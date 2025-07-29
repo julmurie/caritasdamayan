@@ -18,7 +18,19 @@ Route::get('/clinic/dashboard', function () {
     return inertia('Clinic/Dashboard');
 });
 
-// Merchant Dashboard 
+// Partner Merchant Pages
 Route::get('/merchant/dashboard', function () {
-    return inertia('Merchant/Dashboard');
+    return inertia('PartnerMerchant/Dashboard');
+});
+
+Route::get('/merchant/prices', function () {
+    return inertia('PartnerMerchant/Prices');
+});
+
+Route::get('/merchant/soa', function () {
+    return inertia('PartnerMerchant/SOA');
+});
+
+Route::get('/merchant/chargeslips', function () {
+    return inertia('PartnerMerchant/ChargeSlips');
 });
