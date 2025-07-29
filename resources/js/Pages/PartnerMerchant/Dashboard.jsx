@@ -1,9 +1,11 @@
 import React from 'react';
+import Navbar from '../../components/Navbar';
 import "../../../css/merchant.css"; // adjust the path
-
 
 export default function Dashboard() {
   return (
+    <>
+    <Navbar />
     <div className="dashboard-container">
       <div className="header">
         <h1>Dashboard</h1>
@@ -55,5 +57,7 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </>
   );
 }
+

@@ -4,26 +4,81 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    body {
-        font-family: "Poppins", sans-serif;
-        background-color: rgb(231, 231, 231);
-    }
+/* Base Styles */
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: rgb(231, 231, 231);
+  margin: 0;
+  padding: 0;
 }
 
-@layer components {
-    header {
-        background-color: #c61d22;
-        @apply shadow-md;
-    }
-    nav {
-        @apply p-5 max-w-screen-lg mx-auto flex items-center justify-between;
-    }
-    .nav-link {
-        color: white;
-        font-weight: 500;
-    }
-    main {
-        @apply max-w-screen-lg mx-auto;
-    }
+/* Header Styling */
+header {
+  background-color: #c61d22;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Main Navbar Container */
+nav {
+  padding: 0 1.5rem; /* horizontal padding */
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Left Section: Logo + Links */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Logo */
+.logo {
+  height: 40px;
+}
+
+/* Menu List */
+.nav-menu {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navigation Links */
+.nav-link {
+  color: white;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Highlighted Link */
+.nav-link.active {
+  background-color: #e0e0e0;
+  color: #000;
+}
+
+/* Right Section: Icons */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  cursor: pointer;
+  color: white; /* or use currentColor for theming */
 }
