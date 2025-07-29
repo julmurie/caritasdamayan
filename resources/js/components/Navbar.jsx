@@ -75,6 +75,7 @@
 // }
 
 import { Link, usePage } from '@inertiajs/react';
+import CaritasLogo from '../../images/CaritasManilaLogo_White.svg'; // Updated import
 
 export default function Navbar() {
   const currentRoute = usePage().url;
@@ -91,26 +92,33 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-[#B42126] border-b border-black shadow-md">
-      <div className="flex items-center justify-center space-x-8 h-16">
-        {navLinks.map((link) => {
-          const isActive = currentRoute.startsWith(link.href);
-          return (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={`px-3 py-2 rounded-sm text-sm font-semibold ${
-                isActive
-                  ? 'bg-gray-200 text-black'
-                  : 'text-white hover:text-gray-200 hover:underline'
-              }`}
-            >
-              {link.name}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <header >
+      <nav>
+        <div className="flex items-center justify-center space-x-8 h-16">
+          {/* Logo with proper sizing */}
+          <div className="h-10 w-auto">
+            <img 
+              src={CaritasLogo} 
+              alt="Caritas Manila Logo" 
+              className="h-full w-full object-contain"
+            />
+          </div>
+          
+          {navLinks.map((link) => {
+            const isActive = currentRoute.startsWith(link.href);
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="nav-link"
+              >
+                {link.name}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </header>
   );
 }
 
