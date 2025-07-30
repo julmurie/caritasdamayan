@@ -7,7 +7,7 @@
 @layer base {
     body {
         font-family: "Poppins", sans-serif;
-        background-color: rgb(231, 231, 231);
+        background-color: rgb(241, 241, 241);
     }
 }
 
@@ -16,14 +16,8 @@
         background-color: #c61d22;
         @apply shadow-md;
     }
-    nav {
-        @apply p-5 max-w-screen-lg mx-auto flex items-center justify-between;
-    }
     .nav-link {
         color: white;
         font-weight: 500;
-    }
-    main {
-        @apply max-w-screen-lg mx-auto;
     }
 }

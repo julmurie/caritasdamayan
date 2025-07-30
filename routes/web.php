@@ -14,9 +14,15 @@ Route::inertia('/', 'Login');
 
 
 
+
 // Admin Dashboard
 Route::get('/admin/dashboard', function () {
     return inertia('Admin/Dashboard'); // Matches file structure
+});
+
+// Admin Users
+Route::get('/admin/users', function () {
+    return inertia('Admin/Users'); // Matches file structure
 });
 
 // Clinic Volunteer Dashboard
