@@ -3,77 +3,80 @@ import Navbar from "../../components/Navbar";
 import styles from "../../../css/merchant.module.css";
 import { Link } from "@inertiajs/react";
 
-export default function Prices({ merchant = "Generika", products = [] }) {
+export default function Services({ merchant = "Generika", services = [] }) {
     return (
         <>
             <Navbar />
             <div className={styles.pricesContainer}>
+                {/* Sidebar */}
                 <aside className={styles.pricesSidebar}>
                     <div className={styles.pricesSidebarLinks}>
                         <Link
                             href="/merchant/prices"
-                            className={`${styles.pricesSidebarLink} ${styles.pricesSidebarLinkActive}`}
+                            className={styles.pricesSidebarLink}
                         >
                             Products
                         </Link>
                         <Link
                             href="/merchant/services"
-                            className={styles.pricesSidebarLink}
+                            className={`block px-4 py-3 bg-red-700 border-l-4 border-red-700 text-white font-bold ${styles.pricesSidebarLink} ${styles.pricesSidebarLinkActive}`}
                         >
                             Service
                         </Link>
                     </div>
                 </aside>
 
+                {/* Main */}
                 <div className={styles.pricesMain}>
                     <div className="flex justify-between items-center flex-wrap gap-4 mb-4">
                         <div className={styles.pricesHeader}>
-                            <h1>Products</h1>
+                            <h1>Services</h1>
                             <p>Partner Merchant | {merchant}</p>
                         </div>
                         <div className="space-x-2">
                             <Link
-                                href="/partner/products/create"
+                                href="/partner/services/create"
                                 className={styles.btnGreen}
                             >
-                                + Add Product
+                                + Add Service
                             </Link>
                             <Link
-                                href="/partner/products/archived"
+                                href="/partner/services/archived"
                                 className={styles.btnDark}
                             >
-                                Archived Products
+                                Archived Services
                             </Link>
                         </div>
                     </div>
+
                     <hr className="my-4 border-gray-300" />
 
                     <div className={styles.pricesTableWrapper}>
                         <table className={styles.pricesTable}>
                             <thead>
                                 <tr>
-                                    <th>Medicine Name</th>
-                                    <th>Standard Price</th>
-                                    <th>Discounted Price</th>
+                                    <th>Service Name</th>
+                                    <th>Standard Rate</th>
+                                    <th>Discounted Rate</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {products.length === 0 ? (
+                                {services.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan="4"
                                             className={styles.pricesNoData}
                                         >
-                                            No products found.
+                                            No services found.
                                         </td>
                                     </tr>
                                 ) : (
-                                    products.map((item, index) => (
+                                    services.map((item, index) => (
                                         <tr key={index}>
                                             <td>{item.name}</td>
-                                            <td>{item.standard_price}</td>
-                                            <td>{item.discounted_price}</td>
+                                            <td>{item.standard_rate}</td>
+                                            <td>{item.discounted_rate}</td>
                                             <td
                                                 className={
                                                     styles.pricesActionsCol

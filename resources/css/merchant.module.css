@@ -1,0 +1,349 @@
+.dashboardContainer {
+    padding: 1.5rem;
+    padding-top: 1.5rem;
+    background-color: #f3f4f6;
+    min-height: 100vh;
+    color: #1f2937;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.header p {
+    font-size: 0.975rem;
+    color: #6b7280;
+}
+
+.statGrid {
+    display: grid;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.statCard {
+    background-color: white;
+    border-left: 8px solid #dc2626;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.statCard h2 {
+    color: #b91c1c;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.statNumber {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+.statCard a {
+    font-size: 0.875rem;
+    color: #3b82f6;
+    display: inline-block;
+    margin-top: 0.25rem;
+}
+
+.bottomGrid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.card {
+    background-color: white;
+    border-top: 4px solid #dc2626;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #b91c1c;
+    margin-bottom: 0.5rem;
+}
+
+.card ul {
+    font-size: 0.875rem;
+    list-style: none;
+    padding: 0;
+}
+
+.card li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.time {
+    color: #dc2626;
+}
+
+.count {
+    font-weight: bold;
+    color: #dc2626;
+}
+
+/* ===== PRICES PAGE STYLING ===== */
+.pricesContainer {
+    display: flex;
+    min-height: 100vh;
+    background-color: white;
+}
+
+.pricesSidebar {
+    width: 220px;
+    border-right: 1px solid #ccc;
+    background-color: #fff;
+    padding-top: 2rem;
+}
+
+.pricesSidebarLinks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-left: 1rem;
+}
+
+.pricesSidebarLink {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    color: #333;
+    text-decoration: none;
+    background-color: #e5e7eb;
+}
+
+.pricesSidebarLinkActive {
+    background-color: #b91c1c;
+    color: white;
+    font-weight: bold;
+}
+
+.pricesMain {
+    flex: 1;
+    padding: 1.5rem;
+}
+
+.pricesHeader h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.pricesHeader p {
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+.pricesActions {
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btnGreen {
+    background-color: #16a34a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.btnDark {
+    background-color: #1f2937;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.btnGreen:hover {
+    background-color: #15803d;
+}
+
+.btnDark:hover {
+    background-color: #111827;
+}
+
+.pricesTableWrapper {
+    overflow-x: auto;
+}
+
+.pricesTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.pricesTable th,
+.pricesTable td {
+    border: 1px solid #000;
+    padding: 0.5rem;
+}
+
+.pricesTable thead {
+    background-color: #d1d5db;
+    color: #000;
+    font-weight: bold;
+}
+
+.pricesNoData {
+    padding: 1rem;
+    color: #6b7280;
+}
+
+.pricesActionsCol {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.pricesActionBtn {
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #4b5563;
+}
+
+.pricesActionBtn:hover {
+    color: #b91c1c;
+}
+
+.pricesPagination {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-left: 0;
+    text-align: left;
+}
+
+.pricesPagination button {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    background-color: #9ca3af;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.pricesPagination button.active {
+    background-color: #4b5563;
+}
+
+/* Container */
+.soaContainer {
+    padding: 2rem;
+    background-color: white;
+}
+
+/* Header */
+.soaTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.soaSubtext {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.soaBtnRed {
+    background-color: #b32025;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.soaBtnRed:hover {
+    background-color: #a11c20;
+}
+
+.soaReset {
+    background: none;
+    border: none;
+    color: #1a73e8;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+}
+
+.soaBtnGreen {
+    background-color: #218838;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.soaBtnGreen:hover {
+    background-color: #1e7e34;
+}
+
+/* Table */
+.soaTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    border: 1px solid #ccc;
+}
+
+.soaTable thead tr:first-child {
+    background-color: #b32025;
+    color: white;
+}
+
+.soaTable th,
+.soaTable td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.soaTable input[type="text"] {
+    width: 100%;
+    padding: 0.25rem;
+    border: 1px solid #ccc;
+}
+
+/* Pagination */
+.soaPagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.soaPagination select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ccc;
+}
+
+.soaPagination button {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+}
+
+.soaPagination button.active {
+    background-color: #b32025;
+    color: white;
+    border: 1px solid #b32025;
+}

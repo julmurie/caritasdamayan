@@ -93,31 +93,34 @@ export default function Navbar() {
 
   return (
     <header >
-      <nav>
-        <div className="flex items-center justify-center space-x-8 h-16">
-          {/* Logo with proper sizing */}
-          <div className="h-10 w-auto">
-            <img 
-              src={CaritasLogo} 
-              alt="Caritas Manila Logo" 
-              className="h-full w-full object-contain"
-            />
+      <nav className="flex items-center justify-between h-16 px-6">
+          <div className="flex items-center space-x-20">
+            {/* Logo wrapper */}
+            <div className="h-10 w-auto">
+              <img 
+                src={CaritasLogo} 
+                alt="Caritas Manila Logo" 
+                className="h-full w-full object-contain"
+              />
+            </div>
+
+            {/* Nav Links wrapper */}
+            <div className="flex items-center space-x-6">
+              {navLinks.map((link) => {
+                const isActive = currentRoute.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="nav-link"
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          
-          {navLinks.map((link) => {
-            const isActive = currentRoute.startsWith(link.href);
-            return (
-              <Link
-                key={link.name}
-                href={link.href}
-                className="nav-link"
-              >
-                {link.name}
-              </Link>
-            );
-          })}
-        </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-5">
           {/* User dropdown or profile */}
           <Link href="/profile" aria-label="User Profile">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6 text-white">
