@@ -26,6 +26,7 @@ nav {
     justify-content: space-between;
 }
 
+
 /* Left Section: Logo + Links */
 .nav-left {
     display: flex;
@@ -36,6 +37,7 @@ nav {
 /* Logo */
 .logo {
     height: 40px;
+    margin-right: 64px;
 }
 
 /* Menu List */
