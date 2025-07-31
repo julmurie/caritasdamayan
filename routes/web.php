@@ -39,6 +39,10 @@ Route::get('/merchant/prices', function () {
     return inertia('PartnerMerchant/Prices');
 });
 
+Route::get('/merchant/services', function () {
+    return inertia('PartnerMerchant/Services');
+});
+
 Route::get('/merchant/soa', function () {
     return inertia('PartnerMerchant/SOA');
 });
