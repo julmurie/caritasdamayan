@@ -8,7 +8,7 @@ function Users() {
         firstName: "",
         lastName: "",
         branchName: "",
-        branchItem: "product",
+        branchItem: "",
         email: "",
         jobDescription: "",
     });
@@ -26,11 +26,28 @@ function Users() {
             firstName: "",
             lastName: "",
             branchName: "",
-            branchItem: "product",
+            branchItem: "",
             email: "",
             jobDescription: "",
         });
         setSelectedRole("");
+    };
+
+    // NEW: when you pick a role, clear out the other fields + errors.role
+    const handleRoleChange = (e) => {
+        const role = e.target.value;
+        setSelectedRole(role);
+        setErrors((prev) => ({ ...prev, role: "" }));
+        setFormData((prev) => ({
+            ...prev,
+            firstName: "",
+            lastName: "",
+            branchName: "",
+            branchItem: "",
+            jobDescription: "",
+            // Keep email if already entered
+            email: prev.email,
+        }));
     };
 
     const handleChange = (e) => {
@@ -39,32 +56,33 @@ function Users() {
             ...prev,
             [id]: value,
         }));
-        // Clear error when user starts typing
         if (errors[id]) {
-            setErrors((prev) => ({
-                ...prev,
-                [id]: "",
-            }));
+            setErrors((prev) => ({ ...prev, [id]: "" }));
         }
     };
 
     const validateForm = () => {
         const newErrors = {};
-
         if (!selectedRole) {
             newErrors.role = "Please select a role";
         }
 
         if (selectedRole === "merchant") {
             if (!formData.branchName.trim()) {
-                newErrors.branch_name = "Branch name is required";
+                newErrors.branchName = "Branch name is required";
+            }
+            if (!formData.branchItem.trim()) {
+                newErrors.branchItem = "Branch item is required";
             }
         } else {
             if (!formData.firstName.trim()) {
-                newErrors.first_name = "First name is required";
+                newErrors.firstName = "First name is required";
             }
             if (!formData.lastName.trim()) {
-                newErrors.last_name = "Last name is required";
+                newErrors.lastName = "Last name is required";
+            }
+            if (!formData.jobDescription.trim()) {
+                newErrors.jobDescription = "Job description is required";
             }
         }
 
@@ -74,25 +92,64 @@ function Users() {
             newErrors.email = "Email is invalid";
         }
 
-        if (!formData.jobDescription.trim()) {
-            newErrors.job_description = "Job description is required";
-        }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
-        if (validateForm()) {
-            setIsSubmitting(true);
-            // Submit form logic here
-            console.log("Form submitted:", { ...formData, role: selectedRole });
-            // Simulate API call
-            setTimeout(() => {
-                setIsSubmitting(false);
+        if (!validateForm()) return;
+
+        setIsSubmitting(true);
+
+        // 1) Build a clean payload
+        let requestData = {
+            role: selectedRole,
+            email: formData.email.trim(),
+        };
+
+        if (selectedRole === "merchant") {
+            requestData.branchName = formData.branchName.trim();
+            requestData.branchItem = formData.branchItem;
+        } else {
+            requestData.firstName = formData.firstName.trim();
+            requestData.lastName = formData.lastName.trim();
+            requestData.jobDescription = formData.jobDescription.trim();
+        }
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.errors) {
+                    const fieldErrors = {};
+                    Object.entries(data.errors).forEach(([field, msgs]) => {
+                        fieldErrors[field] = msgs[0];
+                    });
+                    setErrors(fieldErrors);
+                } else {
+                    setErrors({
+                        submit: data.error || "Server error occurred",
+                    });
+                }
+            } else {
                 handleCloseModal();
-            }, 1000);
+                // optionally refresh user list or show a toast
+            }
+        } catch (err) {
+            console.error("Network error:", err);
+            setErrors({ submit: "Network error. Please try again." });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -133,7 +190,7 @@ function Users() {
 
                                 <hr className="mb-4 border-gray-300" />
 
-                                <form onSubmit={handleSubmit}>
+                                <form onSubmit={handleRegister}>
                                     <div className="mb-6">
                                         <label
                                             htmlFor="role"
@@ -144,15 +201,7 @@ function Users() {
                                         <select
                                             id="role"
                                             value={selectedRole}
-                                            onChange={(e) => {
-                                                setSelectedRole(e.target.value);
-                                                if (errors.role) {
-                                                    setErrors((prev) => ({
-                                                        ...prev,
-                                                        role: "",
-                                                    }));
-                                                }
-                                            }}
+                                            onChange={handleRoleChange}
                                             className={`bg-gray-50 border ${
                                                 errors.role
                                                     ? "border-red-500"
@@ -187,45 +236,49 @@ function Users() {
                                         <>
                                             <div className="mb-6">
                                                 <label
-                                                    htmlFor="branch_name"
+                                                    htmlFor="branchName"
                                                     className="block mb-2 text-sm font-medium text-gray-900"
                                                 >
                                                     Branch Name
                                                 </label>
                                                 <input
                                                     type="text"
-                                                    id="branch_name"
+                                                    id="branchName"
                                                     value={formData.branchName}
                                                     onChange={handleChange}
                                                     placeholder="e.g. Generika - Main Branch"
                                                     className={`bg-gray-50 border ${
-                                                        errors.branch_name
+                                                        errors.branchName
                                                             ? "border-red-500"
                                                             : "border-gray-300"
                                                     } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
                                                 />
-                                                {errors.branch_name && (
+                                                {errors.branchName && (
                                                     <p className="mt-2 text-sm text-red-600">
-                                                        <span className="font-medium">
-                                                            Oops!
-                                                        </span>{" "}
-                                                        {errors.branch_name}
+                                                        {errors.branchName}
                                                     </p>
                                                 )}
                                             </div>
                                             <div className="mb-6">
                                                 <label
-                                                    htmlFor="branch_item"
+                                                    htmlFor="branchItem"
                                                     className="block mb-2 text-sm font-medium text-gray-900"
                                                 >
                                                     Branch Item
                                                 </label>
                                                 <select
-                                                    id="branch_item"
+                                                    id="branchItem"
                                                     value={formData.branchItem}
                                                     onChange={handleChange}
-                                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                                                    className={`bg-gray-50 border ${
+                                                        errors.branchItem
+                                                            ? "border-red-500"
+                                                            : "border-gray-300"
+                                                    } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
                                                 >
+                                                    <option disabled value="">
+                                                        Select an Item
+                                                    </option>
                                                     <option value="product">
                                                         Product
                                                     </option>
@@ -233,6 +286,11 @@ function Users() {
                                                         Laboratory Service
                                                     </option>
                                                 </select>
+                                                {errors.branchItem && (
+                                                    <p className="mt-2 text-sm text-red-600">
+                                                        {errors.branchItem}
+                                                    </p>
+                                                )}
                                             </div>
                                         </>
                                     ) : (
@@ -240,88 +298,85 @@ function Users() {
                                             <div className="grid gap-6 mb-6 md:grid-cols-2">
                                                 <div>
                                                     <label
-                                                        htmlFor="first_name"
+                                                        htmlFor="firstName"
                                                         className="block mb-2 text-sm font-medium text-gray-900"
                                                     >
                                                         First Name
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        id="first_name"
+                                                        id="firstName"
                                                         value={
                                                             formData.firstName
                                                         }
                                                         onChange={handleChange}
                                                         placeholder="John"
                                                         className={`bg-gray-50 border ${
-                                                            errors.first_name
+                                                            errors.firstName
                                                                 ? "border-red-500"
                                                                 : "border-gray-300"
                                                         } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
                                                     />
-                                                    {errors.first_name && (
+                                                    {errors.firstName && (
                                                         <p className="mt-2 text-sm text-red-600">
-                                                            {errors.first_name}
+                                                            {errors.firstName}
                                                         </p>
                                                     )}
                                                 </div>
                                                 <div>
                                                     <label
-                                                        htmlFor="last_name"
+                                                        htmlFor="lastName"
                                                         className="block mb-2 text-sm font-medium text-gray-900"
                                                     >
                                                         Last Name
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        id="last_name"
+                                                        id="lastName"
                                                         value={
                                                             formData.lastName
                                                         }
                                                         onChange={handleChange}
                                                         placeholder="Doe"
                                                         className={`bg-gray-50 border ${
-                                                            errors.last_name
+                                                            errors.lastName
                                                                 ? "border-red-500"
                                                                 : "border-gray-300"
                                                         } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
                                                     />
-                                                    {errors.last_name && (
+                                                    {errors.lastName && (
                                                         <p className="mt-2 text-sm text-red-600">
-                                                            {errors.last_name}
+                                                            {errors.lastName}
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
+
+                                            {/* Only show job description for non-merchant roles */}
                                             <div className="mb-6">
                                                 <label
-                                                    htmlFor="job_description"
+                                                    htmlFor="jobDescription"
                                                     className="block mb-2 text-sm font-medium text-gray-900"
                                                 >
                                                     Job Description
                                                 </label>
                                                 <input
                                                     type="text"
-                                                    id="job_description"
+                                                    id="jobDescription"
                                                     value={
                                                         formData.jobDescription
                                                     }
                                                     onChange={handleChange}
-                                                    placeholder={
-                                                        selectedRole ===
-                                                        "merchant"
-                                                            ? "e.g. Branch Manager"
-                                                            : "e.g. Executive Director"
-                                                    }
+                                                    placeholder="e.g. Executive Director"
                                                     className={`bg-gray-50 border ${
-                                                        errors.job_description
+                                                        errors.jobDescription
                                                             ? "border-red-500"
                                                             : "border-gray-300"
                                                     } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
                                                 />
-                                                {errors.job_description && (
+                                                {errors.jobDescription && (
                                                     <p className="mt-2 text-sm text-red-600">
-                                                        {errors.job_description}
+                                                        {errors.jobDescription}
                                                     </p>
                                                 )}
                                             </div>
@@ -353,6 +408,12 @@ function Users() {
                                             </p>
                                         )}
                                     </div>
+
+                                    {errors.submit && (
+                                        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+                                            {errors.submit}
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-end space-x-3">
                                         <button

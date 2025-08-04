@@ -17,16 +17,16 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             
-            // Role management
+            // Role management - updated to match frontend values exactly
             $table->enum('role', [
                 'admin',
-                'clinic_volunteer', 
-                'partner_merchant',
+                'volunteer', // Changed from clinic_volunteer to match frontend
+                'merchant',  // Changed from partner_merchant to match frontend
                 'accounting',
                 'treasury'
-            ])->default('clinic_volunteer');
+            ])->default('volunteer'); // Updated default to match new value
             
-            // Personal information (nullable for merchants)
+            // Personal information
             $table->string('firstname')->nullable();
             $table->string('lastname')->nullable();
             $table->string('name')->virtualAs('CONCAT(firstname, " ", lastname)');
@@ -34,7 +34,8 @@ return new class extends Migration
             
             // Merchant-specific fields
             $table->string('branch_name')->nullable();
-            $table->enum('merchant_type', ['product', 'laboratory_service'])->nullable();
+            $table->enum('merchant_type', ['product', 'lab']) // Changed from laboratory_service to match frontend
+                  ->nullable();
             
             // Account status
             $table->boolean('is_active')->default(true);

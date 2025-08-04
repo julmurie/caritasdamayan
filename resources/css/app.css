@@ -1,4 +1,4 @@
-@import url("<https://fonts.googleapis.com/css?family=Inter:100,200,300,regular,500,600,700,800,900,100italic,200italic,300italic,italic,500italic,600italic,700italic,800italic,900italic");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 /* Base Styles */
 body {
-    font-family: "Inter", sans-serif;
+    font-family: "Inter";
     margin: 0;
     padding: 0;
 }
@@ -25,7 +25,6 @@ nav {
     align-items: center;
     justify-content: space-between;
 }
-
 
 /* Left Section: Logo + Links */
 .nav-left {
