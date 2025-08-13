@@ -178,7 +178,7 @@ export default function Login() {
       {/* Mobile background image (mimics your CSS behavior) */}
       <div
         className="sm:hidden fixed inset-0 -z-10 bg-[#c61d23] bg-center bg-no-repeat bg-cover"
-        style={{ backgroundImage: "url('/graphics/logo_for_login.svg')" }}
+        style={{ backgroundImage: `url(${LogoForLogin})` }}
         aria-hidden="true"
       />
     </div>
