@@ -11,74 +11,176 @@ body {
     padding: 0;
 }
 
-/* Header Styling */
-header {
+/* Header wrapper */
+.navbar-header {
     background-color: #c61d22;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative; /* for absolute mobile panel */
+    z-index: 50;
 }
 
-/* Main Navbar Container */
-nav {
-    padding: 0 1.5rem; /* horizontal padding */
-    height: 64px;
+/* Main nav container */
+.navbar-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 64px; /* h-16 */
+    padding-left: 1.5rem; /* px-6 */
+    padding-right: 1.5rem;
 }
 
-/* Left Section: Logo + Links */
-.nav-left {
+/* Left section: logo + menu */
+.navbar-left {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 2rem; /* gap-8 */
+    min-width: 0; /* let menu shrink first */
 }
 
-/* Logo */
-.logo {
-    height: 40px;
-    margin-right: 64px;
+.navbar-logo {
+    width: 160px; /* fixed width */
+    height: auto;
+    object-fit: contain;
+    flex: 0 0 auto; /* never shrink */
+    flex-shrink: 0;
 }
 
-/* Menu List */
-.nav-menu {
+/* Desktop menu */
+.navbar-menu {
     display: flex;
-    gap: 1rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    align-items: center;
+    gap: 0.5rem; /* gap-2 */
+    flex-shrink: 0;
 }
 
-/* Navigation Links */
-.nav-link {
-    color: white;
-    font-weight: 500;
+/* Desktop menu item */
+.navbar-link {
+    display: inline-block;
+    padding: 1.27rem 0.75rem; /* FIXED: was 100% 0.75rem */
+    color: #fff;
     text-decoration: none;
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
     transition: background-color 0.2s ease;
 }
 
-.nav-link:hover {
+.navbar-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Highlighted Link */
-.nav-link.active {
-    background-color: #e0e0e0;
+/* Active link */
+.navbar-link.active {
+    background-color: rgba(255, 255, 255, 0.95);
     color: #000;
+    font-weight: 700;
 }
 
-/* Right Section: Icons */
-.nav-right {
+/* Right section (icons) — always visible */
+.navbar-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1rem; /* gap-4 */
 }
 
-.icon {
+.navbar-icon-link {
+    display: inline-flex;
+    align-items: center;
+}
+
+.navbar-icon-link svg {
     width: 24px;
     height: 24px;
-    object-fit: contain;
-    cursor: pointer;
-    color: white; /* or use currentColor for theming */
+    color: #fff;
+}
+
+/* Hamburger (shown only at/below collapse width) */
+.navbar-hamburger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    color: #fff;
+}
+
+.navbar-hamburger svg {
+    width: 1.75rem; /* size-7 */
+    height: 1.75rem;
+}
+
+/* Mobile dropdown (panel) — hidden on desktop by default */
+.navbar-mobile {
+    display: none;
+}
+
+/* =========================== */
+/* Collapse breakpoint: 1024px */
+/* =========================== */
+@media (max-width: 1024px) {
+    /* Hide desktop links, show hamburger */
+    .navbar-menu {
+        display: none;
+    }
+    .navbar-hamburger {
+        display: inline-flex;
+    }
+
+    /* Mobile panel overlays under the top bar */
+    .navbar-mobile {
+        display: block; /* exists for transition target */
+        position: absolute;
+        top: 64px; /* same as navbar height */
+        left: 0;
+        right: 0;
+        background-color: #c61d22;
+        max-height: 0; /* collapsed */
+        overflow: hidden; /* hide when collapsed */
+        transition: max-height 0.25s ease;
+        z-index: 40;
+        will-change: max-height;
+    }
+
+    .navbar-mobile.open {
+        max-height: calc(100vh - 64px); /* fill viewport below bar */
+        overflow-y: auto; /* scroll if long */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .navbar-mobile ul {
+        display: flex;
+        flex-direction: column;
+        padding: 0 0.75rem 0.75rem;
+        margin: 0;
+    }
+
+    .navbar-mobile li {
+        list-style: none;
+        margin-top: 0.25rem;
+    }
+
+    .navbar-mobile-link {
+        display: block;
+        border-radius: 0.25rem;
+        padding: 0.75rem;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .navbar-mobile-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .navbar-mobile-link.active {
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #000;
+    }
+}
+
+/* Hard desktop guard (optional redundancy) */
+@media (min-width: 1025px) {
+    .navbar-mobile {
+        display: none !important;
+        max-height: 0 !important;
+    }
+    .navbar-hamburger {
+        display: none !important;
+    }
 }

@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+// ⬇️ Add this:
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    // ⬇️ Add HasApiTokens
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -16,14 +19,16 @@ class User extends Authenticatable
      * @var array<string>
      */
     protected $fillable = [
-        'email',
-        'password',
         'role',
         'firstname',
         'lastname',
+        'email',
+        'password',
         'job_description',
         'branch_name',
         'merchant_type',
+        // if you add archive later:
+        // 'archived_at',
     ];
 
     /**
@@ -44,12 +49,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
+        // if you add archive later:
+        // 'archived_at'       => 'datetime',
     ];
 
     /**
-     * Accessor for full name (mirrors your virtual column).
-     *
-     * @return string
+     * Accessor for full name.
      */
     public function getNameAttribute(): string
     {

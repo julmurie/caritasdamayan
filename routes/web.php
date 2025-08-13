@@ -27,8 +27,14 @@ Route::get('/admin/users', function () {
 
 // Clinic Volunteer Dashboard
 Route::get('/clinic/dashboard', function () {
-    return inertia('Clinic/Dashboard');
+    return inertia('ClinicVolunteer/Dashboard');
 });
+
+Route::get('/clinic/patient', function () {
+    return inertia('ClinicVolunteer/Patient');
+});
+
+
 
 // Partner Merchant Pages
 Route::get('/merchant/dashboard', function () {

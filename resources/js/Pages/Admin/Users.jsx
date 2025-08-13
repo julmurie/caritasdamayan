@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
+import UserModal from "@/components/UserModal";
+import styles from "../../../css/users.module.css";
 
 function Users() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,13 +16,15 @@ function Users() {
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const tableRef = useRef(null);
+    const [dataTable, setDataTable] = useState(null);
+    const [editingUserId, setEditingUserId] = useState(null);
 
-    const handleOpenModal = () => {
-        setIsModalOpen(true);
-    };
+    const handleOpenModal = () => setIsModalOpen(true);
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        setEditingUserId(null);
         setErrors({});
         setFormData({
             firstName: "",
@@ -33,7 +37,6 @@ function Users() {
         setSelectedRole("");
     };
 
-    // NEW: when you pick a role, clear out the other fields + errors.role
     const handleRoleChange = (e) => {
         const role = e.target.value;
         setSelectedRole(role);
@@ -45,17 +48,13 @@ function Users() {
             branchName: "",
             branchItem: "",
             jobDescription: "",
-            // Keep email if already entered
             email: prev.email,
         }));
     };
 
     const handleChange = (e) => {
         const { id, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [id]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [id]: value }));
         if (errors[id]) {
             setErrors((prev) => ({ ...prev, [id]: "" }));
         }
@@ -63,27 +62,20 @@ function Users() {
 
     const validateForm = () => {
         const newErrors = {};
-        if (!selectedRole) {
-            newErrors.role = "Please select a role";
-        }
+        if (!selectedRole) newErrors.role = "Please select a role";
 
         if (selectedRole === "merchant") {
-            if (!formData.branchName.trim()) {
+            if (!formData.branchName.trim())
                 newErrors.branchName = "Branch name is required";
-            }
-            if (!formData.branchItem.trim()) {
+            if (!formData.branchItem.trim())
                 newErrors.branchItem = "Branch item is required";
-            }
         } else {
-            if (!formData.firstName.trim()) {
+            if (!formData.firstName.trim())
                 newErrors.firstName = "First name is required";
-            }
-            if (!formData.lastName.trim()) {
+            if (!formData.lastName.trim())
                 newErrors.lastName = "Last name is required";
-            }
-            if (!formData.jobDescription.trim()) {
+            if (!formData.jobDescription.trim())
                 newErrors.jobDescription = "Job description is required";
-            }
         }
 
         if (!formData.email.trim()) {
@@ -96,347 +88,319 @@ function Users() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleRegister = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         setIsSubmitting(true);
 
-        // 1) Build a clean payload
-        let requestData = {
+        const requestData = {
             role: selectedRole,
             email: formData.email.trim(),
+            ...(selectedRole === "merchant"
+                ? {
+                      branchName: formData.branchName.trim(),
+                      branchItem: formData.branchItem.trim(),
+                  }
+                : {
+                      firstName: formData.firstName.trim(),
+                      lastName: formData.lastName.trim(),
+                      jobDescription: formData.jobDescription.trim(),
+                  }),
         };
 
-        if (selectedRole === "merchant") {
-            requestData.branchName = formData.branchName.trim();
-            requestData.branchItem = formData.branchItem;
-        } else {
-            requestData.firstName = formData.firstName.trim();
-            requestData.lastName = formData.lastName.trim();
-            requestData.jobDescription = formData.jobDescription.trim();
-        }
-
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/users", {
-                method: "POST",
+            const url = editingUserId
+                ? `http://127.0.0.1:8000/api/users/${editingUserId}`
+                : "http://127.0.0.1:8000/api/users";
+
+            const method = editingUserId ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     "Content-Type": "application/json",
                     Accept: "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
                 body: JSON.stringify(requestData),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                if (data.errors) {
-                    const fieldErrors = {};
-                    Object.entries(data.errors).forEach(([field, msgs]) => {
-                        fieldErrors[field] = msgs[0];
-                    });
-                    setErrors(fieldErrors);
-                } else {
-                    setErrors({
-                        submit: data.error || "Server error occurred",
-                    });
-                }
-            } else {
-                handleCloseModal();
-                // optionally refresh user list or show a toast
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Request failed");
             }
+
+            if (dataTable) dataTable.ajax.reload(null, false);
+            handleCloseModal();
+            alert(editingUserId ? "User updated!" : "User created!");
         } catch (err) {
-            console.error("Network error:", err);
-            setErrors({ submit: "Network error. Please try again." });
+            console.error("Error:", err);
+            setErrors({ submit: err.message });
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    useEffect(() => {
+        if (
+            !dataTable &&
+            tableRef.current &&
+            window.$ &&
+            window.$.fn.DataTable
+        ) {
+            const dt = $(tableRef.current).DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "http://127.0.0.1:8000/api/users/datatable",
+                    type: "GET",
+                    dataType: "json",
+                },
+                order: [[0, "desc"]],
+                columns: [
+                    {
+                        data: "role",
+                        title: "Role",
+                        render: (data) =>
+                            data
+                                ? data.charAt(0).toUpperCase() + data.slice(1)
+                                : "-",
+                        className: styles.roleColumn,
+                    },
+                    {
+                        data: null,
+                        title: "Name",
+                        render: (data) => {
+                            const name = `${data.firstname || ""} ${
+                                data.lastname || ""
+                            }`.trim();
+                            return name || "-";
+                        },
+                        className: styles.nameColumn,
+                    },
+                    {
+                        data: "branch_name",
+                        title: "Branch Name",
+                        render: (data) => data || "-",
+                        className: styles.branchColumn,
+                    },
+                    {
+                        data: "job_description",
+                        title: "Job Description",
+                        render: (data) => data || "-",
+                        className: styles.jobColumn,
+                    },
+                    {
+                        data: "email",
+                        title: "Email",
+                        render: (data) => data || "-",
+                        className: styles.emailColumn,
+                    },
+                    {
+                        data: null,
+                        title: "Actions",
+                        orderable: false,
+                        searchable: false,
+                        render: (data, type, row) => `
+        <div class="${styles.actions}">
+            <button 
+                class="${styles.editBtn}" 
+                data-id="${row.id}"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+</svg>
+
+            </button>
+            <button 
+                class="${styles.deleteBtn}" 
+                data-id="${row.id}"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+</svg>
+
+            </button>
+        </div>
+    `,
+                        className: styles.actionsColumn,
+                    },
+                ],
+                responsive: {
+                    details: {
+                        display: $.fn.dataTable.Responsive.display.modal({
+                            header: function (row) {
+                                return "Details for " + row.data().email;
+                            },
+                        }),
+                        renderer: $.fn.dataTable.Responsive.renderer.tableAll(),
+                    },
+                },
+                autoWidth: false,
+                scrollX: true,
+                language: {
+                    emptyTable: "No users found",
+                    loadingRecords: "Loading...",
+                    processing: "Processing...",
+                },
+                dom: '<"top"f>rt<"bottom"lip><"clear">',
+                initComplete: function () {
+                    // Apply your custom styles after table initialization
+                    $(this).addClass(styles.dataTable);
+                    $(this).find("thead th").addClass(styles.tableHeader);
+                    $(this).find("tbody td").addClass(styles.tableCell);
+                },
+            });
+
+            setDataTable(dt);
+
+            // Add resize event listener
+            const handleResize = () => {
+                if (dt) {
+                    dt.columns.adjust().responsive.recalc();
+                }
+            };
+
+            window.addEventListener("resize", handleResize);
+
+            // Edit button handler
+            $(tableRef.current).on("click", `.${styles.editBtn}`, function () {
+                const userId = $(this).data("id");
+                handleEditUser(userId);
+            });
+
+            // Delete button handler
+            $(tableRef.current).on(
+                "click",
+                `.${styles.deleteBtn}`,
+                function () {
+                    const userId = $(this).data("id");
+                    handleDeleteUser(userId);
+                }
+            );
+        }
+
+        return () => {
+            if (dataTable) {
+                dataTable.destroy(true);
+                $(tableRef.current).off("click", `.${styles.editBtn}`);
+                $(tableRef.current).off("click", `.${styles.deleteBtn}`);
+            }
+        };
+    }, [dataTable]);
+
+    const handleEditUser = async (userId) => {
+        try {
+            const response = await fetch(
+                `http://127.0.0.1:8000/api/users/${userId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                        Accept: "application/json",
+                    },
+                }
+            );
+
+            if (!response.ok) throw new Error("Failed to fetch user");
+
+            const userData = await response.json();
+
+            setFormData({
+                firstName: userData.firstname || "",
+                lastName: userData.lastname || "",
+                branchName: userData.branch_name || "",
+                branchItem: userData.merchant_type || "", // Note the field name change
+                email: userData.email || "",
+                jobDescription: userData.job_description || "",
+            });
+
+            setSelectedRole(userData.role);
+            setEditingUserId(userId);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error("Error fetching user:", error);
+            alert("Failed to load user data");
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        if (window.confirm("Are you sure you want to delete this user?")) {
+            try {
+                const response = await fetch(
+                    `http://127.0.0.1:8000/api/users/${userId}`,
+                    {
+                        method: "DELETE",
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                if (response.ok) {
+                    if (dataTable) {
+                        dataTable.ajax.reload(null, false);
+                    }
+                    alert("User deleted successfully");
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.message || "Delete failed");
+                }
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert("Error deleting user");
+            }
+        }
+    };
+
     return (
-        <div>
+        <div className={styles.container}>
             <Navbar />
-            <div className="mx-auto w-full px-4 py-8 sm:px-6 lg:px-8">
+            <div className={styles.content}>
                 <main>
-                    <div className="header">
-                        <div className="flex justify-between items-center mb-4">
-                            <h1 className="text-4xl font-bold text-gray-800">
-                                Users
-                            </h1>
-                            <button
-                                onClick={handleOpenModal}
-                                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                            >
-                                + Add User
-                            </button>
-                        </div>
-                        <hr className="mb-4 border-gray-300" />
-                    </div>
-
-                    {isModalOpen && (
-                        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h2 className="text-xl font-semibold">
-                                        Register New User
-                                    </h2>
-                                    <button
-                                        onClick={handleCloseModal}
-                                        className="text-gray-500 hover:text-gray-700"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-
-                                <hr className="mb-4 border-gray-300" />
-
-                                <form onSubmit={handleRegister}>
-                                    <div className="mb-6">
-                                        <label
-                                            htmlFor="role"
-                                            className="block mb-2 text-sm font-medium text-gray-900"
-                                        >
-                                            User Role
-                                        </label>
-                                        <select
-                                            id="role"
-                                            value={selectedRole}
-                                            onChange={handleRoleChange}
-                                            className={`bg-gray-50 border ${
-                                                errors.role
-                                                    ? "border-red-500"
-                                                    : "border-gray-300"
-                                            } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                        >
-                                            <option disabled value="">
-                                                Choose a role
-                                            </option>
-                                            <option value="admin">Admin</option>
-                                            <option value="volunteer">
-                                                Clinic Volunteer
-                                            </option>
-                                            <option value="merchant">
-                                                Partner Merchant
-                                            </option>
-                                            <option value="accounting">
-                                                Accounting
-                                            </option>
-                                            <option value="treasury">
-                                                Treasury
-                                            </option>
-                                        </select>
-                                        {errors.role && (
-                                            <p className="mt-2 text-sm text-red-600">
-                                                {errors.role}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {selectedRole === "merchant" ? (
-                                        <>
-                                            <div className="mb-6">
-                                                <label
-                                                    htmlFor="branchName"
-                                                    className="block mb-2 text-sm font-medium text-gray-900"
-                                                >
-                                                    Branch Name
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="branchName"
-                                                    value={formData.branchName}
-                                                    onChange={handleChange}
-                                                    placeholder="e.g. Generika - Main Branch"
-                                                    className={`bg-gray-50 border ${
-                                                        errors.branchName
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                                />
-                                                {errors.branchName && (
-                                                    <p className="mt-2 text-sm text-red-600">
-                                                        {errors.branchName}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="mb-6">
-                                                <label
-                                                    htmlFor="branchItem"
-                                                    className="block mb-2 text-sm font-medium text-gray-900"
-                                                >
-                                                    Branch Item
-                                                </label>
-                                                <select
-                                                    id="branchItem"
-                                                    value={formData.branchItem}
-                                                    onChange={handleChange}
-                                                    className={`bg-gray-50 border ${
-                                                        errors.branchItem
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                                >
-                                                    <option disabled value="">
-                                                        Select an Item
-                                                    </option>
-                                                    <option value="product">
-                                                        Product
-                                                    </option>
-                                                    <option value="lab">
-                                                        Laboratory Service
-                                                    </option>
-                                                </select>
-                                                {errors.branchItem && (
-                                                    <p className="mt-2 text-sm text-red-600">
-                                                        {errors.branchItem}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="grid gap-6 mb-6 md:grid-cols-2">
-                                                <div>
-                                                    <label
-                                                        htmlFor="firstName"
-                                                        className="block mb-2 text-sm font-medium text-gray-900"
-                                                    >
-                                                        First Name
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        id="firstName"
-                                                        value={
-                                                            formData.firstName
-                                                        }
-                                                        onChange={handleChange}
-                                                        placeholder="John"
-                                                        className={`bg-gray-50 border ${
-                                                            errors.firstName
-                                                                ? "border-red-500"
-                                                                : "border-gray-300"
-                                                        } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                                    />
-                                                    {errors.firstName && (
-                                                        <p className="mt-2 text-sm text-red-600">
-                                                            {errors.firstName}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        htmlFor="lastName"
-                                                        className="block mb-2 text-sm font-medium text-gray-900"
-                                                    >
-                                                        Last Name
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        id="lastName"
-                                                        value={
-                                                            formData.lastName
-                                                        }
-                                                        onChange={handleChange}
-                                                        placeholder="Doe"
-                                                        className={`bg-gray-50 border ${
-                                                            errors.lastName
-                                                                ? "border-red-500"
-                                                                : "border-gray-300"
-                                                        } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                                    />
-                                                    {errors.lastName && (
-                                                        <p className="mt-2 text-sm text-red-600">
-                                                            {errors.lastName}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Only show job description for non-merchant roles */}
-                                            <div className="mb-6">
-                                                <label
-                                                    htmlFor="jobDescription"
-                                                    className="block mb-2 text-sm font-medium text-gray-900"
-                                                >
-                                                    Job Description
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="jobDescription"
-                                                    value={
-                                                        formData.jobDescription
-                                                    }
-                                                    onChange={handleChange}
-                                                    placeholder="e.g. Executive Director"
-                                                    className={`bg-gray-50 border ${
-                                                        errors.jobDescription
-                                                            ? "border-red-500"
-                                                            : "border-gray-300"
-                                                    } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                                />
-                                                {errors.jobDescription && (
-                                                    <p className="mt-2 text-sm text-red-600">
-                                                        {errors.jobDescription}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-
-                                    <div className="mb-6">
-                                        <label
-                                            htmlFor="email"
-                                            className="block mb-2 text-sm font-medium text-gray-900"
-                                        >
-                                            Email Address
-                                        </label>
-                                        <input
-                                            type="email"
-                                            id="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            placeholder="myemail@example.com"
-                                            className={`bg-gray-50 border ${
-                                                errors.email
-                                                    ? "border-red-500"
-                                                    : "border-gray-300"
-                                            } text-gray-900 text-sm rounded-lg block w-full p-2.5`}
-                                        />
-                                        {errors.email && (
-                                            <p className="mt-2 text-sm text-red-600">
-                                                {errors.email}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {errors.submit && (
-                                        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
-                                            {errors.submit}
-                                        </div>
-                                    )}
-
-                                    <div className="flex justify-end space-x-3">
-                                        <button
-                                            type="button"
-                                            onClick={handleCloseModal}
-                                            className="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={isSubmitting}
-                                            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isSubmitting
-                                                ? "Saving..."
-                                                : "Save"}
-                                        </button>
-                                    </div>
-                                </form>
+                    <div className={styles.header}>
+                        <div className={styles.headerContent}>
+                            <h1 className={styles.title}>Users</h1>
+                            <div>
+                                <button
+                                    onClick={handleOpenModal}
+                                    className={styles.addButton}
+                                >
+                                    + Add User
+                                </button>
+                                <button className={styles.archivedButton}>
+                                    Archives
+                                </button>
                             </div>
                         </div>
-                    )}
+                        <hr className={styles.divider} />
+                    </div>
+
+                    <div className={styles.tableContainer}>
+                        <table
+                            ref={tableRef}
+                            className={`${styles.dataTable} display`}
+                        >
+                            {/* DataTables will generate the content */}
+                        </table>
+                    </div>
+
+                    <UserModal
+                        isOpen={isModalOpen}
+                        onClose={handleCloseModal}
+                        onSubmit={handleSubmit}
+                        selectedRole={selectedRole}
+                        onRoleChange={handleRoleChange}
+                        formData={formData}
+                        onChange={handleChange}
+                        errors={errors}
+                        isSubmitting={isSubmitting}
+                    />
                 </main>
             </div>
         </div>

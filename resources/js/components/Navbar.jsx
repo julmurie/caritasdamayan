@@ -73,11 +73,38 @@
 //     </nav>
 //   );
 // }
+import { useState, useEffect, useCallback } from "react";
 import { Link, usePage } from "@inertiajs/react";
-import CaritasLogo from "../../images/CaritasManilaLogo_White.svg"; // Updated import
+import CaritasLogo from "../../images/CaritasManilaLogo_White.svg";
 
 export default function Navbar() {
-    const currentRoute = usePage().url;
+    const { url } = usePage();
+    const [open, setOpen] = useState(false);
+
+    // inside Navbar component
+    useEffect(() => {
+        const mq = window.matchMedia("(min-width: 1024px)"); // match your CSS breakpoint
+        const onChange = (e) => {
+            if (e.matches) setOpen(false);
+        };
+        mq.addEventListener("change", onChange);
+        return () => mq.removeEventListener("change", onChange);
+    }, []);
+
+    // Close mobile menu when navigating
+    useEffect(() => {
+        setOpen(false);
+    }, [url]);
+
+    // ESC to close for accessibility
+    const onKeyDown = useCallback((e) => {
+        if (e.key === "Escape") setOpen(false);
+    }, []);
+    useEffect(() => {
+        if (!open) return;
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [open, onKeyDown]);
 
     const navLinks = [
         { name: "Dashboard", href: "/admin/dashboard" },
@@ -90,45 +117,56 @@ export default function Navbar() {
         { name: "Logs", href: "/admin/logs" },
     ];
 
+    const isActive = (href) => url.startsWith(href);
+
     return (
-        <header>
-            <nav className="flex items-center justify-between h-16 px-6">
-                <div className="flex items-center space-x-20">
-                    {/* Logo wrapper */}
-                    <div className="h-10 w-auto">
+        <header className="navbar-header">
+            <nav
+                className="navbar-container"
+                role="navigation"
+                aria-label="Main"
+            >
+                {/* Left: Logo + Desktop Menu */}
+                <div className="navbar-left">
+                    <Link href="/admin/dashboard" aria-label="Go to Dashboard">
                         <img
                             src={CaritasLogo}
                             alt="Caritas Manila Logo"
-                            className="h-full w-full object-contain"
+                            className="navbar-logo"
                         />
-                    </div>
+                    </Link>
 
-                    {/* Nav Links wrapper */}
-                    <div className="flex items-center space-x-6">
-                        {navLinks.map((link) => {
-                            const isActive = currentRoute.startsWith(link.href);
-                            return (
+                    <ul className="navbar-menu" role="menubar">
+                        {navLinks.map((link) => (
+                            <li key={link.name} role="none">
                                 <Link
-                                    key={link.name}
                                     href={link.href}
-                                    className="nav-link"
+                                    role="menuitem"
+                                    className={`navbar-link ${
+                                        isActive(link.href) ? "active" : ""
+                                    }`}
                                 >
                                     {link.name}
                                 </Link>
-                            );
-                        })}
-                    </div>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-                <div className="flex items-center space-x-5">
-                    {/* User dropdown or profile */}
-                    <Link href="/profile" aria-label="User Profile">
+
+                {/* Right: Icons + Hamburger */}
+                <div className="navbar-right">
+                    {/* Icons: always visible */}
+                    <Link
+                        href="/profile"
+                        aria-label="User Profile"
+                        className="navbar-icon-link"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            strokeWidth={1.5}
+                            strokeWidth="1.5"
                             stroke="currentColor"
-                            className="size-6 text-white"
                         >
                             <path
                                 strokeLinecap="round"
@@ -138,11 +176,13 @@ export default function Navbar() {
                         </svg>
                     </Link>
 
-                    {/* Notification bell */}
-                    <Link href="/notifications" aria-label="Notifications">
+                    <Link
+                        href="/notifications"
+                        aria-label="Notifications"
+                        className="navbar-icon-link"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="icon size-6 text-white"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth="1.5"
@@ -156,15 +196,17 @@ export default function Navbar() {
                         </svg>
                     </Link>
 
-                    {/* Settings */}
-                    <Link href="/settings" aria-label="Settings">
+                    <Link
+                        href="/settings"
+                        aria-label="Settings"
+                        className="navbar-icon-link"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            strokeWidth={1.5}
+                            strokeWidth="1.5"
                             stroke="currentColor"
-                            className="size-6 text-white"
                         >
                             <path
                                 strokeLinecap="round"
@@ -173,8 +215,69 @@ export default function Navbar() {
                             />
                         </svg>
                     </Link>
+
+                    {/* Hamburger (visible only at/below collapse width via CSS) */}
+                    <button
+                        className="navbar-hamburger"
+                        onClick={() => setOpen((v) => !v)}
+                        aria-label="Toggle menu"
+                        aria-controls="mobileMenu"
+                        aria-expanded={open}
+                    >
+                        {open ? (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        ) : (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"
+                                />
+                            </svg>
+                        )}
+                    </button>
                 </div>
             </nav>
+
+            {/* Mobile dropdown: keep only nav links */}
+            <div
+                id="mobileMenu"
+                className={`navbar-mobile ${open ? "open" : ""}`}
+            >
+                <ul role="menubar">
+                    {navLinks.map((link) => (
+                        <li key={link.name} role="none">
+                            <Link
+                                href={link.href}
+                                role="menuitem"
+                                className={`navbar-mobile-link ${
+                                    isActive(link.href) ? "active" : ""
+                                }`}
+                            >
+                                {link.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </header>
     );
 }
