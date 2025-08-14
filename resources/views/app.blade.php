@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caritas Damayan</title>
 
+    <!-- Website Icon -->
+    <!-- <link rel="icon" type="image" href="/resources/images/logo_red.svg"> -->
+
     {{-- jQuery (required by DataTables) --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
