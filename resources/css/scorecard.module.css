@@ -1,0 +1,178 @@
+/* Scope design tokens to the component wrapper */
+.scorecard {
+    --brand-red: #c61d22;
+    --bar-text: #fff;
+    --line: #e5e7eb;
+    --muted: #6b7280;
+
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* Header */
+.header {
+    background: var(--brand-red);
+    color: var(--bar-text);
+    padding: 14px 18px;
+    font-weight: 700;
+    text-align: center;
+    font-size: 1.15rem;
+}
+
+/* Section frame */
+.section {
+    padding: 0;
+    border-top: 8px solid #f3f4f6;
+}
+
+.bar {
+    background: var(--brand-red);
+    color: var(--bar-text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-weight: 700;
+    letter-spacing: 0.25px;
+}
+
+.barRight {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    height: 34px;
+    padding: 0 10px;
+    width: 220px;
+}
+
+/* Indicator 1 & 2 options */
+.optionsGrid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px 14px 16px;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: #fff;
+    font-weight: 600;
+}
+
+/* Collapsible groups (Indicator 3) */
+.fold {
+    border-top: 1px solid var(--line);
+}
+.foldSummary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8d7da10;
+    padding: 10px 14px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--line);
+}
+.fold[open] .foldSummary {
+    background: #f8d7da33;
+}
+
+/* Case list */
+.caseList {
+    list-style: none;
+    counter-reset: item;
+    margin: 0;
+    padding: 4px 8px 12px;
+}
+.caseItem {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 10px 10px 28px;
+    border-bottom: 1px solid var(--line);
+}
+.caseItem:last-child {
+    border-bottom: 0;
+}
+.caseItem::before {
+    counter-increment: item;
+    content: counter(item) ".";
+    position: absolute;
+    left: 8px;
+    top: 12px;
+    font-weight: 700;
+    color: #374151;
+}
+.caseText {
+    color: #111827;
+    max-width: calc(100% - 40px);
+}
+.caseRadio {
+    margin-top: 2px;
+}
+
+/* Scoring table */
+.scoring {
+    margin: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.scoringTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+.scoringTable th,
+.scoringTable td {
+    border-bottom: 1px solid var(--line);
+    padding: 12px 14px;
+    text-align: left;
+}
+.scoringTable th {
+    background: #f9fafb;
+    font-weight: 700;
+}
+.footnote td {
+    font-size: 0.9rem;
+    color: var(--muted);
+    background: #f9fafb;
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+    .optionsGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 640px) {
+    .bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .barRight {
+        justify-content: flex-end;
+    }
+    .search {
+        width: 100%;
+    }
+    .optionsGrid {
+        grid-template-columns: 1fr;
+    }
+}
