@@ -49,6 +49,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
+        'locked_until'      => 'datetime',
         // if you add archive later:
         // 'archived_at'       => 'datetime',
     ];
