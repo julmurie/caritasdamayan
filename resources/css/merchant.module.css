@@ -347,3 +347,248 @@
     color: white;
     border: 1px solid #b32025;
 }
+/* ===== CHARGE SLIP PAGE (scoped) ===== */
+/* ===== CHARGE SLIP PAGE (scoped) ===== */
+.csContainer {
+    padding: 1.5rem;
+    background: #ffffff;
+    min-height: 100vh;
+    color: #1f2937;
+}
+
+.csHeader h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+.csSubhead {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+.csHairline {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 10px 0 12px;
+}
+
+/* Filters (kept simple like slide) */
+.csFilters {
+    display: grid;
+    grid-template-columns: 220px 1fr 260px 220px;
+    gap: 12px;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+@media (max-width: 980px) {
+    .csFilters {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.csLabel {
+    font-size: 12px;
+    color: #6b7280;
+}
+.csInline {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: center;
+}
+.csInput,
+.csSelect {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #cfcfcf;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.csGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+@media (max-width: 1100px) {
+    .csGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 700px) {
+    .csGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.csEmpty {
+    grid-column: 1/-1;
+    text-align: center;
+    color: #6b7280;
+    padding: 32px 0;
+}
+
+/* Card shell matches slide (thin border, no shadow) */
+.csCard {
+    background: #fff;
+    border: 1px solid #cfcfcf;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Red band header */
+.csCardHead {
+    background: #b32025; /* screenshot red */
+    color: #fff;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-weight: 800;
+}
+.csPatient {
+    text-transform: uppercase;
+}
+.csCode {
+    font-weight: 800;
+}
+
+/* Row with grey chips + right date (exact layout) */
+.csRowArea {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+}
+
+/* solid grey chip: "Charge Slip" */
+.csChipSolid {
+    background: #b7b7b7; /* medium grey like screenshot */
+    color: #ffffff;
+    border: 1px solid #a3a3a3;
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+/* hollow chip: dashed input-look "file view link here..." */
+.csChipHollow {
+    text-decoration: none;
+    background: #ffffff;
+    color: #4b5563;
+    border: 1px dashed #9aa0a6;
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-size: 0.92rem;
+}
+
+/* right-aligned date text with bold weight, same line */
+.csDateRight {
+    justify-self: end;
+    color: #4b5563;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 0.95rem;
+}
+
+.csCardFoot {
+    display: flex; /* simpler than grid here */
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px 12px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.csPill {
+    display: inline-block;
+    width: auto; /* prevent stretching */
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.csPillGreen {
+    background: #1e7e34;
+} /* Redeemed */
+.csPillAmber {
+    background: #b45309;
+} /* Unredeemed */
+
+.csView {
+    background: none;
+    color: #1f2937;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+}
+.csView:hover {
+    text-decoration: underline;
+}
+
+/* Modal (kept same) */
+.csModalBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: grid;
+    place-items: center;
+    z-index: 50;
+}
+.csModal {
+    width: min(520px, 94vw);
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+.csModalTitle {
+    margin: 0;
+    padding: 12px 14px;
+    background: #b32025;
+    color: #fff;
+    font-size: 18px;
+}
+.csModalBody {
+    padding: 14px;
+    display: grid;
+    gap: 8px;
+}
+.csRow {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 10px;
+}
+.csModalFoot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid #e5e7eb;
+}
+.csBtnGhost {
+    background: #eef2f7;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.csBtnPrimary {
+    background: #991b1b;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.csLink {
+    color: #1f2937;
+    text-decoration: underline;
+}
