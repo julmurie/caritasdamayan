@@ -1,0 +1,278 @@
+.container {
+    min-height: 100vh;
+}
+
+.content {
+    max-width: 100%;
+    padding: 2rem;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 1.5rem;
+}
+
+.headerContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.addButton {
+    background-color: #16a34a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    margin-right: 1rem;
+}
+
+.addButton:hover {
+    background-color: #15803d;
+}
+
+.archivedButton {
+    background-color: #374d3e;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.archivedButton:hover {
+    background-color: #233127;
+}
+
+.divider {
+    border-color: #e2e8f0;
+}
+
+.tableContainer {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+:global(.dataTable thead th) {
+    background-color: #c52228;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 1rem;
+    text-align: left;
+}
+
+:global(.dataTables_wrapper .dataTables_scroll) {
+    padding: 1rem 0;
+}
+
+.dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+.tableCell {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+.roleColumn {
+    width: 15%;
+}
+
+.nameColumn {
+    width: 20%;
+}
+
+.branchColumn {
+    width: 20%;
+}
+
+.jobColumn {
+    width: 20%;
+}
+
+.emailColumn {
+    width: 15%;
+}
+
+.actionsColumn {
+    width: 10%;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.editBtn {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    transition: opacity 0.2s;
+}
+
+.editBtn:hover {
+    opacity: 0.9;
+}
+
+.deleteBtn {
+    background-color: #ef4444;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    transition: opacity 0.2s;
+}
+
+.deleteBtn:hover {
+    opacity: 0.9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem;
+    }
+
+    .headerContent {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
+/* Add to your users.module.css */
+@media (max-width: 768px) {
+    .tableContainer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dataTable {
+        min-width: 100%;
+    }
+
+    .tableHeader,
+    .tableCell {
+        white-space: nowrap;
+    }
+}
+
+/* for delete modal */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modalContainer {
+    position: relative;
+    width: 100%;
+    max-width: 28rem;
+    padding: 1rem;
+}
+
+.modalContent {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.closeButton {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: #9ca3af;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+}
+
+.closeButton:hover {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.closeIcon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.warningIcon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 1rem;
+    color: #9ca3af;
+}
+
+.confirmationText {
+    margin-bottom: 1.25rem;
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.confirmButton {
+    background-color: #dc2626;
+    color: white;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.confirmButton:hover {
+    background-color: #b91c1c;
+}
+
+.cancelButton {
+    background-color: white;
+    color: #374151;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.cancelButton:hover {
+    background-color: #f9fafb;
+}

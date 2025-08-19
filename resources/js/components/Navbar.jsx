@@ -1,134 +1,147 @@
-// import { Link, usePage } from '@inertiajs/react';
-
-// export default function Navbar() {
-//   const { auth } = usePage().props;
-//   const currentRoute = usePage().url;
-
-//   const navConfig = {
-//     admin: [
-//       { name: 'Dashboard', href: '/admin/dashboard' },
-//       { name: 'Patients', href: '/admin/patients' },
-//       { name: 'Approvals', href: '/admin/approvals' },
-//       { name: 'Prices', href: '/admin/prices' },
-//       { name: 'Charge Slips', href: '/admin/charge-slips' },
-//       { name: 'SOA', href: '/admin/soa' },
-//       { name: 'Users', href: '/admin/users' },
-//       { name: 'Logs', href: '/admin/logs' },
-//     ],
-//     clinic: [
-//       { name: 'Dashboard', href: '/clinic/dashboard' },
-//       { name: 'Patients', href: '/clinic/patients' },
-//       { name: 'Charge Slips', href: '/clinic/charge-slips' },
-//       { name: 'Prices', href: '/clinic/prices' },
-//     ],
-//     merchant: [
-//       { name: 'Dashboard', href: '/merchant/dashboard' },
-//       { name: 'Prices', href: '/merchant/prices' },
-//       { name: 'Charge Slips', href: '/merchant/charge-slips' },
-//       { name: 'SOA', href: '/merchant/soa' },
-//     ],
-//     accounting: [
-//       { name: 'Dashboard', href: '/accounting/dashboard' },
-//       { name: 'SOA', href: '/accounting/soa' },
-//     ],
-//     treasury: [
-//       { name: 'Dashboard', href: '/treasury/dashboard' },
-//       { name: 'SOA', href: '/treasury/soa' },
-//     ],
-//   };
-
-//   const role = auth?.user?.role;
-//   const links = navConfig[role] || [];
-
-//   return (
-//     <nav className="bg-white border-b border-gray-200 shadow-sm">
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//         <div className="flex justify-between h-16 items-center">
-//           <div className="flex space-x-4">
-//             {links.map((link) => {
-//               const isActive = currentRoute.startsWith(link.href);
-//               return (
-//                 <Link
-//                   key={link.name}
-//                   href={link.href}
-//                   className={`inline-flex items-center px-3 py-2 border-b-2 text-sm font-medium transition-all ${
-//                     isActive
-//                       ? 'border-blue-600 text-blue-700'
-//                       : 'border-transparent text-gray-600 hover:border-blue-300 hover:text-blue-600'
-//                   } ${link.primary ? 'font-bold' : ''}`}
-//                 >
-//                   {link.name}
-//                 </Link>
-//               );
-//             })}
-//           </div>
-
-//           <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-700">
-//             <span>{auth.user.name}</span>
-//             <span className="text-gray-400">|</span>
-//             <span className="capitalize">{role}</span>
-//           </div>
-//         </div>
-//       </div>
-//     </nav>
-//   );
-// }
+import { useState, useEffect, useCallback } from "react";
+import { router } from "@inertiajs/react";
 import { Link, usePage } from "@inertiajs/react";
-import CaritasLogo from "../../images/CaritasManilaLogo_White.svg"; // Updated import
+import CaritasLogo from "../../images/CaritasManilaLogo_White.svg";
 
 export default function Navbar() {
-    const currentRoute = usePage().url;
+    const { url, props } = usePage();
+    const roleFromProps = props?.auth?.user?.role ?? null;
 
-    const navLinks = [
-        { name: "Dashboard", href: "/admin/dashboard" },
-        { name: "Patient", href: "/admin/patients" },
-        { name: "Approvals", href: "/admin/approvals" },
-        { name: "Prices", href: "/admin/prices" },
-        { name: "Charge Slip", href: "/admin/charge-slips" },
-        { name: "SOA", href: "/admin/soa" },
-        { name: "Users", href: "/admin/users" },
-        { name: "Logs", href: "/admin/logs" },
-    ];
+    const [open, setOpen] = useState(false);
+    const [role, setRole] = useState(roleFromProps);
+
+    // derive role from Inertia props first, fallback to localStorage ("me")
+    useEffect(() => {
+        if (roleFromProps) {
+            setRole(roleFromProps);
+            return;
+        }
+        try {
+            const me = JSON.parse(localStorage.getItem("me") || "null");
+            if (me?.role) setRole(me.role);
+        } catch {
+            /* ignore */
+        }
+    }, [roleFromProps]);
+
+    // close mobile when crossing breakpoint (match your CSS: 1024px)
+    useEffect(() => {
+        const mq = window.matchMedia("(min-width: 1024px)");
+        const onChange = (e) => e.matches && setOpen(false);
+        mq.addEventListener("change", onChange);
+        return () => mq.removeEventListener("change", onChange);
+    }, []);
+
+    // close on route change
+    useEffect(() => setOpen(false), [url]);
+
+    // close on ESC
+    const onKeyDown = useCallback(
+        (e) => e.key === "Escape" && setOpen(false),
+        []
+    );
+    useEffect(() => {
+        if (!open) return;
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [open, onKeyDown]);
+
+    // role-based links (exactly from your comment)
+    const navConfig = {
+        admin: [
+            { name: "Dashboard", href: "/admin/dashboard" },
+            { name: "Patients", href: "/admin/patients" },
+            { name: "Approvals", href: "/admin/approvals" },
+            { name: "Prices", href: "/admin/prices" },
+            { name: "Charge Slips", href: "/admin/charge-slips" },
+            { name: "SOA", href: "/admin/soa" },
+            { name: "Users", href: "/admin/users" },
+            { name: "Logs", href: "/admin/logs" },
+        ],
+        clinic: [
+            { name: "Dashboard", href: "/clinic/dashboard" },
+            { name: "Patients", href: "/clinic/patients" },
+            { name: "Charge Slips", href: "/clinic/charge-slips" },
+            { name: "Prices", href: "/clinic/prices" },
+        ],
+        merchant: [
+            { name: "Dashboard", href: "/merchant/dashboard" },
+            { name: "Prices", href: "/merchant/prices" },
+            { name: "Charge Slips", href: "/merchant/charge-slips" },
+            { name: "SOA", href: "/merchant/soa" },
+        ],
+        accounting: [
+            { name: "Dashboard", href: "/accounting/dashboard" },
+            { name: "SOA", href: "/accounting/soa" },
+        ],
+        treasury: [
+            { name: "Dashboard", href: "/treasury/dashboard" },
+            { name: "SOA", href: "/treasury/soa" },
+        ],
+    };
+
+    const links = role && navConfig[role] ? navConfig[role] : [];
+
+    const isActive = (href) => url.startsWith(href);
+    const logoHref = links.length ? links[0].href : "/";
+
+    function handleLogout() {
+        if (confirm("Are you sure you want to log out?")) {
+            router.post(
+                "/logout",
+                {},
+                {
+                    preserveScroll: true,
+                }
+            );
+        }
+    }
 
     return (
-        <header>
-            <nav className="flex items-center justify-between h-16 px-6">
-                <div className="flex items-center space-x-20">
-                    {/* Logo wrapper */}
-                    <div className="h-10 w-auto">
-                        <img
-                            src={CaritasLogo}
-                            alt="Caritas Manila Logo"
-                            className="h-full w-full object-contain"
-                        />
-                    </div>
+        <header className="navbar-header">
+            <nav
+                className="navbar-container"
+                role="navigation"
+                aria-label="Main"
+            >
+                {/* Left: Logo + Desktop menu */}
+                <div className="navbar-left">
+                    <img
+                        src={CaritasLogo}
+                        alt="Caritas Manila Logo"
+                        className="navbar-logo"
+                    />
 
-                    {/* Nav Links wrapper */}
-                    <div className="flex items-center space-x-6">
-                        {navLinks.map((link) => {
-                            const isActive = currentRoute.startsWith(link.href);
-                            return (
+                    <ul className="navbar-menu" role="menubar">
+                        {links.map((link) => (
+                            <li key={link.name} role="none">
                                 <Link
-                                    key={link.name}
                                     href={link.href}
-                                    className="nav-link"
+                                    role="menuitem"
+                                    className={`navbar-link ${
+                                        isActive(link.href) ? "active" : ""
+                                    }`}
                                 >
                                     {link.name}
                                 </Link>
-                            );
-                        })}
-                    </div>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-                <div className="flex items-center space-x-5">
-                    {/* User dropdown or profile */}
-                    <Link href="/profile" aria-label="User Profile">
+
+                {/* Right: icons (always visible) + hamburger */}
+                <div className="navbar-right">
+                    <Link
+                        href="/profile"
+                        aria-label="User Profile"
+                        className="navbar-icon-link"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            strokeWidth={1.5}
+                            strokeWidth="1.5"
                             stroke="currentColor"
-                            className="size-6 text-white"
                         >
                             <path
                                 strokeLinecap="round"
@@ -138,11 +151,13 @@ export default function Navbar() {
                         </svg>
                     </Link>
 
-                    {/* Notification bell */}
-                    <Link href="/notifications" aria-label="Notifications">
+                    <Link
+                        href="/notifications"
+                        aria-label="Notifications"
+                        className="navbar-icon-link"
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="icon size-6 text-white"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth="1.5"
@@ -156,25 +171,91 @@ export default function Navbar() {
                         </svg>
                     </Link>
 
-                    {/* Settings */}
-                    <Link href="/settings" aria-label="Settings">
+                    {/* Logout as a button to clear token */}
+                    <button
+                        onClick={handleLogout}
+                        aria-label="Logout"
+                        className="navbar-icon-link"
+                        style={{ background: "transparent", border: 0 }}
+                    >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.5}
                             stroke="currentColor"
-                            className="size-6 text-white"
+                            className="size-6"
                         >
                             <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15M12 9l3 3m0 0-3 3m3-3H2.25"
+                                d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"
                             />
                         </svg>
-                    </Link>
+                    </button>
+
+                    {/* Hamburger (CSS controls visibility at <=1024px) */}
+                    <button
+                        className="navbar-hamburger"
+                        onClick={() => setOpen((v) => !v)}
+                        aria-label="Toggle menu"
+                        aria-controls="mobileMenu"
+                        aria-expanded={open}
+                    >
+                        {open ? (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        ) : (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"
+                                />
+                            </svg>
+                        )}
+                    </button>
                 </div>
             </nav>
+
+            {/* Mobile dropdown (role-based links) */}
+            <div
+                id="mobileMenu"
+                className={`navbar-mobile ${open ? "open" : ""}`}
+            >
+                <ul role="menubar">
+                    {links.map((link) => (
+                        <li key={link.name} role="none">
+                            <Link
+                                href={link.href}
+                                role="menuitem"
+                                className={`navbar-mobile-link ${
+                                    isActive(link.href) ? "active" : ""
+                                }`}
+                            >
+                                {link.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </header>
     );
 }
