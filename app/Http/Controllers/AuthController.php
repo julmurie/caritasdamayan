@@ -141,16 +141,17 @@ public function login(Request $request)
 
     $request->session()->regenerate();
 
-    $to = match (\Auth::user()->role ?? null) {
-        'admin'      => '/admin/dashboard',
-        'clinic'     => '/clinic/dashboard',
-        'merchant'   => '/merchant/dashboard',
-        'accounting' => '/accounting/dashboard',
-        'treasury'   => '/treasury/dashboard',
-        default      => '/admin/dashboard',
-    };
+  $to = match (\Auth::user()->role ?? null) {
+    'admin'      => route('admin.dashboard'),
+    'clinic'     => route('clinic.dashboard'),
+    'merchant'   => route('merchant.dashboard'),
+    'accounting' => route('accounting.dashboard'),
+    'treasury'   => route('treasury.dashboard'),
+    default      => route('admin.dashboard'),
+};
 
-    return redirect()->intended($to)->setStatusCode(303);
+return redirect()->intended($to)->setStatusCode(303);
+
 }
 
 
