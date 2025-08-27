@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Caritas Damayan</title>
-
-    <!-- Website Icon -->
-    <!-- <link rel="icon" type="image" href="/resources/images/logo_red.svg"> -->
+    <title inertia>Caritas Damayan</title>
 
     {{-- jQuery (required by DataTables) --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -33,7 +30,7 @@
     @vite('resources/js/app.jsx')
     @inertiaHead
 </head>
-<body>
+<body class="font-sans antialiased">
     @inertia
 </body>
 </html>

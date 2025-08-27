@@ -4,11 +4,18 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Http\Controllers\AuthController;
 
-// ---------- Public ----------
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ServiceController;
+
+/*
+|--------------------------------------------------------------------------
+| Public (Login)
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function (Request $request) {
-    // If logged in and not explicitly switching, go to the role dashboard
+    // If already logged in (and not explicitly switching), redirect by role
     if (Auth::check() && !$request->boolean('switch')) {
         $role = Auth::user()->role ?? 'admin';
 
@@ -24,24 +31,29 @@ Route::get('/', function (Request $request) {
         return redirect($to);
     }
 
-    // Render login with no-store headers (prevents cached page on back nav)
+    // Render login with no-store headers so cached login won't show
     $resp = Inertia::render('Login')->toResponse($request);
     return $resp->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                 ->header('Pragma', 'no-cache')
                 ->header('Expires', '0');
 })->name('login');
 
-// Optional back-compat
+// Back-compat: /login -> /
 Route::redirect('/login', '/');
 
-// Session (cookie) login POST — only for guests
+// Session (cookie) login — only for guests
 Route::middleware('guest')->group(function () {
-    Route::post('/session-login', [AuthController::class, 'sessionLogin']);
+    Route::post('/session-login', [AuthController::class, 'sessionLogin'])->name('session.login');
 });
 
-// ---------- Protected (must be logged in) ----------
+/*
+|--------------------------------------------------------------------------
+| Protected (must be logged in)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
-    // Admin
+
+    /* ---------------- Admin ---------------- */
     Route::prefix('admin')->group(function () {
         Route::inertia('/dashboard', 'Admin/Dashboard')->name('admin.dashboard');
         Route::inertia('/patients', 'Admin/Patients')->name('admin.patients');
@@ -53,34 +65,55 @@ Route::middleware('auth')->group(function () {
         Route::inertia('/logs', 'Admin/Logs')->name('admin.logs');
     });
 
-    // Clinic
+    /* ---------------- Clinic ---------------- */
     Route::prefix('clinic')->group(function () {
-        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('clinic.dashboard');
-        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('clinic.patients');
-        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('clinic.charge_slips');
-        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('clinic.prices');
+        // Adjust to "ClinicVolunteer" if that matches your folder structure
+        Route::inertia('/dashboard', 'Clinic/Dashboard')->name('clinic.dashboard');
+        // Uncomment if these pages exist
+        // Route::inertia('/patients', 'Clinic/Patients')->name('clinic.patients');
+        // Route::inertia('/charge-slips', 'Clinic/ChargeSlips')->name('clinic.charge_slips');
+        // Route::inertia('/prices', 'Clinic/Prices')->name('clinic.prices');
     });
 
-    // Merchant
+    /* ---------------- Partner Merchant ---------------- */
     Route::prefix('merchant')->group(function () {
         Route::inertia('/dashboard', 'PartnerMerchant/Dashboard')->name('merchant.dashboard');
-        Route::inertia('/prices', 'PartnerMerchant/Prices')->name('merchant.prices');
+        Route::inertia('/services',  'PartnerMerchant/Services')->name('merchant.services');
+        Route::inertia('/soa',       'PartnerMerchant/SOA')->name('merchant.soa');
         Route::inertia('/charge-slips', 'PartnerMerchant/ChargeSlips')->name('merchant.charge_slips');
-        Route::inertia('/soa', 'PartnerMerchant/SOA')->name('merchant.soa');
+
+        // Prices page is DB-driven (controller) — avoids duplicate Inertia route
+        Route::get('/prices', [ProductController::class, 'index'])->name('products.index');
+
+        // -------- Products (DB / DataTables / CRUD) --------
+        Route::get('/products/datatable', [ProductController::class, 'datatable'])->name('products.datatable');
+        Route::post('/products',          [ProductController::class, 'store'])->name('products.store');
+        Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
+        Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+        Route::get('/products/archived',  [ProductController::class, 'archived'])->name('products.archived.index');
+
+        // -------- Services (DB / DataTables / CRUD) --------
+        Route::get('/services/datatable', [ServiceController::class, 'datatable'])->name('services.datatable');
+        Route::post('/services',          [ServiceController::class, 'store'])->name('services.store');
+        Route::patch('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}/archive', [ServiceController::class, 'archive'])->name('services.archive');
+        Route::post('/services/{id}/restore', [ServiceController::class, 'restore'])->name('services.restore');
+        Route::get('/services/archived',  [ServiceController::class, 'archived'])->name('services.archived.index');
     });
 
-    // Accounting
+    /* ---------------- Accounting ---------------- */
     Route::prefix('accounting')->group(function () {
         Route::inertia('/dashboard', 'Accounting/Dashboard')->name('accounting.dashboard');
         Route::inertia('/soa', 'Accounting/SOA')->name('accounting.soa');
     });
 
-    // Treasury
+    /* ---------------- Treasury ---------------- */
     Route::prefix('treasury')->group(function () {
         Route::inertia('/dashboard', 'Treasury/Dashboard')->name('treasury.dashboard');
         Route::inertia('/soa', 'Treasury/SOA')->name('treasury.soa');
     });
 
-    // Logout (session)
+    /* ---------------- Logout ---------------- */
     Route::post('/logout', [AuthController::class, 'sessionLogout'])->name('logout');
 });
