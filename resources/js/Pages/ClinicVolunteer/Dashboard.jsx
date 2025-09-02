@@ -4,6 +4,7 @@ function Dashboard() {
     return (
         <div>
             <Navbar />
+            <p>welcome volunteer</p>
         </div>
     );
 }
