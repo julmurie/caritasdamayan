@@ -15,9 +15,11 @@ use App\Http\Controllers\ServiceController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function (Request $request) {
-    // If already logged in (and not explicitly switching), redirect by role
+    // Clear any stale intended URL (prevents cross-role redirects after logout)
+    $request->session()->forget('url.intended');
+
     if (Auth::check() && !$request->boolean('switch')) {
-        $role = Auth::user()->role ?? 'admin';
+            $role = Auth::user()->role ?? 'admin';
 
         $to = match ($role) {
             'admin'      => route('admin.dashboard'),
@@ -31,12 +33,12 @@ Route::get('/', function (Request $request) {
         return redirect($to);
     }
 
-    // Render login with no-store headers so cached login won't show
     $resp = Inertia::render('Login')->toResponse($request);
     return $resp->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                 ->header('Pragma', 'no-cache')
                 ->header('Expires', '0');
 })->name('login');
+
 
 // Back-compat: /login -> /
 Route::redirect('/login', '/');
@@ -68,11 +70,11 @@ Route::middleware('auth')->group(function () {
     /* ---------------- Clinic ---------------- */
     Route::prefix('clinic')->group(function () {
         // Adjust to "ClinicVolunteer" if that matches your folder structure
-        Route::inertia('/dashboard', 'Clinic/Dashboard')->name('clinic.dashboard');
+        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('clinic.dashboard');
         // Uncomment if these pages exist
-        // Route::inertia('/patients', 'Clinic/Patients')->name('clinic.patients');
-        // Route::inertia('/charge-slips', 'Clinic/ChargeSlips')->name('clinic.charge_slips');
-        // Route::inertia('/prices', 'Clinic/Prices')->name('clinic.prices');
+        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('clinic.patients');
+        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('clinic.charge_slips');
+        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('clinic.prices');
     });
 
     /* ---------------- Partner Merchant ---------------- */

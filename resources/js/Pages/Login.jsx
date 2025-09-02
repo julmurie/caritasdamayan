@@ -1,5 +1,5 @@
 // resources/js/Pages/Login.jsx
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import LogoWithTextRed from "../../images/logo_with_text_red.svg";
 import LogoForLogin from "../../images/logo_for_login.svg";
@@ -46,17 +46,6 @@ export default function Login() {
             s % 60
         ).padStart(2, "0")}`;
 
-    const roleRedirect = (role) => {
-        const map = {
-            admin: "/admin/dashboard",
-            clinic: "/clinic/dashboard",
-            merchant: "/merchant/dashboard",
-            accounting: "/accounting/dashboard",
-            treasury: "/treasury/dashboard",
-        };
-        return map[role] || "/admin/dashboard";
-    };
-
     async function handleSubmit(e) {
         e.preventDefault();
         if (loading || locked) return;
@@ -73,7 +62,7 @@ export default function Login() {
         setLoading(true);
         try {
             // 1) API login to enforce attempts/lock
-            const apiRes = await fetch("http://127.0.0.1:8000/api/login", {
+            const apiRes = await fetch("/api/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -85,12 +74,12 @@ export default function Login() {
             const apiData = await apiRes.json().catch(() => ({}));
 
             if (!apiRes.ok) {
+                // Locked now (423) or just hit 0 attempts (401 with retry info)
                 if (
                     apiRes.status === 423 ||
                     apiData?.retry_after ||
                     apiData?.retry_at
                 ) {
-                    // Locked now (423) or just hit 0 attempts (401 w/ retry info)
                     const retryAtIso = apiData?.retry_at;
                     const retryAfterSec = apiData?.retry_after;
                     const until = retryAtIso
@@ -121,23 +110,27 @@ export default function Login() {
                 return;
             }
 
-            // 2) Establish session via /session-login
+            // 2) Establish session via /session-login (server decides redirect)
             const csrf =
                 document.querySelector('meta[name="csrf-token"]')?.content ||
                 "";
-            await fetch("/session-login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": csrf,
-                    Accept: "text/html,application/xhtml+xml,application/xml",
-                },
-                credentials: "same-origin",
-                body: JSON.stringify({ email, password: pwd }),
-            });
 
-            // 3) Redirect by role (from /api/login response)
-            window.location.href = roleRedirect(apiData?.user?.role);
+            await new Promise((resolve, reject) => {
+                router.post(
+                    "/session-login",
+                    { email, password: pwd, _token: csrf },
+                    {
+                        // 👇 added explicit CSRF header (small but important)
+                        headers: { "X-CSRF-TOKEN": csrf },
+                        onSuccess: () => resolve(),
+                        onError: () => {
+                            setBannerErr("Session login failed");
+                            reject(new Error("Session login failed"));
+                        },
+                        preserveScroll: true,
+                    }
+                );
+            });
         } catch (err) {
             setBannerErr(err?.message || "Login failed");
         } finally {
@@ -310,6 +303,7 @@ export default function Login() {
                                         : bannerErr}
                                 </p>
                             )}
+
                             {/* Login button */}
                             <div className="grid w-full">
                                 <button
