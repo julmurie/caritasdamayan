@@ -373,9 +373,9 @@ function Users() {
                                 >
                                     + Add User
                                 </button>
-                                <button className={styles.archivedButton}>
+                                {/* <button className={styles.archivedButton}>
                                     Archives
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                         <hr className={styles.divider} />
