@@ -23,7 +23,7 @@ Route::get('/', function (Request $request) {
 
         $to = match ($role) {
             'admin'      => route('admin.dashboard'),
-            'clinic'     => route('clinic.dashboard'),
+            'volunteer'     => route('clinic.dashboard'),
             'merchant'   => route('merchant.dashboard'),
             'accounting' => route('accounting.dashboard'),
             'treasury'   => route('treasury.dashboard'),
@@ -56,7 +56,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     /* ---------------- Admin ---------------- */
-    Route::prefix('admin')->group(function () {
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::inertia('/dashboard', 'Admin/Dashboard')->name('admin.dashboard');
         Route::inertia('/patients', 'Admin/Patients')->name('admin.patients');
         Route::inertia('/approvals', 'Admin/Approvals')->name('admin.approvals');
@@ -68,17 +68,19 @@ Route::middleware('auth')->group(function () {
     });
 
     /* ---------------- Clinic ---------------- */
-    Route::prefix('clinic')->group(function () {
+    Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
         // Adjust to "ClinicVolunteer" if that matches your folder structure
-        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('clinic.dashboard');
+        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
         // Uncomment if these pages exist
-        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('clinic.patients');
-        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('clinic.charge_slips');
-        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('clinic.prices');
+        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
+        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');
+        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('volunteer.prices');
+
+        Route::inertia('/scorecard', 'components/ScoreCard')->name('volunteer.scorecard');
     });
 
     /* ---------------- Partner Merchant ---------------- */
-    Route::prefix('merchant')->group(function () {
+    Route::prefix('merchant')->middleware('role:merchant')->group(function () {
         Route::inertia('/dashboard', 'PartnerMerchant/Dashboard')->name('merchant.dashboard');
         Route::inertia('/services',  'PartnerMerchant/Services')->name('merchant.services');
         Route::inertia('/soa',       'PartnerMerchant/SOA')->name('merchant.soa');
@@ -105,13 +107,13 @@ Route::middleware('auth')->group(function () {
     });
 
     /* ---------------- Accounting ---------------- */
-    Route::prefix('accounting')->group(function () {
+    Route::prefix('accounting')->middleware('role:accounting')->group(function () {
         Route::inertia('/dashboard', 'Accounting/Dashboard')->name('accounting.dashboard');
         Route::inertia('/soa', 'Accounting/SOA')->name('accounting.soa');
     });
 
     /* ---------------- Treasury ---------------- */
-    Route::prefix('treasury')->group(function () {
+    Route::prefix('treasury')->middleware('role:treasury')->group(function () {
         Route::inertia('/dashboard', 'Treasury/Dashboard')->name('treasury.dashboard');
         Route::inertia('/soa', 'Treasury/SOA')->name('treasury.soa');
     });
