@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SOAController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,21 +16,18 @@ use App\Http\Controllers\ServiceController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function (Request $request) {
-    // Clear any stale intended URL (prevents cross-role redirects after logout)
     $request->session()->forget('url.intended');
 
     if (Auth::check() && !$request->boolean('switch')) {
-            $role = Auth::user()->role ?? 'admin';
-
+        $role = Auth::user()->role ?? 'admin';
         $to = match ($role) {
             'admin'      => route('admin.dashboard'),
-            'clinic'     => route('clinic.dashboard'),
+            'volunteer'     => route('volunteer.dashboard'),
             'merchant'   => route('merchant.dashboard'),
             'accounting' => route('accounting.dashboard'),
             'treasury'   => route('treasury.dashboard'),
             default      => route('admin.dashboard'),
         };
-
         return redirect($to);
     }
 
@@ -39,11 +37,8 @@ Route::get('/', function (Request $request) {
                 ->header('Expires', '0');
 })->name('login');
 
-
-// Back-compat: /login -> /
 Route::redirect('/login', '/');
 
-// Session (cookie) login — only for guests
 Route::middleware('guest')->group(function () {
     Route::post('/session-login', [AuthController::class, 'sessionLogin'])->name('session.login');
 });
@@ -62,58 +57,92 @@ Route::middleware('auth')->group(function () {
         Route::inertia('/approvals', 'Admin/Approvals')->name('admin.approvals');
         Route::inertia('/prices', 'Admin/Prices')->name('admin.prices');
         Route::inertia('/charge-slips', 'Admin/ChargeSlips')->name('admin.charge_slips');
-        Route::inertia('/soa', 'Admin/SOA')->name('admin.soa');
+        Route::inertia('/soa', 'Admin/SOA')->name('admin.soa');   // PAGE ONLY
         Route::inertia('/users', 'Admin/Users')->name('admin.users');
         Route::inertia('/logs', 'Admin/Logs')->name('admin.logs');
+
+        // SOA API
+        Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('admin.soa.datatable');
+        Route::post  ('/soa',              [SOAController::class, 'store'])->name('admin.soa.store');
+        Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('admin.soa.update');
+        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('admin.soa.destroy');
+        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('admin.soa.restore');
     });
 
     /* ---------------- Clinic ---------------- */
-    Route::prefix('clinic')->group(function () {
-        // Adjust to "ClinicVolunteer" if that matches your folder structure
-        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('clinic.dashboard');
-        // Uncomment if these pages exist
-        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('clinic.patients');
-        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('clinic.charge_slips');
-        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('clinic.prices');
+    Route::prefix('volunteer')->group(function () {
+        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
+        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
+        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');
+        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('volunteer.prices');
+        Route::inertia('/soa', 'ClinicVolunteer/SOA')->name('volunteer.soa'); // PAGE ONLY
+
+        // SOA API
+        Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('volunteer.soa.datatable');
+        Route::post  ('/soa',              [SOAController::class, 'store'])->name('volunteer.soa.store');
+        Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('volunteer.soa.update');
+        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('volunteer.soa.destroy');
+        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('volunteer.soa.restore');
     });
 
     /* ---------------- Partner Merchant ---------------- */
     Route::prefix('merchant')->group(function () {
         Route::inertia('/dashboard', 'PartnerMerchant/Dashboard')->name('merchant.dashboard');
         Route::inertia('/services',  'PartnerMerchant/Services')->name('merchant.services');
-        Route::inertia('/soa',       'PartnerMerchant/SOA')->name('merchant.soa');
         Route::inertia('/charge-slips', 'PartnerMerchant/ChargeSlips')->name('merchant.charge_slips');
+        Route::inertia('/soa',       'PartnerMerchant/SOA')->name('merchant.soa'); // PAGE ONLY
 
-        // Prices page is DB-driven (controller) — avoids duplicate Inertia route
+        // Prices (existing)
         Route::get('/prices', [ProductController::class, 'index'])->name('products.index');
 
-        // -------- Products (DB / DataTables / CRUD) --------
-        Route::get('/products/datatable', [ProductController::class, 'datatable'])->name('products.datatable');
-        Route::post('/products',          [ProductController::class, 'store'])->name('products.store');
-        Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        // Products (existing)
+        Route::get   ('/products/datatable', [ProductController::class, 'datatable'])->name('products.datatable');
+        Route::post  ('/products',           [ProductController::class, 'store'])->name('products.store');
+        Route::patch ('/products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
-        Route::post('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-        Route::get('/products/archived',  [ProductController::class, 'archived'])->name('products.archived.index');
+        Route::post  ('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
+        Route::get   ('/products/archived',  [ProductController::class, 'archived'])->name('products.archived.index');
 
-        // -------- Services (DB / DataTables / CRUD) --------
-        Route::get('/services/datatable', [ServiceController::class, 'datatable'])->name('services.datatable');
-        Route::post('/services',          [ServiceController::class, 'store'])->name('services.store');
-        Route::patch('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+        // Services (existing)
+        Route::get   ('/services/datatable', [ServiceController::class, 'datatable'])->name('services.datatable');
+        Route::post  ('/services',           [ServiceController::class, 'store'])->name('services.store');
+        Route::patch ('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::delete('/services/{service}/archive', [ServiceController::class, 'archive'])->name('services.archive');
-        Route::post('/services/{id}/restore', [ServiceController::class, 'restore'])->name('services.restore');
-        Route::get('/services/archived',  [ServiceController::class, 'archived'])->name('services.archived.index');
+        Route::post  ('/services/{id}/restore', [ServiceController::class, 'restore'])->name('services.restore');
+        Route::get   ('/services/archived',  [ServiceController::class, 'archived'])->name('services.archived.index');
+
+        // SOA API
+        Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('merchant.soa.datatable');
+        Route::post  ('/soa',              [SOAController::class, 'store'])->name('merchant.soa.store');
+        Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('merchant.soa.update');
+        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('merchant.soa.destroy');
+        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('merchant.soa.restore');
     });
 
     /* ---------------- Accounting ---------------- */
     Route::prefix('accounting')->group(function () {
         Route::inertia('/dashboard', 'Accounting/Dashboard')->name('accounting.dashboard');
-        Route::inertia('/soa', 'Accounting/SOA')->name('accounting.soa');
+        Route::inertia('/soa',       'Accounting/SOA')->name('accounting.soa'); // PAGE ONLY
+
+        // SOA API
+        Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('accounting.soa.datatable');
+        Route::post  ('/soa',              [SOAController::class, 'store'])->name('accounting.soa.store');
+        Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('accounting.soa.update');
+        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('accounting.soa.destroy');
+        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('accounting.soa.restore');
     });
 
     /* ---------------- Treasury ---------------- */
     Route::prefix('treasury')->group(function () {
         Route::inertia('/dashboard', 'Treasury/Dashboard')->name('treasury.dashboard');
-        Route::inertia('/soa', 'Treasury/SOA')->name('treasury.soa');
+        Route::inertia('/soa',       'Treasury/SOA')->name('treasury.soa'); // PAGE ONLY
+
+        // SOA API
+        Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('treasury.soa.datatable');
+        Route::post  ('/soa',              [SOAController::class, 'store'])->name('treasury.soa.store');
+        Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('treasury.soa.update');
+        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('treasury.soa.destroy');
+        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('treasury.soa.restore');
     });
 
     /* ---------------- Logout ---------------- */

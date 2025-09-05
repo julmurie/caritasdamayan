@@ -145,7 +145,7 @@ class AuthController extends Controller
 
         $to = match ($role) {
             'admin'                                   => route('admin.dashboard'),
-            'clinic', 'volunteer', 'clinic_volunteer' => route('clinic.dashboard'),
+            'clinic', 'volunteer', 'clinic_volunteer' => route('volunteer.dashboard'),
             'merchant'                                => route('merchant.dashboard'),
             'accounting'                              => route('accounting.dashboard'),
             'treasury'                                => route('treasury.dashboard'),

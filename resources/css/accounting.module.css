@@ -1,0 +1,132 @@
+/* ---------- Page shell ---------- */
+.soaContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 20px 40px;
+    background: #fff;
+    color: #111;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.soaTitle {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.soaSubtext {
+    margin: 2px 0 14px;
+    color: #666;
+    font-size: 14px;
+}
+
+/* ---------- Buttons (top bar) ---------- */
+.soaBtnRed {
+    appearance: none;
+    border: 1px solid #7f1515;
+    background: #b22222; /* Caritas red */
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.soaBtnRed:hover {
+    background: #981b1b;
+}
+
+.soaBtnGreen {
+    appearance: none;
+    border: 1px solid #116b2a;
+    background: #22c55e;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.soaBtnGreen:hover {
+    background: #16a34a;
+}
+
+.soaReset {
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #2563eb;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.soaReset:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Table ---------- */
+/* Full grid in BLACK (outer + inner lines) */
+.soaTable {
+    width: 100%;
+    border-collapse: collapse; /* ensures one-pixel grid */
+    font-size: 13px;
+    border: 1px solid #000; /* outer border black */
+}
+
+.soaTable thead th,
+.soaTable tbody td {
+    border: 1px solid #000; /* every cell black */
+}
+
+/* Header (red) */
+.soaTable thead tr:first-child th {
+    background: #b22222;
+    color: #fff;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid #000; /* keep black grid look */
+    white-space: nowrap;
+}
+
+/* Filter row (light gray with recessed inputs) */
+.soaTable thead tr:nth-child(2) th {
+    background: #e9eaeb; /* light gray like screenshot */
+    padding: 8px 10px;
+}
+
+.soaTable thead tr:nth-child(2) th input {
+    width: 100%;
+    font: inherit;
+    color: #111;
+    padding: 6px 8px;
+    border: 1px solid #cfcfcf;
+    border-radius: 3px;
+    background: #f5f5f5;
+    outline: none;
+}
+
+/* Body cells */
+.soaTable tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    background: #fff;
+}
+
+/* Right-align amounts column if you reuse this class */
+.numRight {
+    text-align: right;
+}
+
+/* Action buttons inside the Action column */
+.soaTable .btn-edit,
+.soaTable .btn-delete {
+    border: 1px solid #000; /* keep black grid vibe */
+    background: #fff;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+}
+.soaTable .btn-edit:hover,
+.soaTable .btn-delete:hover {
+    background: #f3f3f3;
+}

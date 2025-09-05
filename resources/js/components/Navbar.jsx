@@ -58,11 +58,11 @@ export default function Navbar() {
             { name: "Users", href: "/admin/users" },
             { name: "Logs", href: "/admin/logs" },
         ],
-        clinic: [
-            { name: "Dashboard", href: "/clinic/dashboard" },
-            { name: "Patients", href: "/clinic/patients" },
-            { name: "Charge Slips", href: "/clinic/charge-slips" },
-            { name: "Prices", href: "/clinic/prices" },
+        volunteer: [
+            { name: "Dashboard", href: "/volunteer/dashboard" },
+            { name: "Patients", href: "/volunteer/patients" },
+            { name: "Charge Slips", href: "/volunteer/charge-slips" },
+            { name: "Prices", href: "/volunteer/prices" },
         ],
         merchant: [
             { name: "Dashboard", href: "/merchant/dashboard" },
