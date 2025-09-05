@@ -1,10 +1,12 @@
-import Navbar from "@/components/Navbar";
-function SOA() {
+import React from "react";
+import Navbar from "../../components/Navbar";
+import SoaLayout from "../../components/SoaLayout";
+
+export default function TreasurySOA() {
     return (
-        <div>
+        <>
             <Navbar />
-        </div>
+            <SoaLayout title="SOA" showAddButton={false} />
+        </>
     );
 }
-
-export default SOA;

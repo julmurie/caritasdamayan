@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SOA;
+use App\Models\Soa; // <-- use the proper model class name
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,25 +11,21 @@ class SOAController extends Controller
     // Render page (Inertia)
     public function index(Request $request)
     {
-        // You can pull merchant from auth/profile if you have that
         $merchant = $request->user()->merchant_name ?? 'Generika';
 
         return Inertia::render('Merchant/SOA', [
             'merchant'   => $merchant,
-            // Optional: preload nothing; DataTables will fetch via ajax
-            'soaRecords' => [], 
+            'soaRecords' => [], // DataTables fetches via ajax
         ]);
     }
 
     // DataTables server-side JSON
     public function datatable(Request $request)
     {
-        // Basic DataTables params
         $draw   = (int) $request->input('draw', 1);
         $start  = (int) $request->input('start', 0);
         $length = (int) $request->input('length', 20);
 
-        // Base query
         $query = Soa::query();
 
         // Global search
@@ -37,15 +33,19 @@ class SOAController extends Controller
         if (!empty($globalSearch)) {
             $query->where(function ($q) use ($globalSearch) {
                 $q->where('number', 'like', "%{$globalSearch}%")
+                  ->orWhere('soa_date', 'like', "%{$globalSearch}%")
                   ->orWhere('cover_period', 'like', "%{$globalSearch}%")
                   ->orWhere('charge_slip', 'like', "%{$globalSearch}%")
+                  ->orWhere('attachment', 'like', "%{$globalSearch}%")
                   ->orWhere('status', 'like', "%{$globalSearch}%");
             });
         }
 
-        // Column-specific filters (from header inputs)
-        // DataTables sends columns[i][search][value]
-        $columns = $request->input('columns', []);
+        // (You can keep column-specific filters if you still send them; skipped here.)
+
+        $recordsTotal = Soa::count();
+
+        // Ordering
         $map = [
             0 => 'number',
             1 => 'soa_date',
@@ -54,53 +54,19 @@ class SOAController extends Controller
             4 => 'total_amount',
             5 => 'attachment',
             6 => 'status',
-            // 7 => 'action' (virtual)
         ];
-        foreach ($columns as $idx => $col) {
-            $val = trim($col['search']['value'] ?? '');
-            if ($val === '' || !isset($map[$idx])) continue;
-
-            $field = $map[$idx];
-
-            if ($field === 'soa_date') {
-                // Allow yyyy-mm-dd or a range "2025-01-01|2025-01-31"
-                if (str_contains($val, '|')) {
-                    [$from, $to] = array_map('trim', explode('|', $val, 2));
-                    if ($from) $query->whereDate('soa_date', '>=', $from);
-                    if ($to)   $query->whereDate('soa_date', '<=', $to);
-                } else {
-                    $query->whereDate('soa_date', $val);
-                }
-            } elseif ($field === 'total_amount') {
-                // Allow ranges "100|5000"
-                if (str_contains($val, '|')) {
-                    [$min, $max] = array_map('trim', explode('|', $val, 2));
-                    if ($min !== '') $query->where('total_amount', '>=', (float) $min);
-                    if ($max !== '') $query->where('total_amount', '<=', (float) $max);
-                } else {
-                    $query->where('total_amount', (float) $val);
-                }
-            } else {
-                $query->where($field, 'like', "%{$val}%");
-            }
-        }
-
-        // Total counts
-        $recordsTotal    = Soa::count();
-        $recordsFiltered = (clone $query)->count();
-
-        // Ordering
         $order = $request->input('order.0'); // first order instruction
         if ($order) {
-            $orderColIdx = (int) ($order['column'] ?? 0);
+            $orderColIdx = (int) ($order['column'] ?? 1);
             $dir         = $order['dir'] === 'desc' ? 'desc' : 'asc';
-            $orderCol    = $map[$orderColIdx] ?? 'number';
-            if ($orderCol !== 'action') {
-                $query->orderBy($orderCol, $dir);
-            }
+            $orderCol    = $map[$orderColIdx] ?? 'soa_date';
+            $query->orderBy($orderCol, $dir);
         } else {
             $query->orderBy('soa_date', 'desc');
         }
+
+        // Filtered count (clone before paging)
+        $recordsFiltered = (clone $query)->count();
 
         // Pagination
         if ($length !== -1) {
@@ -109,16 +75,22 @@ class SOAController extends Controller
 
         // Build rows for DataTables
         $rows = $query->get()->map(function (Soa $s) {
+            // If you stored file in 'public' disk, link it
+            $attachment = '—';
+            if ($s->attachment) {
+                $url = asset('storage/' . ltrim($s->attachment, '/'));
+                $attachment = '<a href="'.$url.'" target="_blank" rel="noopener">View</a>';
+            }
+
             return [
-                'number'       => $s->number,
-                'soa_date'     => optional($s->soa_date)->toDateString(),
-                'cover_period' => $s->cover_period,
-                'charge_slip'  => $s->charge_slip,
-                'total_amount' => number_format($s->total_amount, 2),
-                'attachment'   => $s->attachment,  // or linkify here
-                'status'       => $s->status,
-                'action'       => '',               // front-end renders buttons
-                'id'           => $s->id,           // handy for actions
+                'id'            => $s->id,
+                'number'        => $s->number,
+                'soa_date'      => optional($s->soa_date)->toDateString(),
+                'cover_period'  => $s->cover_period,
+                'charge_slip'   => $s->charge_slip,
+                'total_amount'  => number_format((float)$s->total_amount, 2, '.', ','), // "1,234.56"
+                'attachment'    => $attachment, // HTML link
+                'status'        => $s->status,
             ];
         });
 
@@ -130,48 +102,77 @@ class SOAController extends Controller
         ]);
     }
 
-    // --- CRUD (minimal) ---
+    // Create
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'number'       => ['required','string','max:100','unique:soas,number'],
-            'soa_date'     => ['required','date'],
-            'cover_period' => ['nullable','string','max:255'],
-            'charge_slip'  => ['nullable','string','max:255'],
-            'total_amount' => ['required','numeric','min:0'],
-            'attachment'   => ['nullable','string','max:255'],
-            'status'       => ['required','string','max:50'],
+        $val = $request->validate([
+            // IMPORTANT: table name is 'soa' (singular), not 'soas'
+            'number'        => ['required','string','max:100','unique:soa,number'],
+            'soa_date'      => ['required','date'],
+            'cover_period'  => ['nullable','string','max:255'],
+            'charge_slip'   => ['nullable','string','max:255'],
+
+            // numeric but may arrive with commas; we'll normalize below
+            'total_amount'  => ['required'],
+
+            // file only; 5MB limit; allowed types
+            'attachment'    => ['nullable','file','mimes:png,jpeg,jpg,pdf','max:5120'],
+
+            'status'        => ['required','string','max:50'],
+
         ]);
 
-        Soa::create($validated);
-        return back()->with('success', 'SOA created.');
+        // normalize amount (strip commas)
+        $val['total_amount'] = (float) str_replace(',', '', (string) $request->input('total_amount', 0));
+
+        // store file if provided (public disk)
+        if ($request->hasFile('attachment')) {
+            $path = $request->file('attachment')->store('soa_attachments', 'public');
+            $val['attachment'] = $path; // save path in DB
+        }
+
+        Soa::create($val);
+
+        return back(303)->with('success', 'SOA created.');
     }
 
+    // Update
     public function update(Request $request, Soa $soa)
     {
-        $validated = $request->validate([
-            'number'       => ['required','string','max:100','unique:soas,number,'.$soa->id],
-            'soa_date'     => ['required','date'],
-            'cover_period' => ['nullable','string','max:255'],
-            'charge_slip'  => ['nullable','string','max:255'],
-            'total_amount' => ['required','numeric','min:0'],
-            'attachment'   => ['nullable','string','max:255'],
-            'status'       => ['required','string','max:50'],
+        $val = $request->validate([
+            // unique for same table; ignore current row id
+            'number'        => ['required','string','max:100','unique:soa,number,'.$soa->id],
+            'soa_date'      => ['required','date'],
+            'cover_period'  => ['nullable','string','max:255'],
+            'charge_slip'   => ['nullable','string','max:255'],
+            'total_amount'  => ['required'],
+            'attachment'    => ['nullable','file','mimes:png,jpeg,jpg,pdf','max:5120'],
+            'status'        => ['required','string','max:50'],
+            'merchant'      => ['nullable','string','max:255'],
+            'department'    => ['nullable','string','max:255'],
         ]);
 
-        $soa->update($validated);
-        return back()->with('success', 'SOA updated.');
+        $val['total_amount'] = (float) str_replace(',', '', (string) $request->input('total_amount', 0));
+
+        if ($request->hasFile('attachment')) {
+            $path = $request->file('attachment')->store('soa_attachments', 'public');
+            $val['attachment'] = $path;
+        }
+
+        $soa->update($val);
+
+        return back(303)->with('success', 'SOA updated.');
     }
 
     public function destroy(Soa $soa)
     {
         $soa->delete();
-        return back()->with('success', 'SOA deleted.');
+        return back(303)->with('success', 'SOA deleted.');
     }
 
     public function restore($id)
     {
         Soa::withTrashed()->findOrFail($id)->restore();
-        return back()->with('success', 'SOA restored.');
+        return back(303)->with('success', 'SOA restored.');
     }
 }
