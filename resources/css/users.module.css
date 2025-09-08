@@ -68,18 +68,6 @@
     border-collapse: collapse;
 }
 
-:global(.dataTable thead th) {
-    background-color: #c52228;
-    color: #ffffff;
-    font-weight: 600;
-    padding: 1rem;
-    text-align: left;
-}
-
-:global(.dataTables_wrapper .dataTables_scroll) {
-    padding: 1rem 0;
-}
-
 .dataTables_filter {
     margin-bottom: 1rem;
 }
@@ -143,6 +131,25 @@
 
 .deleteBtn:hover {
     opacity: 0.9;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 600;
+}
+.badgeGreen {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+.badgeGray {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
 }
 
 /* Responsive adjustments */
@@ -275,4 +282,120 @@
 
 .cancelButton:hover {
     background-color: #f9fafb;
+}
+
+/* ===== Scoped SOA-style grid ONLY for Users table ===== */
+.usersTableWrapper {
+    overflow: auto;
+}
+
+.usersTable {
+    width: 100%;
+    border-collapse: collapse; /* single-pixel grid */
+    border: 1px solid #000; /* outer border */
+    font-size: 13px;
+}
+
+/* Black grid lines on every cell */
+.usersTable thead th,
+.usersTable tbody td {
+    border: 1px solid #000;
+}
+
+/* Red header like SOA + thicker bottom line */
+.usersTable thead tr:first-child th {
+    background: #b22222;
+    color: #fff;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid #000;
+    white-space: nowrap;
+}
+
+/* Body cells */
+.usersTable tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    background: #fff;
+}
+
+/* Action buttons inside the Action column */
+.usersActionCell {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+.usersActionBtn {
+    border: 1px solid #000; /* keep black grid vibe */
+    background: #fff;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    line-height: 0; /* icon snug */
+}
+.usersActionBtn:hover {
+    background: #f3f3f3;
+}
+
+.tableContainer :global(.dataTables_wrapper .dataTables_scroll) {
+    padding: 1rem 0;
+}
+
+/* Make the icon strokes visible (SVGs use currentColor) */
+.usersActionBtn {
+    color: #111 !important; /* ← forces a dark stroke */
+    background: #fff !important; /* keep SOA-style button */
+    border: 1px solid #000;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    line-height: 1; /* avoid weird vertical trim */
+}
+
+.usersActionBtn:hover {
+    background: #f3f3f3;
+}
+
+/* Be explicit about SVG sizing & stroke inheritance */
+.usersActionBtn svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    stroke: currentColor; /* in case a global style changed it */
+    fill: none;
+}
+
+/* Top bar container with search on the left and buttons on the right */
+.usersTopBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+/* Style Buttons controls similar to SOA (white + black border) */
+.usersTopBar :global(.dt-buttons .dt-button) {
+    border: 1px solid #000;
+    background: #fff;
+    color: #111;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    margin-left: 8px;
+    cursor: pointer;
+}
+.usersTopBar :global(.dt-buttons .dt-button:hover) {
+    background: #f3f3f3;
+}
+
+/* Make the search field look like the SOA “recessed” inputs */
+.usersTopBar :global(.dataTables_filter input) {
+    font: inherit;
+    color: #111;
+    padding: 6px 8px;
+    border: 1px solid #cfcfcf;
+    border-radius: 3px;
+    background: #f5f5f5;
+    outline: none;
 }

@@ -1,10 +1,16 @@
 // resources/js/Pages/Login.jsx
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import LogoWithTextRed from "../../images/logo_with_text_red.svg";
 import LogoForLogin from "../../images/logo_for_login.svg";
 
+// Reusable alerts
+import FlashAlerts from "@/Components/FlashAlerts";
+import Alert from "@/Components/Alert";
+
 export default function Login() {
+    const { props } = usePage();
+
     const [email, setEmail] = useState("");
     const [pwd, setPwd] = useState("");
     const [showPwd, setShowPwd] = useState(false);
@@ -21,6 +27,15 @@ export default function Login() {
 
     const canLogin = email.trim() !== "" && pwd.trim() !== "";
     const locked = !!lockUntil;
+
+    // If server flashed a retry_at (optional), start countdown
+    useEffect(() => {
+        const retryAt = props?.flash?.retry_at;
+        if (retryAt) {
+            const ts = new Date(retryAt).getTime();
+            if (!isNaN(ts) && ts > Date.now()) setLockUntil(ts);
+        }
+    }, [props?.flash?.retry_at]);
 
     // --- Countdown effect ---
     useEffect(() => {
@@ -138,6 +153,8 @@ export default function Login() {
         }
     }
 
+    const lockSuffix = locked && remaining > 0 ? ` (${fmt(remaining)})` : "";
+
     return (
         <div className="w-full min-h-screen">
             <Head title="Login" />
@@ -145,6 +162,24 @@ export default function Login() {
                 {/* Left */}
                 <div className="flex-1 bg-white flex items-center justify-center px-4">
                     <div className="w-full max-w-[532px] relative">
+                        {/* Global server flashes (success/error/info/warning) */}
+                        <FlashAlerts autoDismissMs={6000} />
+
+                        {/* Client-side login error/lock alert */}
+                        {bannerErr && (
+                            <div className="fixed top-4 right-4 z-[101] w-full max-w-sm pointer-events-none">
+                                <Alert
+                                    variant="danger"
+                                    onClose={() => setBannerErr("")}
+                                    className="pointer-events-auto shadow-lg"
+                                >
+                                    {locked && remaining > 0
+                                        ? `${bannerErr} (${fmt(remaining)})`
+                                        : bannerErr}
+                                </Alert>
+                            </div>
+                        )}
+                        {/* Logo + Title */}
                         <img
                             src={LogoWithTextRed}
                             alt="Logo with Text (Red)"

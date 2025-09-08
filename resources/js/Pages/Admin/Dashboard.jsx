@@ -1,13 +1,15 @@
-import Navbar from '@/components/Navbar';
+import Navbar from "@/components/Navbar";
+import FlashAlerts from "@/Components/FlashAlerts";
+import PageHeader from "@/Components/PageHeader";
 
 export default function Dashboard() {
-  return (
-    <>
-      <Navbar />
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-        <p className="mt-2 text-gray-600">Welcome to the admin panel.</p>
-      </div>
-    </>
-  );
+    return (
+        <>
+            <FlashAlerts autoDismissMs={6000} /> {/* shows the session flash */}
+            <Navbar />
+            <div className="m-8">
+                <PageHeader title="Dashboard" />
+            </div>
+        </>
+    );
 }

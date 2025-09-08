@@ -15,56 +15,73 @@ public function datatable(Request $request)
 {
     $query = User::query();
 
-    // Search functionality
+     // Search (now includes merchant_type and date strings)
     if ($request->has('search') && !empty($request->search['value'])) {
         $search = $request->search['value'];
-        $query->where(function($q) use ($search) {
+        $query->where(function ($q) use ($search) {
             $q->where('email', 'like', "%$search%")
               ->orWhere('firstname', 'like', "%$search%")
               ->orWhere('lastname', 'like', "%$search%")
               ->orWhere('role', 'like', "%$search%")
               ->orWhere('branch_name', 'like', "%$search%")
-              ->orWhere('job_description', 'like', "%$search%");
+              ->orWhere('job_description', 'like', "%$search%")
+              ->orWhere('merchant_type', 'like', "%$search%")
+              ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') like ?", ["%$search%"])
+              ->orWhereRaw("DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') like ?", ["%$search%"]);
         });
     }
 
     // Get total count before pagination
     $total = $query->count();
 
+    $columns = [
+        'role',
+        'firstname',
+        'merchant_type',
+        'branch_name',
+        'job_description',
+        'email',
+        'is_active',
+        'created_at',
+        'updated_at',
+    ];
+
     // Sorting
-if ($request->has('order') && isset($request->order[0]['column'])) {
-    $columns = ['role', 'firstname', 'branch_name', 'job_description', 'email'];
-    $orderColumn = $columns[$request->order[0]['column']] ?? 'created_at';
-    $orderDirection = $request->order[0]['dir'] ?? 'asc';
-    $query->orderBy($orderColumn, $orderDirection);
-} else {
-    // Default: sort by created_at DESC (newest first)
-    $query->orderBy('created_at', 'desc');
-}
+    if ($request->has('order') && isset($request->order[0]['column'])) {
+            $idx = (int) $request->order[0]['column'];
+            $orderColumn = $columns[$idx] ?? 'created_at';
+            $orderDirection = $request->order[0]['dir'] ?? 'desc';
+            $query->orderBy($orderColumn, $orderDirection);
+        } else {
+            // Default: newest first
+            $query->orderBy('created_at', 'desc');
+        }
 
+    // Pagination
+        $length = (int) $request->input('length', 10);
+        $start  = (int) $request->input('start', 0);
+        $users  = $query->skip($start)->take($length)->get();
 
-    // Proper pagination (add LIMIT)
-    $length = $request->input('length', 10); // Default to 10 items per page
-    $users = $query->skip($request->input('start', 0))
-                   ->take($length)
-                   ->get();
-
-    // Format response
+    // Response
     return response()->json([
-        'draw' => $request->input('draw'),
-        'recordsTotal' => User::count(),
+        'draw'            => (int) $request->input('draw'),
+        'recordsTotal'    => User::count(),
         'recordsFiltered' => $total,
         'data' => $users->map(function ($user) {
             return [
-                'id' => $user->id,
-                'role' => $user->role ?? '-',
-                'firstname' => $user->firstname ?? '',
-                'lastname' => $user->lastname ?? '',
-                'branch_name' => $user->branch_name ?? '-',
+                'id'              => $user->id,
+                'role'            => $user->role ?? '-',
+                'firstname'       => $user->firstname ?? '',
+                'lastname'        => $user->lastname ?? '',
+                'merchant_type'   => $user->merchant_type ?? null,  // "product" | "lab" | null
+                'branch_name'     => $user->branch_name ?? '-',
                 'job_description' => $user->job_description ?? '-',
-                'email' => $user->email ?? '-',
+                'email'           => $user->email ?? '-',
+                'is_active'       => (bool) ($user->is_active ?? true),
+                'created_at'      => optional($user->created_at)->toIso8601String(),
+                'updated_at'      => optional($user->updated_at)->toIso8601String(),
             ];
-        })
+        }),
     ]);
 }
 

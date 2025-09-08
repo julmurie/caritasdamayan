@@ -55,7 +55,18 @@ Route::middleware('auth')->group(function () {
         Route::inertia('/dashboard', 'Admin/Dashboard')->name('admin.dashboard');
         Route::inertia('/patients', 'Admin/Patients')->name('admin.patients');
         Route::inertia('/approvals', 'Admin/Approvals')->name('admin.approvals');
-        Route::inertia('/prices', 'Admin/Prices')->name('admin.prices');
+
+        Route::get('/prices', function () {
+        return Inertia::render('PartnerMerchant/Prices', [
+            'merchant'    => 'Generika',
+            'permissions' => ['canManage' => false],
+            'endpoints'   => [
+                'productsDatatable' => route('products.datatable'),
+                'servicesDatatable' => route('services.datatable'),
+            ],
+        ]);
+    })->name('admin.prices');
+        
         Route::inertia('/charge-slips', 'Admin/ChargeSlips')->name('admin.charge_slips');
         Route::inertia('/soa', 'Admin/SOA')->name('admin.soa');   // PAGE ONLY
         Route::inertia('/users', 'Admin/Users')->name('admin.users');
@@ -74,7 +85,18 @@ Route::middleware('auth')->group(function () {
         Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
         Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
         Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');
-        Route::inertia('/prices', 'ClinicVolunteer/Prices')->name('volunteer.prices');
+
+        Route::get('/prices', function () {
+        return Inertia::render('PartnerMerchant/Prices', [
+            'merchant'    => 'Generika',
+            'permissions' => ['canManage' => false],
+            'endpoints'   => [
+                'productsDatatable' => route('products.datatable'),
+                'servicesDatatable' => route('services.datatable'),
+            ],
+        ]);
+    })->name('volunteer.prices');
+
         Route::inertia('/soa', 'ClinicVolunteer/SOA')->name('volunteer.soa'); // PAGE ONLY
 
         // SOA API
@@ -85,6 +107,12 @@ Route::middleware('auth')->group(function () {
         Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('volunteer.soa.restore');
     });
 
+    Route::get('/merchant/products/datatable', [ProductController::class, 'datatable'])
+    ->name('products.datatable');
+
+    Route::get('/merchant/services/datatable', [ServiceController::class, 'datatable'])
+    ->name('services.datatable');
+
     /* ---------------- Partner Merchant ---------------- */
     Route::prefix('merchant')->middleware('role:merchant')->group(function () {
         Route::inertia('/dashboard', 'PartnerMerchant/Dashboard')->name('merchant.dashboard');
@@ -92,24 +120,23 @@ Route::middleware('auth')->group(function () {
         Route::inertia('/charge-slips', 'PartnerMerchant/ChargeSlips')->name('merchant.charge_slips');
         Route::inertia('/soa',       'PartnerMerchant/SOA')->name('merchant.soa'); // PAGE ONLY
 
-        // Prices (existing)
-        Route::get('/prices', [ProductController::class, 'index'])->name('products.index');
+         // Prices page (shared page but still accessible to merchants)
+        Route::get('/prices', [ProductController::class, 'index'])->name('merchant.prices');
 
-        // Products (existing)
-        Route::get   ('/products/datatable', [ProductController::class, 'datatable'])->name('products.datatable');
-        Route::post  ('/products',           [ProductController::class, 'store'])->name('products.store');
-        Route::patch ('/products/{product}', [ProductController::class, 'update'])->name('products.update');
-        Route::delete('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
-        Route::post  ('/products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
-        Route::get   ('/products/archived',  [ProductController::class, 'archived'])->name('products.archived.index');
+        // Products (mutations stay merchant-only)
+        Route::post  ('/products',                 [ProductController::class, 'store'])->name('products.store');
+        Route::patch ('/products/{product}',       [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}/archive',[ProductController::class, 'archive'])->name('products.archive');
+        Route::post  ('/products/{id}/restore',    [ProductController::class, 'restore'])->name('products.restore');
+        Route::get   ('/products/archived',        [ProductController::class, 'archived'])->name('products.archived.index');
 
-        // Services (existing)
-        Route::get   ('/services/datatable', [ServiceController::class, 'datatable'])->name('services.datatable');
-        Route::post  ('/services',           [ServiceController::class, 'store'])->name('services.store');
-        Route::patch ('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
-        Route::delete('/services/{service}/archive', [ServiceController::class, 'archive'])->name('services.archive');
-        Route::post  ('/services/{id}/restore', [ServiceController::class, 'restore'])->name('services.restore');
-        Route::get   ('/services/archived',  [ServiceController::class, 'archived'])->name('services.archived.index');
+        // Services (mutations stay merchant-only)
+        Route::post  ('/services',                 [ServiceController::class, 'store'])->name('services.store');
+        Route::patch ('/services/{service}',       [ServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}/archive',[ServiceController::class, 'archive'])->name('services.archive');
+        Route::post  ('/services/{id}/restore',    [ServiceController::class, 'restore'])->name('services.restore');
+        Route::get   ('/services/archived',        [ServiceController::class, 'archived'])->name('services.archived.index');
+
 
         // SOA API
         Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('merchant.soa.datatable');

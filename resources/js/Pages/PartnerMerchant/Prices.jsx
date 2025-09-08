@@ -3,30 +3,53 @@ import Navbar from "../../components/Navbar";
 import styles from "../../../css/merchant.module.css";
 import { router } from "@inertiajs/react";
 
-// put these near the top of Prices.jsx (inside the file, outside the component is fine)
+const ICON_COLOR = "#111827"; // Tailwind gray-800-ish
+
 const icons = {
     edit: `
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-         stroke="currentColor" stroke-width="1.5" width="18" height="18" aria-hidden="true">
+         stroke="${ICON_COLOR}" stroke-width="1.5" width="18" height="18" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round"
         d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
     </svg>
   `,
     archive: `
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-         stroke="currentColor" stroke-width="1.5" width="18" height="18" aria-hidden="true">
+         stroke="${ICON_COLOR}" stroke-width="1.5" width="18" height="18" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round"
         d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
     </svg>
   `,
     restore: `
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
-</svg>
-`,
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+         stroke="${ICON_COLOR}" stroke-width="1.5" class="w-5 h-5" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7
+           48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662
+           M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7
+           48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662
+           M4.5 12l3 3m-3-3-3 3" />
+    </svg>
+  `,
 };
 
-export default function Prices({ merchant = "Generika", products = [] }) {
+export default function Prices({
+    merchant = "Generika",
+    permissions = {},
+    endpoints = {},
+}) {
+    const canManage = !!permissions?.canManage;
+
+    // use endpoints passed from server (with safe fallbacks)
+    const productsURL =
+        endpoints.productsDatatable || "/merchant/products/datatable";
+    const servicesURL =
+        endpoints.servicesDatatable || "/merchant/services/datatable";
+    const archivedURL =
+        endpoints.productsArchived || "/merchant/products/archived";
+    const servicesArchivedURL =
+        endpoints.servicesArchived || "/merchant/services/archived";
+
     // Tabs (single page feel)
     const [activeTab, setActiveTab] = useState(
         (typeof window !== "undefined" && location.hash?.slice(1)) || "products"
@@ -49,7 +72,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
     });
     const [form, setForm] = useState(resetForm());
 
-    // ===== SERVICES state (kept separate to avoid touching products) =====
+    // ===== SERVICES state =====
     const serviceTableRef = useRef(null);
 
     const [showAddService, setShowAddService] = useState(false);
@@ -63,89 +86,115 @@ export default function Prices({ merchant = "Generika", products = [] }) {
     });
     const [serviceForm, setServiceForm] = useState(resetServiceForm());
 
-    // Archived services (fetched when modal opens)
+    // Archived services (fetch only when merchant)
     const [archivedServices, setArchivedServices] = useState([]);
+    const [archivedServicesCount, setArchivedServicesCount] = useState(0);
     useEffect(() => {
-        if (showArchivedService) {
-            fetch("/merchant/services/archived")
+        if (canManage && showArchivedService) {
+            fetch(servicesArchivedURL)
                 .then((r) => r.json())
                 .then(setArchivedServices);
         }
-    }, [showArchivedService]);
+    }, [canManage, showArchivedService, servicesArchivedURL]);
 
-    // Archived data (fetched when modal opens)
+    // Archived products (fetch only when merchant)
     const [archived, setArchived] = useState([]);
+    const [archivedCount, setArchivedCount] = useState(0);
+
     useEffect(() => {
-        if (showArchived) {
-            fetch("/merchant/products/archived")
-                .then((r) => r.json())
-                .then(setArchived);
-        }
-    }, [showArchived]);
+        fetch(archivedURL)
+            .then((r) => r.json())
+            .then((items) => setArchivedCount(items.length))
+            .catch(() => {});
+        fetch(servicesArchivedURL)
+            .then((r) => r.json())
+            .then((items) => setArchivedServicesCount(items.length))
+            .catch(() => {});
+    }, [archivedURL, servicesArchivedURL]);
 
     // === DataTables setup (global jQuery) ===
     const tableRef = useRef(null);
     const dtProductsRef = useRef(null);
     const dtServicesRef = useRef(null);
 
-    const buildActionsHtml = (row) => {
-        return `
-    <div class="${styles.pricesActionsCol}">
-      <button class="${styles.pricesActionBtn} btn-archive"
-              title="Archive" data-id="${row.id}" aria-label="Archive">
-        ${icons.archive}
-      </button>
-      <button class="${styles.pricesActionBtn} btn-edit"
-              title="Edit" data-id="${row.id}" aria-label="Edit">
-        ${icons.edit}
-      </button>
-    </div>
-  `;
-    };
+    const buildActionsHtml = (row) => `
+  <div class="${styles.pricesActionsCol}">
+    <button type="button" class="${styles.pricesActionBtn} btn-archive" title="Archive" data-id="${row.id}" aria-label="Archive">
+      ${icons.archive}
+    </button>
+    <button type="button" class="${styles.pricesActionBtn} btn-edit" title="Edit" data-id="${row.id}" aria-label="Edit">
+      ${icons.edit}
+    </button>
+  </div>
+`;
 
-    // Services row buttons (mirrors products)
-    const buildServiceActionsHtml = (row) => {
-        return `
-    <div class="${styles.pricesActionsCol}">
-      <button class="${styles.pricesActionBtn} btn-archive-service"
-              title="Archive" data-id="${row.id}" aria-label="Archive">
-        ${icons.archive}
-      </button>
-      <button class="${styles.pricesActionBtn} btn-edit-service"
-              title="Edit" data-id="${row.id}" aria-label="Edit">
-        ${icons.edit}
-      </button>
-    </div>
-  `;
-    };
-    // ---- Initialize PRODUCTS DataTable ONCE ----
+    const buildServiceActionsHtml = (row) => `
+  <div class="${styles.pricesActionsCol}">
+    <button type="button" class="${styles.pricesActionBtn} btn-archive-service" title="Archive" data-id="${row.id}" aria-label="Archive">
+      ${icons.archive}
+    </button>
+    <button type="button" class="${styles.pricesActionBtn} btn-edit-service" title="Edit" data-id="${row.id}" aria-label="Edit">
+      ${icons.edit}
+    </button>
+  </div>
+`;
+
     useEffect(() => {
-        if (
-            !tableRef.current ||
-            !window.$ ||
-            !window.$.fn ||
-            !window.$.fn.DataTable
-        )
-            return;
+        if (showArchived) {
+            fetch(archivedURL)
+                .then((r) => r.json())
+                .then((items) => {
+                    setArchived(items);
+                    setArchivedCount(items.length);
+                });
+        }
+    }, [showArchived, archivedURL]);
+
+    useEffect(() => {
+        if (showArchivedService) {
+            fetch(servicesArchivedURL)
+                .then((r) => r.json())
+                .then((items) => {
+                    setArchivedServices(items);
+                    setArchivedServicesCount(items.length);
+                });
+        }
+    }, [showArchivedService, servicesArchivedURL]);
+
+    // ---- Initialize PRODUCTS DataTable ----
+    useEffect(() => {
+        if (!tableRef.current || !window.$?.fn?.DataTable) return;
 
         const $table = window.$(tableRef.current);
 
-        // destroy safety (should be null on first mount)
         if (window.$.fn.dataTable.isDataTable(tableRef.current)) {
             $table.off("click", "button.btn-edit");
             $table.off("click", "button.btn-archive");
             $table.DataTable().destroy(true);
         }
 
+        // columns base (no Action when !canManage)
+        const productColumns = [
+            { data: "name", title: "Medicine Name" },
+            { data: "standard_price", title: "Standard Price" },
+            { data: "discounted_price", title: "Discounted Price" },
+        ];
+        if (canManage) {
+            productColumns.push({
+                data: null,
+                title: "Action",
+                orderable: false,
+                searchable: false,
+                render: (_d, _t, row) => buildActionsHtml(row),
+            });
+        }
+
         const dt = $table.DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: {
-                url: "/merchant/products/datatable",
-                type: "GET",
-                dataType: "json",
-            },
+
+            ajax: { url: productsURL, type: "GET", dataType: "json" },
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"],
@@ -158,99 +207,102 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 { extend: "excel", title: `products_${merchant}` },
                 { extend: "print", title: `Products – ${merchant}` },
             ],
-            columns: [
-                { data: "name", title: "Medicine Name" },
-                { data: "standard_price", title: "Standard Price" },
-                { data: "discounted_price", title: "Discounted Price" },
-                {
-                    data: null,
-                    title: "Action",
-                    orderable: false,
-                    searchable: false,
-                    render: (data, type, row) => buildActionsHtml(row),
-                },
-            ],
+            columns: productColumns,
             order: [[0, "asc"]],
         });
         dtProductsRef.current = dt;
 
-        // Delegated events
-        $table.on("click", "button.btn-edit", function () {
-            const rowData = dt.row(window.$(this).closest("tr")).data();
-            if (!rowData) return;
-            setEditing({
-                id: rowData.id,
-                name: rowData.name,
-                standard_price: String(rowData.standard_price).replace(
-                    /,/g,
-                    ""
-                ),
-                discounted_price: String(rowData.discounted_price).replace(
-                    /,/g,
-                    ""
-                ),
+        // Bind row actions only when merchant
+        if (canManage) {
+            $table.on("click", "button.btn-edit", function () {
+                const rowData = dt.row(window.$(this).closest("tr")).data();
+                if (!rowData) return;
+                setEditing({
+                    id: rowData.id,
+                    name: rowData.name,
+                    standard_price: String(rowData.standard_price).replace(
+                        /,/g,
+                        ""
+                    ),
+                    discounted_price: String(rowData.discounted_price).replace(
+                        /,/g,
+                        ""
+                    ),
+                });
+                setForm({
+                    name: rowData.name,
+                    standard_price: String(rowData.standard_price).replace(
+                        /,/g,
+                        ""
+                    ),
+                    discounted_price: String(rowData.discounted_price).replace(
+                        /,/g,
+                        ""
+                    ),
+                });
             });
-            setForm({
-                name: rowData.name,
-                standard_price: String(rowData.standard_price).replace(
-                    /,/g,
-                    ""
-                ),
-                discounted_price: String(rowData.discounted_price).replace(
-                    /,/g,
-                    ""
-                ),
-            });
-        });
 
-        $table.on("click", "button.btn-archive", function () {
-            const id = window.$(this).data("id");
-            router.delete(`/merchant/products/${id}/archive`, {
-                onSuccess: () => dt.ajax.reload(null, false),
+            $table.on("click", "button.btn-archive", function () {
+                const id = window.$(this).data("id");
+                router.delete(`/merchant/products/${id}/archive`, {
+                    onSuccess: () => {
+                        dt.ajax.reload(null, false);
+                        setArchivedCount((n) => n + 1); // <-- bump
+                        if (showArchived) {
+                            // if modal open, refresh list too
+                            fetch(archivedURL)
+                                .then((r) => r.json())
+                                .then(setArchived);
+                        }
+                    },
+                });
             });
-        });
+        }
 
-        // cleanup on unmount
         return () => {
-            $table.off("click", "button.btn-edit");
-            $table.off("click", "button.btn-archive");
+            if (canManage) {
+                $table.off("click", "button.btn-edit");
+                $table.off("click", "button.btn-archive");
+            }
             if (window.$.fn.dataTable.isDataTable(tableRef.current)) {
                 $table.DataTable().destroy(true);
             }
             dtProductsRef.current = null;
         };
-    }, []);
+    }, [canManage, productsURL, merchant]);
 
-    // ===== SERVICES DataTable (separate instance) =====
+    // ===== SERVICES DataTable =====
     useEffect(() => {
-        // Initialize only when Services tab is active
-
-        if (
-            !serviceTableRef.current ||
-            !window.$ ||
-            !window.$.fn ||
-            !window.$.fn.DataTable
-        )
-            return;
+        if (!serviceTableRef.current || !window.$?.fn?.DataTable) return;
 
         const $table = window.$(serviceTableRef.current);
 
-        // destroy previous instance if any
         if (window.$.fn.dataTable.isDataTable(serviceTableRef.current)) {
             $table.off("click", "button.btn-edit-service");
             $table.off("click", "button.btn-archive-service");
             $table.DataTable().destroy(true);
         }
 
+        const serviceColumns = [
+            { data: "name", title: "Service Name" },
+            { data: "standard_rate", title: "Standard Rate" },
+            { data: "discounted_rate", title: "Discounted Rate" },
+        ];
+        if (canManage) {
+            serviceColumns.push({
+                data: null,
+                title: "Action",
+                orderable: false,
+                searchable: false,
+                render: (_d, _t, row) => buildServiceActionsHtml(row),
+            });
+        }
+
         const dt = $table.DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: {
-                url: "/merchant/services/datatable",
-                type: "GET",
-                dataType: "json",
-            },
+            ajax: { url: servicesURL, type: "GET", dataType: "json" },
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"],
@@ -263,62 +315,67 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 { extend: "excel", title: `services_${merchant}` },
                 { extend: "print", title: `Services – ${merchant}` },
             ],
-            columns: [
-                { data: "name", title: "Service Name" },
-                { data: "standard_rate", title: "Standard Rate" },
-                { data: "discounted_rate", title: "Discounted Rate" },
-                {
-                    data: null,
-                    title: "Action",
-                    orderable: false,
-                    searchable: false,
-                    render: (data, type, row) => buildServiceActionsHtml(row),
-                },
-            ],
+            columns: serviceColumns,
             order: [[0, "asc"]],
         });
         dtServicesRef.current = dt;
 
-        // Delegated events
-        $table.on("click", "button.btn-edit-service", function () {
-            const rowData = dt.row(window.$(this).closest("tr")).data();
-            if (!rowData) return;
-            setServiceEditing({
-                id: rowData.id,
-                name: rowData.name,
-                standard_rate: String(rowData.standard_rate).replace(/,/g, ""),
-                discounted_rate: String(rowData.discounted_rate).replace(
-                    /,/g,
-                    ""
-                ),
+        if (canManage) {
+            $table.on("click", "button.btn-edit-service", function () {
+                const rowData = dt.row(window.$(this).closest("tr")).data();
+                if (!rowData) return;
+                setServiceEditing({
+                    id: rowData.id,
+                    name: rowData.name,
+                    standard_rate: String(rowData.standard_rate).replace(
+                        /,/g,
+                        ""
+                    ),
+                    discounted_rate: String(rowData.discounted_rate).replace(
+                        /,/g,
+                        ""
+                    ),
+                });
+                setServiceForm({
+                    name: rowData.name,
+                    standard_rate: String(rowData.standard_rate).replace(
+                        /,/g,
+                        ""
+                    ),
+                    discounted_rate: String(rowData.discounted_rate).replace(
+                        /,/g,
+                        ""
+                    ),
+                });
             });
-            setServiceForm({
-                name: rowData.name,
-                standard_rate: String(rowData.standard_rate).replace(/,/g, ""),
-                discounted_rate: String(rowData.discounted_rate).replace(
-                    /,/g,
-                    ""
-                ),
-            });
-        });
 
-        $table.on("click", "button.btn-archive-service", function () {
-            const id = window.$(this).data("id");
-            router.delete(`/merchant/services/${id}/archive`, {
-                onSuccess: () => dt.ajax.reload(null, false),
+            $table.on("click", "button.btn-archive-service", function () {
+                const id = window.$(this).data("id");
+                router.delete(`/merchant/services/${id}/archive`, {
+                    onSuccess: () => {
+                        dt.ajax.reload(null, false);
+                        setArchivedServicesCount((n) => n + 1); // <-- bump
+                        if (showArchivedService) {
+                            fetch(servicesArchivedURL)
+                                .then((r) => r.json())
+                                .then(setArchivedServices);
+                        }
+                    },
+                });
             });
-        });
+        }
 
-        // cleanup on unmount
         return () => {
-            $table.off("click", "button.btn-edit-service");
-            $table.off("click", "button.btn-archive-service");
+            if (canManage) {
+                $table.off("click", "button.btn-edit-service");
+                $table.off("click", "button.btn-archive-service");
+            }
             if (window.$.fn.dataTable.isDataTable(serviceTableRef.current)) {
                 $table.DataTable().destroy(true);
             }
             dtServicesRef.current = null;
         };
-    }, []); // <-- runs once
+    }, [canManage, servicesURL, merchant]); // runs again if canManage/URL changes
 
     // After switching tabs, fix column widths for the now-visible table
     useEffect(() => {
@@ -327,29 +384,20 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 activeTab === "products"
                     ? dtProductsRef.current
                     : dtServicesRef.current;
-            // guard
             if (!dt) return;
             try {
                 dt.columns.adjust().responsive.recalc();
             } catch {}
         };
-        // slight delay to let the div become visible before adjust
         const t = setTimeout(fix, 0);
         return () => clearTimeout(t);
     }, [activeTab]);
 
-    const reloadTable = () => {
-        if (dtProductsRef.current)
-            dtProductsRef.current.ajax.reload(null, false);
-    };
+    const reloadTable = () => dtProductsRef.current?.ajax.reload(null, false);
+    const reloadServiceTable = () =>
+        dtServicesRef.current?.ajax.reload(null, false);
 
-    // ===== SERVICES helpers and actions =====
-
-    const reloadServiceTable = () => {
-        if (dtServicesRef.current)
-            dtServicesRef.current.ajax.reload(null, false);
-    };
-
+    // ===== Merchant-only actions =====
     const addService = (e) => {
         e.preventDefault();
         router.post(
@@ -403,13 +451,13 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                     setArchivedServices((list) =>
                         list.filter((x) => x.id !== id)
                     );
+                    setArchivedServicesCount((n) => Math.max(0, n - 1)); // <-- drop
                     reloadServiceTable();
                 },
             }
         );
     };
 
-    // === Inertia actions (products) ===
     const addRow = (e) => {
         e.preventDefault();
         router.post(
@@ -461,6 +509,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
             {
                 onSuccess: () => {
                     setArchived((list) => list.filter((x) => x.id !== id));
+                    setArchivedCount((n) => Math.max(0, n - 1)); // <-- drop
                     reloadTable();
                 },
             }
@@ -507,7 +556,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 </aside>
 
                 <div className={styles.pricesMain}>
-                    {/* PRODUCTS SECTION (always rendered) */}
+                    {/* PRODUCTS SECTION */}
                     <div
                         style={{
                             display:
@@ -519,21 +568,24 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                                 <h1>Products</h1>
                                 <p>Partner Merchant | {merchant}</p>
                             </div>
-                            <div className="space-x-2">
-                                <button
-                                    className={styles.btnGreen}
-                                    onClick={() => setShowAdd(true)}
-                                >
-                                    + Add Product
-                                </button>
-                                <button
-                                    className={styles.btnDark}
-                                    onClick={() => setShowArchived(true)}
-                                    title="View archived products"
-                                >
-                                    Archived Products ({archived.length})
-                                </button>
-                            </div>
+
+                            {canManage && (
+                                <div className="space-x-2">
+                                    <button
+                                        className={styles.btnGreen}
+                                        onClick={() => setShowAdd(true)}
+                                    >
+                                        + Add Product
+                                    </button>
+                                    <button
+                                        className={styles.btnDark}
+                                        onClick={() => setShowArchived(true)}
+                                        title="View archived products"
+                                    >
+                                        Archived Products ({archivedCount})
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <hr className="my-4 border-gray-300" />
 
@@ -548,17 +600,15 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                                         <th>Medicine Name</th>
                                         <th>Standard Price</th>
                                         <th>Discounted Price</th>
-                                        <th>Action</th>
+                                        {canManage && <th>Action</th>}
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {/* DataTables will render rows */}
-                                </tbody>
+                                <tbody>{/* DataTables */}</tbody>
                             </table>
                         </div>
                     </div>
 
-                    {/* SERVICES SECTION (always rendered) */}
+                    {/* SERVICES SECTION */}
                     <div
                         style={{
                             display:
@@ -570,22 +620,27 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                                 <h1>Service</h1>
                                 <p>Partner Merchant | {merchant}</p>
                             </div>
-                            <div className="space-x-2">
-                                <button
-                                    className={styles.btnGreen}
-                                    onClick={() => setShowAddService(true)}
-                                >
-                                    + Add Service
-                                </button>
-                                <button
-                                    className={styles.btnDark}
-                                    onClick={() => setShowArchivedService(true)}
-                                    title="View archived services"
-                                >
-                                    Archived Services ({archivedServices.length}
-                                    )
-                                </button>
-                            </div>
+
+                            {canManage && (
+                                <div className="space-x-2">
+                                    <button
+                                        className={styles.btnGreen}
+                                        onClick={() => setShowAddService(true)}
+                                    >
+                                        + Add Service
+                                    </button>
+                                    <button
+                                        className={styles.btnDark}
+                                        onClick={() =>
+                                            setShowArchivedService(true)
+                                        }
+                                        title="View archived services"
+                                    >
+                                        Archived Services (
+                                        {archivedServicesCount})
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <hr className="my-4 border-gray-300" />
 
@@ -600,20 +655,18 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                                         <th>Service Name</th>
                                         <th>Standard Rate</th>
                                         <th>Discounted Rate</th>
-                                        <th>Action</th>
+                                        {canManage && <th>Action</th>}
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {/* DataTables will render rows */}
-                                </tbody>
+                                <tbody>{/* DataTables */}</tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Add Modal */}
-            {showAdd && (
+            {/* ===== MERCHANT-ONLY MODALS ===== */}
+            {canManage && showAdd && (
                 <Modal onClose={() => setShowAdd(false)} title="Add Product">
                     <form onSubmit={addRow} className="space-y-3">
                         <Field
@@ -659,8 +712,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 </Modal>
             )}
 
-            {/* Edit Modal */}
-            {editing && (
+            {canManage && editing && (
                 <Modal onClose={cancelEdit} title={`Edit: ${editing.name}`}>
                     <form onSubmit={saveEdit} className="space-y-3">
                         <Field
@@ -706,8 +758,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 </Modal>
             )}
 
-            {/* Archived Modal */}
-            {showArchived && (
+            {canManage && showArchived && (
                 <Modal
                     onClose={() => setShowArchived(false)}
                     title="Archived Products"
@@ -763,22 +814,10 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                                                         restoreRow(item.id)
                                                     }
                                                     aria-label="Restore"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.5}
-                                                        stroke="currentColor"
-                                                        className="size-6"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
-                                                        />
-                                                    </svg>
-                                                </button>
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: icons.restore,
+                                                    }}
+                                                />
                                             </td>
                                         </tr>
                                     ))}
@@ -796,8 +835,8 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                     </div>
                 </Modal>
             )}
-            {/* SERVICES: Add Modal */}
-            {showAddService && (
+
+            {canManage && showAddService && (
                 <Modal
                     onClose={() => setShowAddService(false)}
                     title="Add Service"
@@ -852,8 +891,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 </Modal>
             )}
 
-            {/* SERVICES: Edit Modal */}
-            {serviceEditing && (
+            {canManage && serviceEditing && (
                 <Modal
                     onClose={cancelServiceEdit}
                     title={`Edit: ${serviceEditing.name}`}
@@ -908,8 +946,7 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                 </Modal>
             )}
 
-            {/* SERVICES: Archived Modal */}
-            {showArchivedService && (
+            {canManage && showArchivedService && (
                 <Modal
                     onClose={() => setShowArchivedService(false)}
                     title="Archived Services"
@@ -965,27 +1002,10 @@ export default function Prices({ merchant = "Generika", products = [] }) {
                                                         restoreService(item.id)
                                                     }
                                                     aria-label="Restore"
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.5}
-                                                        stroke="currentColor"
-                                                        className="size-6"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7
-            48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7
-            c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3
-            c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7
-            48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7
-            c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
-                                                        />
-                                                    </svg>
-                                                </button>
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: icons.restore,
+                                                    }}
+                                                />
                                             </td>
                                         </tr>
                                     ))}

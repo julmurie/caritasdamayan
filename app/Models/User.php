@@ -47,12 +47,11 @@ class User extends Authenticatable
      * @var array<string,string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-        'locked_until'      => 'datetime',
-        // if you add archive later:
-        // 'archived_at'       => 'datetime',
-    ];
+    'email_verified_at' => 'datetime',
+    'password'          => 'hashed',
+    'is_active'         => 'boolean',
+    'locked_until'      => 'datetime',
+];
 
     /**
      * Accessor for full name.

@@ -1,16 +1,17 @@
 import React from "react";
 import Navbar from "../../components/Navbar";
 import styles from "../../../css/merchant.module.css";
+import FlashAlerts from "@/Components/FlashAlerts";
+import PageHeader from "@/Components/PageHeader";
 
 export default function Dashboard() {
     return (
         <>
+            <FlashAlerts autoDismissMs={6000} /> {/* shows the session flash */}
             <Navbar />
             <div className={styles.dashboardContainer}>
-                <div className={styles.header}>
-                    <h1>Dashboard</h1>
-                    <p>Partner Merchant | Generika</p>
-                    <hr className="my-4 border-gray-300" />
+                <div>
+                    <PageHeader title="Dashboard" />
                 </div>
 
                 <div className={styles.statGrid}>

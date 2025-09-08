@@ -10,17 +10,11 @@ class HandleInertiaRequests extends Middleware
 {
     /**
      * The root template that's loaded on the first page visit.
-     *
-     * @see https://inertiajs.com/server-side-setup#root-template
-     *
-     * @var string
      */
     protected $rootView = 'app';
 
     /**
      * Determines the current asset version.
-     *
-     * @see https://inertiajs.com/asset-versioning
      */
     public function version(Request $request): ?string
     {
@@ -28,19 +22,27 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Define the props that are shared by default.
-     *
-     * @see https://inertiajs.com/shared-data
-     *
-     * @return array<string, mixed>
+     * Shared props available to every Inertia page.
      */
     public function share(Request $request): array
-{
-    return [
-        ...parent::share($request),
-        'auth' => [
-            'user' => Auth::user(),
+    {
+        return array_merge(parent::share($request), [
+            // Minimal, lazy-evaluated auth info
+            'auth' => [
+                'user' => fn () => $request->user(),                 // null when guest
+                'role' => fn () => optional($request->user())->role, // e.g., admin/merchant/...
+            ],
+
+            // Flash messages for Tailwind alerts
+            'flash' => [
+            'success' => session('success'),
+            'error'   => session('error'),
+            'info'    => session('info'),
+            'warning' => session('warning'),
         ],
-    ];
-}
+
+            // Optional: handy if you prefer reading CSRF from props
+            // 'csrf_token' => fn () => csrf_token(),
+        ]);
+    }
 }

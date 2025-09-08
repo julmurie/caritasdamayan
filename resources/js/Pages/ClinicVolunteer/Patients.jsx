@@ -16,7 +16,7 @@ import React from "react";
 import Sidebar from "../../components/Sidebar";
 import styles from "../../../css/Volunteer.module.css";
 
-const Patient = () => {
+const Patients = () => {
     return (
         <div className={styles.container}>
             <div className={styles.sidebar}>

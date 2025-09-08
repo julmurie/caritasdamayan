@@ -104,80 +104,87 @@ class AuthController extends Controller
                 $user->save();
             }
 
-            if ($user->locked_until && now()->lessThan($user->locked_until)) {
-                $wait = now()->diffInMinutes($user->locked_until, false);
-                return back()
-                    ->withErrors(['email' => "Account locked. Try again in ~{$wait} minute(s)."])
-                    ->onlyInput('email');
-            }
+            // 🔐 still locked? flash error + retry_at for countdown
+        if ($user->locked_until && now()->lessThan($user->locked_until)) {
+            $wait = now()->diffInMinutes($user->locked_until, false);
+            return back()
+                ->withErrors(['email' => "Account locked. Try again in ~{$wait} minute(s)."])
+                ->with('error', 'Too many failed attempts. Please wait before trying again.')
+                ->with('retry_at', $user->locked_until->toIso8601String())
+                ->onlyInput('email');
         }
+    }
 
         // Attempt auth
-        if (!\Auth::attempt($credentials, true)) {
-            if ($user) {
-                $user->attempts_left = max(0, (int)$user->attempts_left - 1);
-                if ($user->attempts_left <= 0) {
-                    $user->locked_until = now()->addMinutes(15);
-                }
-                $user->save();
-
-                $msg = $user->locked_until
-                    ? 'Too many failed attempts. Try again in 15 minutes.'
-                    : ('Invalid credentials. Attempts left: ' . $user->attempts_left);
-
-                return back()->withErrors(['email' => $msg])->onlyInput('email');
-            }
-
-            return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
-        }
-
-        // Success
+    if (!\Auth::attempt($credentials, true)) {
         if ($user) {
-            $user->attempts_left = 5;
-            $user->locked_until  = null;
-            $user->save();
-        }
-
-        $request->session()->regenerate();
-
-        // ----- Guarded redirect logic -----
-        $role = Auth::user()->role ?? 'admin';
-
-        $to = match ($role) {
-            'admin'                                   => route('admin.dashboard'),
-            'clinic', 'volunteer', 'clinic_volunteer' => route('volunteer.dashboard'),
-            'merchant'                                => route('merchant.dashboard'),
-            'accounting'                              => route('accounting.dashboard'),
-            'treasury'                                => route('treasury.dashboard'),
-            default                                   => route('admin.dashboard'),
-        };
-
-        // Pull (and remove) intended URL from session
-        $intended = session()->pull('url.intended'); // string|null
-
-        if ($intended) {
-            $path = parse_url($intended, PHP_URL_PATH) ?? '/';
-            $allowedPrefix = "/{$role}/";
-            if (Str::startsWith($path, $allowedPrefix)) {
-                // HARD redirect to ensure navigation
-                return Inertia::location($intended);
+            $user->attempts_left = max(0, (int)$user->attempts_left - 1);
+            if ($user->attempts_left <= 0) {
+                $user->locked_until = now()->addMinutes(15);
             }
+            $user->save();
+
+            $msg = $user->locked_until
+                ? 'Too many failed attempts. Try again in 15 minutes.'
+                : ('Invalid credentials. Attempts left: ' . $user->attempts_left);
+
+            // ❌ flash a top error + optional retry_at
+            return back()
+                ->withErrors(['email' => $msg])
+                ->with('error', $msg)
+                ->when($user->locked_until, fn ($r) => $r->with('retry_at', $user->locked_until->toIso8601String()))
+                ->onlyInput('email');
         }
 
-        // Fallback: HARD redirect to the role dashboard
-        return Inertia::location($to);
+        return back()
+            ->withErrors(['email' => 'Invalid credentials'])
+            ->with('error', 'Invalid credentials')
+            ->onlyInput('email');
     }
 
-    /**
-     * Session logout — POST /logout
-     */
-    public function sessionLogout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        // Force a full reload so CSRF <meta> is refreshed
-        return Inertia::location(route('login'));
+    // ✅ Success: reset & flash success
+    if ($user) {
+        $user->attempts_left = 5;
+        $user->locked_until  = null;
+        $user->save();
     }
+
+    $request->session()->regenerate();
+
+    $role = Auth::user()->role ?? 'admin';
+    $to = match ($role) {
+        'admin'                                   => route('admin.dashboard'),
+        'clinic', 'volunteer', 'clinic_volunteer' => route('volunteer.dashboard'),
+        'merchant'                                => route('merchant.dashboard'),
+        'accounting'                              => route('accounting.dashboard'),
+        'treasury'                                => route('treasury.dashboard'),
+        default                                   => route('admin.dashboard'),
+    };
+
+    // 🌟 flash success **BEFORE** redirect
+$request->session()->flash('success', 'Signed in!');
+
+
+    // Intended redirect guarded by role
+    $intended = session()->pull('url.intended');
+    if ($intended) {
+        $path = parse_url($intended, PHP_URL_PATH) ?? '/';
+        $allowedPrefix = "/{$role}/";
+        if (\Illuminate\Support\Str::startsWith($path, $allowedPrefix)) {
+            return \Inertia\Inertia::location($intended);
+        }
+    }
+    return \Inertia\Inertia::location($to);
+}
+
+public function sessionLogout(Request $request)
+{
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    // 🌟 green alert on login page after logout
+    session()->flash('success', 'You have been logged out.');
+    return \Inertia\Inertia::location(route('login'));
+}
 }
