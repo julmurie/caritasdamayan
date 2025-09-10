@@ -1,68 +1,140 @@
-import React, { useState } from "react";
+// src/components/Sidebar.jsx
+import React, { useState, useEffect } from "react";
 import styles from "../../css/volunteer.module.css";
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+export default function Sidebar({ onToggle }) {
+    const [open, setOpen] = useState(true);
 
-  return (
-    <div
-      className={`${styles.sidebar} bg-light border-end ${
-        isOpen ? "" : "d-none"
-      }`}
-    >
-      {/* Header with toggle button */}
-      <div className="d-flex align-items-center justify-content-between p-2 border-bottom">
-        <h5 className="mb-0">Patients</h5>
-        <button
-          className="btn btn-sm btn-outline-secondary"
-          onClick={() => setIsOpen(!isOpen)}
+    useEffect(() => {
+        onToggle?.(open);
+    }, [open, onToggle]);
+
+    return (
+        <aside
+            className={`${styles.side} ${
+                open ? styles.sideOpen : styles.sideClosed
+            }`}
+            role="dialog"
+            aria-label="Sidebar"
         >
-          <i className={`bi ${isOpen ? "bi-chevron-left" : "bi-chevron-right"}`}></i>
-        </button>
-      </div>
+            {/* floating handle (always visible) */}
+            <button
+                type="button"
+                className={styles.sideHandle}
+                onClick={() => setOpen(!open)}
+                aria-label={open ? "Collapse" : "Expand"}
+            >
+                {open ? (
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className={styles.chev}
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
+                        />
+                    </svg>
+                ) : (
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className={styles.chev}
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                        />
+                    </svg>
+                )}
+            </button>
 
-      <div className="p-2">
-        <button className="btn btn-danger w-100 mb-2">+ Add Patient</button>
-        <button className="btn btn-outline-secondary w-100 mb-2">
-          Archived Patient
-        </button>
+            {/* Header */}
+            <div className={styles.sideHeader}>
+                <button
+                    className={`${styles.btn} ${styles.btnGreen}`}
+                    type="button"
+                >
+                    <span className={styles.iconLeft}>
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H4a1 1 0 1 1 0-2h5V4a1 1 0 0 1 1-1Z" />
+                        </svg>
+                    </span>
+                    <span className={styles.btnText}>Add Patient</span>
+                </button>
 
-        <input
-          type="text"
-          className="form-control mb-3"
-          placeholder="Search patient"
-        />
+                <button
+                    className={`${styles.btn} ${styles.btnDark}`}
+                    type="button"
+                >
+                    <span className={styles.iconLeft}>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9Z" />
+                        </svg>
+                    </span>
+                    <span className={styles.btnText}>Archived Patient</span>
+                </button>
 
-        <ul className={`list-group ${styles["patient-list"]}`}>
-          <li className="list-group-item active">Juan Dela Cruz</li>
-          <li className="list-group-item">Maria Santos</li>
-          <li className="list-group-item">Pedro Reyes</li>
-          <li className="list-group-item">Ana Lopez</li>
-        </ul>
+                {/* search + filter */}
+                <div className={styles.searchRow}>
+                    <input className={styles.search} placeholder="Search" />
+                    <button
+                        type="button"
+                        className={styles.filterBtn}
+                        aria-label="Filter"
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 5a1 1 0 0 1 1-1h16a1 1 0 0 1 .8 1.6l-6.2 8.27V19a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10 17v-3.13L3.2 5.6A1 1 0 0 1 3 5Z" />
+                        </svg>
+                    </button>
+                </div>
 
-        {/* Pagination */}
-        <nav className="mt-3">
-          <ul className="pagination pagination-sm justify-content-center">
-            <li className="page-item disabled">
-              <a className="page-link">«</a>
-            </li>
-            <li className="page-item active">
-              <a className="page-link">1</a>
-            </li>
-            <li className="page-item">
-              <a className="page-link">2</a>
-            </li>
-            <li className="page-item">
-              <a className="page-link">3</a>
-            </li>
-            <li className="page-item">
-              <a className="page-link">»</a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-  );
-};
+                <div className={styles.tally}>Total Patients (x)</div>
+            </div>
 
-export default Sidebar;
+            {/* Body (list) */}
+            <div className={styles.listWrap}>
+                <div className={styles.groupHead}>
+                    <span className={styles.rowText}>Dela Cruz, Juan</span>
+                    <button className={styles.iconOnly} aria-label="Delete">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7 2a1 1 0 0 0-1 1v1H4.5a1 1 0 1 0 0 2H5v9a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V6h.5a1 1 0 1 0 0-2H14V3a1 1 0 0 0-1-1H7Z" />
+                        </svg>
+                    </button>
+                </div>
+                <button className={styles.row} type="button">
+                    <span className={styles.rowText}>Luna, Antonio</span>
+                </button>
+                <button className={styles.row} type="button">
+                    <span className={styles.rowText}>Salazar, Paul</span>
+                </button>
+                <div className={styles.flexFill} />
+            </div>
+
+            {/* Footer (pagination) */}
+            <div className={styles.pagesBar}>
+                <span className={styles.pagesLabel}>Pages</span>
+                <div className={styles.pages}>
+                    <button className={styles.pageBtn}>&lt;</button>
+                    <button
+                        className={`${styles.pageBtn} ${styles.pageActive}`}
+                    >
+                        1
+                    </button>
+                    <button className={styles.pageBtn}>2</button>
+                    <span className={styles.pageDots}>..</span>
+                    <button className={styles.pageBtn}>8</button>
+                    <button className={styles.pageBtn}>&gt;</button>
+                </div>
+            </div>
+        </aside>
+    );
+}

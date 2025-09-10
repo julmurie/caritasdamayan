@@ -1,92 +1,164 @@
-// import ScoreCard from "../../components/ScoreCard";
-// import Navbar from "../../components/Navbar";
-
-// function Patient() {
-//     return (
-//         <div>
-//             <Navbar />
-//             <ScoreCard />
-//         </div>
-//     );
-// }
-
-// export default Patient;
-
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../../components/Sidebar";
-import styles from "../../../css/Volunteer.module.css";
+import Navbar from "../../components/Navbar";
+import styles from "../../../css/volunteer.module.css";
+
+import Information from "@/components/Information";
+import Documents from "@/components/Documents";
+import RequestApproval from "@/components/RequestApproval";
+import AssistanceRecord from "@/components/AssistanceRecord";
 
 const Patients = () => {
+    const [activeTab, setActiveTab] = useState("information");
+
+    const renderTab = () => {
+        switch (activeTab) {
+            case "information":
+                return <Information />;
+            case "documents":
+                return <Documents />;
+            case "approval":
+                return <RequestApproval />;
+            case "history":
+                return <AssistanceRecord />;
+            default:
+                return <Information />;
+        }
+    };
+
     return (
-        <div className={styles.container}>
-            <div className={styles.sidebar}>
+        <>
+            <Navbar />
+
+            {/* 2-col shell with push sidebar */}
+            <div className={styles.shell} style={{ "--sideW": "240px" }}>
+                {/* Sidebar */}
                 <Sidebar />
-            </div>
 
-            <div className={styles.mainContent}>
-                {/* Top Tabs */}
-                <ul className={styles.navTabs}>
-                    <li className={`${styles.navTab} ${styles.active}`}>
-                        Initial Assessment
-                    </li>
-                    <li className={styles.navTab}>Patient Profile</li>
-                </ul>
+                {/* Main content */}
+                <main className={styles.main}>
+                    {/* ===== TOP: Patient card (left) + Add panels (right) ===== */}
+                    <div className={styles.row2col}>
+                        {/* Patient header card (kept) */}
+                        <section className={styles.pHeaderCard}>
+                            <div className={styles.pHeaderInner}>
+                                <div className={styles.pAvatar} aria-hidden />
+                                <div className={styles.pMeta}>
+                                    <h2 className={styles.pName}>
+                                        Dela Cruz, Juan
+                                    </h2>
+                                    <div className={styles.pSub}>
+                                        Male | 38 years old
+                                    </div>
 
-                {/* Sub Tabs */}
-                <ul className={styles.navPills}>
-                    <li className={`${styles.navPill} ${styles.active}`}>
-                        Information
-                    </li>
-                    <li className={styles.navPill}>Documents</li>
-                    <li className={styles.navPill}>Request Approval</li>
-                    <li className={styles.navPill}>Request History</li>
-                </ul>
+                                    <div className={styles.pCodes}>
+                                        <div>
+                                            <span className={styles.pCodeLabel}>
+                                                Patient Number:
+                                            </span>
+                                            <span className={styles.pCodeValue}>
+                                                00001
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className={styles.pCodeLabel}>
+                                                Patient Code:
+                                            </span>
+                                            <span className={styles.pCodeValue}>
+                                                ABC01
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
 
-                {/* Patient Info Table */}
-                <div className={styles.card}>
-                    <h6>Patient Information</h6>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <th>Name</th>
-                                <td>Juan Dela Cruz</td>
-                            </tr>
-                            <tr>
-                                <th>Age</th>
-                                <td>32</td>
-                            </tr>
-                            <tr>
-                                <th>Gender</th>
-                                <td>Male</td>
-                            </tr>
-                            <tr>
-                                <th>Address</th>
-                                <td>Quezon City</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                        {/* Right side: Add Documents + Add Appointment */}
+                        <div className={styles.rightPanels}>
+                            <aside className={styles.docPanel}>
+                                <h4 className={styles.panelTitle}>
+                                    Add Documents
+                                </h4>
+                                <div className={styles.docGrid}>
+                                    <button className={styles.docBtn}>
+                                        Score Card
+                                    </button>
+                                    <button className={styles.docBtn}>
+                                        Medicine Request
+                                    </button>
+                                    <button className={styles.docBtn}>
+                                        Laboratory Request
+                                    </button>
+                                </div>
+                            </aside>
 
-                {/* Buttons for Documents */}
-                <div className={styles.card}>
-                    <h6>Documents</h6>
-                    <div
-                        style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "0.5rem",
-                        }}
-                    >
-                        <button className={styles.btn}>Score Card</button>
-                        <button className={styles.btn}>Medicine Request</button>
-                        <button className={styles.btn}>
-                            Laboratory Request
-                        </button>
-                        <button className={styles.btn}>Others</button>
+                            <aside className={styles.docPanel}>
+                                <h4 className={styles.panelTitle}>
+                                    Add Appointment
+                                </h4>
+                                <div className={styles.docGrid}>
+                                    <button className={styles.docBtn}>
+                                        Donated Item
+                                    </button>
+                                    <button className={styles.docBtn}>
+                                        Referral
+                                    </button>
+                                    <button className={styles.docBtn}>
+                                        Initial Assessment
+                                    </button>
+                                    <button className={styles.docBtn}>
+                                        Consultation
+                                    </button>
+                                </div>
+                            </aside>
+                        </div>
                     </div>
-                </div>
+
+                    {/* ===== TABS (kept) ===== */}
+                    <ul className={styles.tabBar}>
+                        <li
+                            className={`${styles.tab} ${
+                                activeTab === "information"
+                                    ? styles.tabActive
+                                    : ""
+                            }`}
+                            onClick={() => setActiveTab("information")}
+                        >
+                            Information
+                        </li>
+                        <li
+                            className={`${styles.tab} ${
+                                activeTab === "documents"
+                                    ? styles.tabActive
+                                    : ""
+                            }`}
+                            onClick={() => setActiveTab("documents")}
+                        >
+                            Documents
+                        </li>
+                        <li
+                            className={`${styles.tab} ${
+                                activeTab === "approval" ? styles.tabActive : ""
+                            }`}
+                            onClick={() => setActiveTab("approval")}
+                        >
+                            Request Approval
+                        </li>
+                        <li
+                            className={`${styles.tab} ${
+                                activeTab === "history" ? styles.tabActive : ""
+                            }`}
+                            onClick={() => setActiveTab("history")}
+                        >
+                            Assistance Record
+                        </li>
+                    </ul>
+
+                    {/* ===== TAB BODY (only this area changes on click) ===== */}
+                    <div className={styles.tabContent}>{renderTab()}</div>
+                </main>
             </div>
-        </div>
+        </>
     );
 };
 
