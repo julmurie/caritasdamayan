@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PatientController;
 
 // routes/api.php
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
@@ -19,6 +20,8 @@ Route::middleware('auth:sanctum')->patch('/users/{user}/reset-attempts', functio
 Route::get('/users/datatable', [UserController::class, 'datatable']);
 Route::post('/users', [UserController::class, 'store']);
 Route::get('/users', [UserController::class, 'index']);
+Route::get('/patients',  [PatientController::class, 'index']);
+Route::post('/patients', [PatientController::class, 'store']);
 
 // TEMP: expose show/update/destroy WITHOUT auth
 Route::get('/users/{user}', [UserController::class, 'show'])->withoutMiddleware('auth:sanctum');

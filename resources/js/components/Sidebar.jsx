@@ -1,28 +1,71 @@
-// src/components/Sidebar.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { fetchPatients, createPatient } from "@/api/patients";
 import styles from "../../css/volunteer.module.css";
+import AddPatientModal from "@/Components/Modals/AddPatientModal";
 
 export default function Sidebar({ onToggle }) {
     const [open, setOpen] = useState(true);
 
+    const [patients, setPatients] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState("");
+
+    const [showAdd, setShowAdd] = useState(false);
+
+    // keep parent informed about width change
     useEffect(() => {
         onToggle?.(open);
     }, [open, onToggle]);
+
+    // load patients
+    const load = async () => {
+        try {
+            setLoading(true);
+            setErr("");
+            const data = await fetchPatients(); // expects array
+            setPatients(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+            setErr(e.message || "Failed to load patients");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        load();
+    }, []);
+
+    // modal save handler
+    const handleCreate = async (form) => {
+        await createPatient(form);
+        setShowAdd(false);
+        await load();
+    };
+
+    {
+        showAdd && (
+            <AddPatientModal
+                onClose={() => setShowAdd(false)}
+                onSave={handleCreate}
+            />
+        );
+    }
 
     return (
         <aside
             className={`${styles.side} ${
                 open ? styles.sideOpen : styles.sideClosed
             }`}
-            role="dialog"
             aria-label="Sidebar"
         >
-            {/* floating handle (always visible) */}
+            {/* collapse/expand handle (always visible) */}
             <button
                 type="button"
                 className={styles.sideHandle}
-                onClick={() => setOpen(!open)}
+                onClick={() => setOpen((v) => !v)}
                 aria-label={open ? "Collapse" : "Expand"}
+                title={open ? "Collapse" : "Expand"}
             >
                 {open ? (
                     <svg
@@ -57,84 +100,124 @@ export default function Sidebar({ onToggle }) {
                 )}
             </button>
 
-            {/* Header */}
+            {/* header actions */}
             <div className={styles.sideHeader}>
                 <button
-                    className={`${styles.btn} ${styles.btnGreen}`}
                     type="button"
+                    className={`${styles.btn} ${styles.btnGreen}`}
+                    onClick={() => setShowAdd(true)}
                 >
                     <span className={styles.iconLeft}>
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10 3a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H4a1 1 0 1 1 0-2h5V4a1 1 0 0 1 1-1Z" />
+                        {/* plus-in-circle; shows white on green button */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            width="16"
+                            height="16"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="8.25" />
+                            <path d="M12 8.5v7M8.5 12h7" />
                         </svg>
                     </span>
                     <span className={styles.btnText}>Add Patient</span>
                 </button>
 
                 <button
-                    className={`${styles.btn} ${styles.btnDark}`}
                     type="button"
+                    className={`${styles.btn} ${styles.btnDark}`}
                 >
-                    <span className={styles.iconLeft}>
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9Z" />
-                        </svg>
-                    </span>
                     <span className={styles.btnText}>Archived Patient</span>
                 </button>
 
-                {/* search + filter */}
+                {/* search (hook up later server-side) + filter */}
                 <div className={styles.searchRow}>
-                    <input className={styles.search} placeholder="Search" />
+                    <input
+                        className={styles.search}
+                        placeholder="Search patient (soon)"
+                        disabled
+                    />
                     <button
                         type="button"
                         className={styles.filterBtn}
-                        aria-label="Filter"
+                        disabled
+                        title="Filter (soon)"
                     >
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 5a1 1 0 0 1 1-1h16a1 1 0 0 1 .8 1.6l-6.2 8.27V19a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10 17v-3.13L3.2 5.6A1 1 0 0 1 3 5Z" />
+                        <svg
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M3 5h14M6 10h8m-6 5h4"
+                                stroke="currentColor"
+                                fill="none"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                            />
                         </svg>
                     </button>
                 </div>
 
-                <div className={styles.tally}>Total Patients (x)</div>
+                {open && (
+                    <div className={styles.tally}>
+                        {loading
+                            ? "Loading…"
+                            : `Total Patients (${patients.length})`}
+                    </div>
+                )}
             </div>
 
-            {/* Body (list) */}
+            {/* list */}
             <div className={styles.listWrap}>
-                <div className={styles.groupHead}>
-                    <span className={styles.rowText}>Dela Cruz, Juan</span>
-                    <button className={styles.iconOnly} aria-label="Delete">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M7 2a1 1 0 0 0-1 1v1H4.5a1 1 0 1 0 0 2H5v9a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V6h.5a1 1 0 1 0 0-2H14V3a1 1 0 0 0-1-1H7Z" />
-                        </svg>
-                    </button>
-                </div>
-                <button className={styles.row} type="button">
-                    <span className={styles.rowText}>Luna, Antonio</span>
-                </button>
-                <button className={styles.row} type="button">
-                    <span className={styles.rowText}>Salazar, Paul</span>
-                </button>
+                {err && <div className={styles.row}>{err}</div>}
+                {loading && <div className={styles.row}>Loading…</div>}
+                {!loading && patients.length === 0 && (
+                    <div className={styles.row}>No patients yet.</div>
+                )}
+
+                {!loading &&
+                    patients.map((p) => (
+                        <button
+                            key={
+                                p.patient_id ??
+                                `${p.patient_lname}-${p.patient_fname}`
+                            }
+                            type="button"
+                            className={styles.row}
+                            title={`${p.patient_lname}, ${p.patient_fname}${
+                                p.patient_mname ? " " + p.patient_mname : ""
+                            }`}
+                            // onClick={() => ... select patient if you need }
+                        >
+                            <span className={styles.rowText}>
+                                {p.patient_lname}, {p.patient_fname}
+                                {p.patient_mname ? ` ${p.patient_mname}` : ""}
+                            </span>
+                        </button>
+                    ))}
+
                 <div className={styles.flexFill} />
             </div>
 
-            {/* Footer (pagination) */}
+            {/* simple footer (keep, or replace with real pagination later) */}
             <div className={styles.pagesBar}>
-                <span className={styles.pagesLabel}>Pages</span>
+                <span className={styles.pagesLabel}>Patients</span>
                 <div className={styles.pages}>
-                    <button className={styles.pageBtn}>&lt;</button>
-                    <button
-                        className={`${styles.pageBtn} ${styles.pageActive}`}
-                    >
-                        1
-                    </button>
-                    <button className={styles.pageBtn}>2</button>
-                    <span className={styles.pageDots}>..</span>
-                    <button className={styles.pageBtn}>8</button>
-                    <button className={styles.pageBtn}>&gt;</button>
+                    <span className={styles.pageBtn}>{patients.length}</span>
                 </div>
             </div>
+
+            {/* Add Patient Modal */}
+            {showAdd && (
+                <AddPatientModal
+                    onClose={() => setShowAdd(false)}
+                    onSave={handleCreate}
+                />
+            )}
         </aside>
     );
 }

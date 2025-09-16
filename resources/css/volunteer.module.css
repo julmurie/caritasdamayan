@@ -588,6 +588,27 @@
     color: #111827;
 }
 
+/* Modal CSS */
+.modalBackdrop {
+    position: fixed; /* important */
+    inset: 0; /* cover screen */
+    background: rgba(0, 0, 0, 0.35);
+    display: grid;
+    place-items: center;
+    z-index: 1000; /* above sidebar */
+}
+.modalCard {
+    background: #fff;
+    border-radius: 10px;
+    min-width: 560px;
+    max-width: 720px;
+    width: calc(100% - 32px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh; /* prevent tall overflow */
+}
+
 /* Responsive tweaks */
 @media (max-width: 1200px) {
     .row2col {
