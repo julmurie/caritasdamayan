@@ -48,7 +48,7 @@ Route::middleware('guest')->group(function () {
 | Protected (must be logged in)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware('auth', 'nocache')->group(function () {
 
     /* ---------------- Admin ---------------- */
     Route::prefix('admin')->middleware('role:admin')->group(function () {
@@ -80,8 +80,8 @@ Route::middleware('auth')->group(function () {
         Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('admin.soa.restore');
     });
 
-    /* ---------------- Clinic ---------------- */
-    Route::prefix('volunteer')->group(function () {
+    /* ---------------- Clinic Volunteer---------------- */
+    Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
         Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
         Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
         Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');

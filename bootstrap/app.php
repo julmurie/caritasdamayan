@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\IdleLogout;
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -15,16 +16,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // 1) Register route middleware aliases (use in routes like ->middleware('role:admin'))
-        $middleware->alias([
-            'role' => EnsureRole::class,
-        ]);
+    $middleware->alias([
+        // 'idle' => IdleLogout::class,
+        'role'    => \App\Http\Middleware\EnsureRole::class,
+        'nocache' => \App\Http\Middleware\PreventBackHistory::class,
+    ]);
 
-        // 2) Keep/append your web middlewares
-        $middleware->web(append: [
-            HandleInertiaRequests::class,
-        ]);
-    })
+    // Web group middleware (append once)
+    $middleware->web(append: [
+        \App\Http\Middleware\HandleInertiaRequests::class,
+        // IdleLogout::class,
+    ]);
+})
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

@@ -14,6 +14,7 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [pwd, setPwd] = useState("");
     const [showPwd, setShowPwd] = useState(false);
+    const [remember, setRemember] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // field-level errors
@@ -133,7 +134,7 @@ export default function Login() {
             await new Promise((resolve, reject) => {
                 router.post(
                     "/session-login",
-                    { email, password: pwd, _token: csrf },
+                    { email, password: pwd, remember, _token: csrf },
                     {
                         // 👇 added explicit CSRF header (small but important)
                         headers: { "X-CSRF-TOKEN": csrf },
@@ -278,6 +279,7 @@ export default function Login() {
                                         disabled={locked || loading}
                                         className="h-full flex-1 text-[25px] pl-2 pr-14 border-l-2 border-l-[#c61d23] focus:outline-none focus:ring-0 disabled:bg-gray-100"
                                     />
+
                                     <button
                                         type="button"
                                         aria-label={
@@ -326,25 +328,24 @@ export default function Login() {
                                     </p>
                                 )}
                             </div>
-
-                            {/* Banner */}
-                            {bannerErr && (
-                                <p
-                                    role="alert"
-                                    className="text-center text-red-600 text-[18px] mb-2"
-                                >
-                                    {locked && remaining > 0
-                                        ? `${bannerErr} (${fmt(remaining)})`
-                                        : bannerErr}
-                                </p>
-                            )}
+                            <label className="flex items-center gap-2 text-xl">
+                                <input
+                                    type="checkbox"
+                                    className="w-5 h-5"
+                                    checked={remember}
+                                    onChange={(e) =>
+                                        setRemember(e.target.checked)
+                                    }
+                                />
+                                Remember me
+                            </label>
 
                             {/* Login button */}
                             <div className="grid w-full">
                                 <button
                                     type="submit"
                                     disabled={!canLogin || loading || locked}
-                                    className={`text-white text-center font-bold text-[35px] rounded-full border-0 mt-8 transition-colors shadow-[0_8px_12px_rgba(0,0,0,0.2)] py-2
+                                    className={`text-white text-center font-bold text-[35px] rounded-full border-0 transition-colors shadow-[0_8px_12px_rgba(0,0,0,0.2)] py-2
                     ${
                         !canLogin || loading || locked
                             ? "bg-[#bababa] cursor-not-allowed"
@@ -358,6 +359,17 @@ export default function Login() {
                                         : "Login"}
                                 </button>
                             </div>
+                            {/* Banner */}
+                            {bannerErr && (
+                                <p
+                                    role="alert"
+                                    className="text-center text-red-600 text-[18px]"
+                                >
+                                    {locked && remaining > 0
+                                        ? `${bannerErr} (${fmt(remaining)})`
+                                        : bannerErr}
+                                </p>
+                            )}
 
                             <div className="text-center mt-2">
                                 <a
