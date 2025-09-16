@@ -1,55 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { fetchPatients, createPatient } from "@/api/patients";
 import styles from "../../css/volunteer.module.css";
-import AddPatientModal from "@/Components/Modals/AddPatientModal";
+import AddPatientModal from "./modals/AddPatientModal";
 
-export default function Sidebar({ onToggle }) {
+export default function Sidebar({ onToggle, onSelect, selectedId }) {
     const [open, setOpen] = useState(true);
-
     const [patients, setPatients] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [err, setErr] = useState("");
-
     const [showAdd, setShowAdd] = useState(false);
 
-    // keep parent informed about width change
-    useEffect(() => {
-        onToggle?.(open);
-    }, [open, onToggle]);
+    const idOf = (row) => row?.patient_id ?? row?.id;
 
-    // load patients
-    const load = async () => {
+    async function load({ selectFirstIfNone = true } = {}) {
         try {
-            setLoading(true);
-            setErr("");
-            const data = await fetchPatients(); // expects array
-            setPatients(Array.isArray(data) ? data : []);
+            const data = await fetchPatients();
+            setPatients(data);
+            if (selectFirstIfNone && !selectedId && data?.length) {
+                onSelect?.(idOf(data[0]));
+            }
         } catch (e) {
-            console.error(e);
-            setErr(e.message || "Failed to load patients");
-        } finally {
-            setLoading(false);
+            console.error("fetchPatients failed:", e);
+            setPatients([]);
         }
-    };
+    }
 
+    useEffect(() => onToggle?.(open), [open, onToggle]);
     useEffect(() => {
-        load();
+        load({ selectFirstIfNone: true });
     }, []);
 
-    // modal save handler
-    const handleCreate = async (form) => {
-        await createPatient(form);
-        setShowAdd(false);
-        await load();
-    };
-
-    {
-        showAdd && (
-            <AddPatientModal
-                onClose={() => setShowAdd(false)}
-                onSave={handleCreate}
-            />
-        );
+    async function handleCreate(form) {
+        try {
+            const created = await createPatient(form);
+            setShowAdd(false);
+            await load({ selectFirstIfNone: false });
+            const newId = idOf(created);
+            if (newId) onSelect?.(newId);
+        } catch (e) {
+            console.error("createPatient failed:", e);
+            alert(e.message || "Failed to save patient");
+        }
     }
 
     return (
@@ -59,22 +48,21 @@ export default function Sidebar({ onToggle }) {
             }`}
             aria-label="Sidebar"
         >
-            {/* collapse/expand handle (always visible) */}
             <button
                 type="button"
                 className={styles.sideHandle}
-                onClick={() => setOpen((v) => !v)}
+                onClick={() => setOpen(!open)}
                 aria-label={open ? "Collapse" : "Expand"}
-                title={open ? "Collapse" : "Expand"}
             >
+                {/* chevrons unchanged */}
                 {open ? (
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
                         viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
                         className={styles.chev}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
                     >
                         <path
                             strokeLinecap="round"
@@ -85,11 +73,11 @@ export default function Sidebar({ onToggle }) {
                 ) : (
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
                         viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
                         className={styles.chev}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
                     >
                         <path
                             strokeLinecap="round"
@@ -100,7 +88,6 @@ export default function Sidebar({ onToggle }) {
                 )}
             </button>
 
-            {/* header actions */}
             <div className={styles.sideHeader}>
                 <button
                     type="button"
@@ -108,112 +95,68 @@ export default function Sidebar({ onToggle }) {
                     onClick={() => setShowAdd(true)}
                 >
                     <span className={styles.iconLeft}>
-                        {/* plus-in-circle; shows white on green button */}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            width="16"
-                            height="16"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <circle cx="12" cy="12" r="8.25" />
-                            <path d="M12 8.5v7M8.5 12h7" />
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H4a1 1 0 1 1 0-2h5V4a1 1 0 0 1 1-1Z" />
                         </svg>
                     </span>
                     <span className={styles.btnText}>Add Patient</span>
                 </button>
 
                 <button
-                    type="button"
                     className={`${styles.btn} ${styles.btnDark}`}
+                    type="button"
                 >
+                    <span className={styles.iconLeft}>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9Z" />
+                        </svg>
+                    </span>
                     <span className={styles.btnText}>Archived Patient</span>
                 </button>
 
-                {/* search (hook up later server-side) + filter */}
                 <div className={styles.searchRow}>
-                    <input
-                        className={styles.search}
-                        placeholder="Search patient (soon)"
-                        disabled
-                    />
+                    <input className={styles.search} placeholder="Search" />
                     <button
                         type="button"
                         className={styles.filterBtn}
-                        disabled
-                        title="Filter (soon)"
+                        aria-label="Filter"
                     >
-                        <svg
-                            viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M3 5h14M6 10h8m-6 5h4"
-                                stroke="currentColor"
-                                fill="none"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                            />
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 5a1 1 0 0 1 1-1h16a1 1 0 0 1 .8 1.6l-6.2 8.27V19a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10 17v-3.13L3.2 5.6A1 1 0 0 1 3 5Z" />
                         </svg>
                     </button>
                 </div>
 
-                {open && (
-                    <div className={styles.tally}>
-                        {loading
-                            ? "Loading…"
-                            : `Total Patients (${patients.length})`}
-                    </div>
-                )}
-            </div>
-
-            {/* list */}
-            <div className={styles.listWrap}>
-                {err && <div className={styles.row}>{err}</div>}
-                {loading && <div className={styles.row}>Loading…</div>}
-                {!loading && patients.length === 0 && (
-                    <div className={styles.row}>No patients yet.</div>
-                )}
-
-                {!loading &&
-                    patients.map((p) => (
-                        <button
-                            key={
-                                p.patient_id ??
-                                `${p.patient_lname}-${p.patient_fname}`
-                            }
-                            type="button"
-                            className={styles.row}
-                            title={`${p.patient_lname}, ${p.patient_fname}${
-                                p.patient_mname ? " " + p.patient_mname : ""
-                            }`}
-                            // onClick={() => ... select patient if you need }
-                        >
-                            <span className={styles.rowText}>
-                                {p.patient_lname}, {p.patient_fname}
-                                {p.patient_mname ? ` ${p.patient_mname}` : ""}
-                            </span>
-                        </button>
-                    ))}
-
-                <div className={styles.flexFill} />
-            </div>
-
-            {/* simple footer (keep, or replace with real pagination later) */}
-            <div className={styles.pagesBar}>
-                <span className={styles.pagesLabel}>Patients</span>
-                <div className={styles.pages}>
-                    <span className={styles.pageBtn}>{patients.length}</span>
+                <div className={styles.tally}>
+                    Total Patients ({patients?.length ?? 0})
                 </div>
             </div>
 
-            {/* Add Patient Modal */}
+            <div className={styles.listWrap}>
+                {patients.map((p) => {
+                    const id = idOf(p);
+                    const active = id === selectedId;
+                    return (
+                        <button
+                            key={id}
+                            type="button"
+                            className={styles.row}
+                            onClick={() => onSelect?.(id)}
+                            title={`${p.patient_lname}, ${p.patient_fname}`}
+                            style={{ fontWeight: active ? 700 : 400 }}
+                        >
+                            <span className={styles.rowText}>
+                                {p.patient_lname}, {p.patient_fname}
+                            </span>
+                        </button>
+                    );
+                })}
+                <div className={styles.flexFill} />
+            </div>
+
             {showAdd && (
                 <AddPatientModal
+                    open={showAdd}
                     onClose={() => setShowAdd(false)}
                     onSave={handleCreate}
                 />

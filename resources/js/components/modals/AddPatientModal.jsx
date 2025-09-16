@@ -1,206 +1,406 @@
-import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
 import styles from "../../../css/volunteer.module.css";
 
-const empty = {
-    patient_lname: "",
-    patient_fname: "",
-    patient_mname: "",
-    address: "",
-    birthday: "",
-    gender: "",
-    contact_no: "",
-    class_id: "",
-    assist_id: "",
-    pb_id: "",
-    cb_by: "",
-    assessed_by: "",
-};
+const CATEGORIES = [
+    "Caritas Manila Program Volunteers",
+    "Caritas in Action Referrals",
+    "Referrals from Other Caritas Manila Clinics",
+    "Caritas Manila Employees",
+    "Parish Employees",
+    "Parish Volunteers or Lay Leaders",
+    "YSLEP Scholars",
+    "Other Program Beneficiaries (e.g., Restorative Justice, Sanlakbay, etc.)",
+];
 
-export default function AddPatientModal({ onClose, onSave }) {
-    const [form, setForm] = useState(empty);
-    const [busy, setBusy] = useState(false);
-    const [err, setErr] = useState("");
-    const [portalEl, setPortalEl] = useState(null);
+export default function AddPatientModal({ open, onClose, onSubmit }) {
+    if (!open) return null;
 
-    useEffect(() => {
-        const root = document.getElementById("modal-root") || document.body;
-        setPortalEl(root);
-    }, []);
+    const root = document.getElementById("modal-root");
+    if (!root) return null;
 
-    function setField(k, v) {
-        setForm((f) => ({ ...f, [k]: v }));
+    const [isFP, setIsFP] = useState(null); // true => FP, false => NFP, null => not selected
+
+    function handleClassificationChange(e) {
+        const v = e.target.value;
+        if (v === "FP") setIsFP(true);
+        else if (v === "NFP") setIsFP(false);
+        else setIsFP(null);
     }
 
-    async function submit(e) {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setErr("");
-        setBusy(true);
-        try {
-            await onSave(form);
-        } catch (e) {
-            setErr(e.message || "Failed to save");
-        } finally {
-            setBusy(false);
-        }
-    }
+        const form = new FormData(e.target);
+        const payload = {
+            patient_fname: form.get("patient_fname"),
+            patient_lname: form.get("patient_lname"),
+            patient_mname: form.get("patient_mname"),
+            gender: form.get("gender"),
+            birthday: form.get("birthday"),
+            contact_no: form.get("contact_no"),
+            address: form.get("address"),
+            clinic: form.get("clinic"),
+            parish: form.get("parish"),
+            classification_cm: form.get("classification_cm"),
+            category: form.get("category"),
+            booklet_no: form.get("booklet_no"),
+            is_head_family: form.get("is_head_family") === "on" ? 1 : 0,
+            valid_id_no: form.get("valid_id_no"),
+            endorsed_as_fp: form.get("endorsed_as_fp") === "on" ? 1 : 0,
+            first_time_visit: form.get("first_time_visit") === "on" ? 1 : 0,
+        };
+        onSave(payload);
+    };
 
-    const modalUI = (
-        <div className={styles.modalBackdrop} role="dialog" aria-modal="true">
+    return ReactDOM.createPortal(
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
             <div className={styles.modalCard}>
-                <div className={styles.modalHead}>
-                    <h3>Add Patient</h3>
+                {/* Header */}
+                <div className={styles.modalHeader}>
+                    <h3 className={styles.modalTitle}>Patient Information</h3>
                     <button
-                        onClick={onClose}
-                        className={styles.iconOnly}
+                        type="button"
+                        className={styles.modalClose}
                         aria-label="Close"
+                        onClick={onClose}
                     >
                         ✕
                     </button>
                 </div>
 
-                <form className={styles.modalBody} onSubmit={submit}>
-                    {err && <div className={styles.errorBox}>{err}</div>}
-
-                    <div className={styles.formGrid}>
-                        <label>
-                            Last Name*
+                {/* Body (scrollable) */}
+                <div className={styles.modalBody}>
+                    <form className={styles.formGrid} onSubmit={handleSubmit}>
+                        {/* Names */}
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="patient_fname"
+                                className={styles.formLabel}
+                            >
+                                First Name <span className={styles.req}>*</span>
+                            </label>
                             <input
+                                id="patient_fname"
+                                name="patient_fname"
                                 required
-                                value={form.patient_lname}
-                                onChange={(e) =>
-                                    setField("patient_lname", e.target.value)
-                                }
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="e.g. Juan"
                             />
-                        </label>
-                        <label>
-                            First Name*
-                            <input
-                                required
-                                value={form.patient_fname}
-                                onChange={(e) =>
-                                    setField("patient_fname", e.target.value)
-                                }
-                            />
-                        </label>
-                        <label>
-                            Middle Name
-                            <input
-                                value={form.patient_mname}
-                                onChange={(e) =>
-                                    setField("patient_mname", e.target.value)
-                                }
-                            />
-                        </label>
+                        </div>
 
-                        <label>
-                            Address
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="patient_lname"
+                                className={styles.formLabel}
+                            >
+                                Last Name <span className={styles.req}>*</span>
+                            </label>
                             <input
-                                value={form.address}
-                                onChange={(e) =>
-                                    setField("address", e.target.value)
-                                }
+                                id="patient_lname"
+                                name="patient_lname"
+                                required
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="e.g. Dela Cruz"
                             />
-                        </label>
-                        <label>
-                            Birthday
+                        </div>
+
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="patient_mname"
+                                className={styles.formLabel}
+                            >
+                                Middle Name
+                            </label>
                             <input
-                                type="date"
-                                value={form.birthday}
-                                onChange={(e) =>
-                                    setField("birthday", e.target.value)
-                                }
+                                id="patient_mname"
+                                name="patient_mname"
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="(optional)"
                             />
-                        </label>
-                        <label>
-                            Gender
+                        </div>
+
+                        {/* Demographics */}
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="gender"
+                                className={styles.formLabel}
+                            >
+                                Gender
+                            </label>
                             <select
-                                value={form.gender}
-                                onChange={(e) =>
-                                    setField("gender", e.target.value)
-                                }
+                                id="gender"
+                                name="gender"
+                                className={styles.formControl}
                             >
                                 <option value="">Select</option>
-                                <option>Male</option>
                                 <option>Female</option>
+                                <option>Male</option>
+                                <option>Others</option>
                             </select>
-                        </label>
-                        <label>
-                            Contact No
-                            <input
-                                value={form.contact_no}
-                                onChange={(e) =>
-                                    setField("contact_no", e.target.value)
-                                }
-                            />
-                        </label>
+                        </div>
 
-                        {/* Optional system fields */}
-                        <label>
-                            Class ID
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="birthday"
+                                className={styles.formLabel}
+                            >
+                                Birthday
+                            </label>
                             <input
-                                value={form.class_id}
-                                onChange={(e) =>
-                                    setField("class_id", e.target.value)
-                                }
+                                id="birthday"
+                                name="birthday"
+                                className={styles.formControl}
+                                type="date"
                             />
-                        </label>
-                        <label>
-                            Assist ID
-                            <input
-                                value={form.assist_id}
-                                onChange={(e) =>
-                                    setField("assist_id", e.target.value)
-                                }
-                            />
-                        </label>
-                        <label>
-                            PB ID
-                            <input
-                                value={form.pb_id}
-                                onChange={(e) =>
-                                    setField("pb_id", e.target.value)
-                                }
-                            />
-                        </label>
-                        <label>
-                            CB By
-                            <input
-                                value={form.cb_by}
-                                onChange={(e) =>
-                                    setField("cb_by", e.target.value)
-                                }
-                            />
-                        </label>
-                        <label>
-                            Assessed By
-                            <input
-                                value={form.assessed_by}
-                                onChange={(e) =>
-                                    setField("assessed_by", e.target.value)
-                                }
-                            />
-                        </label>
-                    </div>
+                        </div>
 
-                    <div className={styles.modalActions}>
-                        <button type="button" onClick={onClose} disabled={busy}>
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className={styles.btnGreen}
-                            disabled={busy}
-                        >
-                            {busy ? "Saving…" : "Save"}
-                        </button>
-                    </div>
-                </form>
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="contact_no"
+                                className={styles.formLabel}
+                            >
+                                Contact No
+                            </label>
+                            <input
+                                id="contact_no"
+                                name="contact_no"
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="e.g. 09xxxxxxxxx"
+                            />
+                        </div>
+
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="address"
+                                className={styles.formLabel}
+                            >
+                                Address
+                            </label>
+                            <input
+                                id="address"
+                                name="address"
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="Street / Barangay / City"
+                            />
+                        </div>
+
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="clinic"
+                                className={styles.formLabel}
+                            >
+                                Clinic
+                            </label>
+                            <input
+                                id="clinic"
+                                name="clinic"
+                                className={styles.formControl}
+                                type="text"
+                            />
+                        </div>
+
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="parish"
+                                className={styles.formLabel}
+                            >
+                                Parish
+                            </label>
+                            <input
+                                id="parish"
+                                name="parish"
+                                className={styles.formControl}
+                                type="text"
+                            />
+                        </div>
+
+                        {/* Classification to CM (FP / NFP) */}
+                        <div className={styles.formRow}>
+                            <label className={styles.formLabel}>
+                                Classification to CM
+                            </label>
+                            <div className={styles.inlineChoices}>
+                                <label className={styles.choice}>
+                                    <input
+                                        type="radio"
+                                        name="classification_cm"
+                                        value="FP"
+                                        onChange={handleClassificationChange}
+                                    />
+                                    <span>Beneficiary (FP)</span>
+                                </label>
+                                <label className={styles.choice}>
+                                    <input
+                                        type="radio"
+                                        name="classification_cm"
+                                        value="NFP"
+                                        onChange={handleClassificationChange}
+                                    />
+                                    <span>Beneficiary (NFP)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Category (Annex 2) */}
+                        <div className={styles.formRow}>
+                            <label
+                                htmlFor="category"
+                                className={styles.formLabel}
+                            >
+                                Category as client
+                            </label>
+                            <select
+                                id="category"
+                                name="category"
+                                className={styles.formControl}
+                            >
+                                <option value="">Select category</option>
+                                {CATEGORIES.map((c) => (
+                                    <option key={c} value={c}>
+                                        {c}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* FP sub-questions */}
+                        {isFP === true && (
+                            <>
+                                <div className={styles.formRow}>
+                                    <label
+                                        htmlFor="booklet_no"
+                                        className={styles.formLabel}
+                                    >
+                                        Booklet #
+                                    </label>
+                                    <input
+                                        id="booklet_no"
+                                        name="booklet_no"
+                                        className={styles.formControl}
+                                        type="text"
+                                    />
+                                </div>
+
+                                <div className={styles.formRow}>
+                                    <label className={styles.formLabel}>
+                                        Is head of the family
+                                    </label>
+                                    <div className={styles.inlineChoices}>
+                                        <label className={styles.choice}>
+                                            <input
+                                                type="radio"
+                                                name="is_head_of_family"
+                                                value="yes"
+                                            />
+                                            <span>Yes</span>
+                                        </label>
+                                        <label className={styles.choice}>
+                                            <input
+                                                type="radio"
+                                                name="is_head_of_family"
+                                                value="no"
+                                                defaultChecked
+                                            />
+                                            <span>No</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* NFP sub-questions */}
+                        {isFP === false && (
+                            <>
+                                <div className={styles.formRow}>
+                                    <label
+                                        htmlFor="valid_id_no"
+                                        className={styles.formLabel}
+                                    >
+                                        Valid ID with #
+                                    </label>
+                                    <input
+                                        id="valid_id_no"
+                                        name="valid_id_no"
+                                        className={styles.formControl}
+                                        type="text"
+                                    />
+                                </div>
+
+                                <div className={styles.formRow}>
+                                    <label className={styles.formLabel}>
+                                        Endorsed for registration as CM family
+                                        partner?
+                                    </label>
+                                    <div className={styles.inlineChoices}>
+                                        <label className={styles.choice}>
+                                            <input
+                                                type="radio"
+                                                name="endorsed_for_registration"
+                                                value="yes"
+                                            />
+                                            <span>Yes</span>
+                                        </label>
+                                        <label className={styles.choice}>
+                                            <input
+                                                type="radio"
+                                                name="endorsed_for_registration"
+                                                value="no"
+                                                defaultChecked
+                                            />
+                                            <span>No</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className={styles.formRow}>
+                                    <label className={styles.formLabel}>
+                                        First time visiting the clinic?
+                                    </label>
+                                    <div className={styles.inlineChoices}>
+                                        <label className={styles.choice}>
+                                            <input
+                                                type="radio"
+                                                name="first_time_visit"
+                                                value="yes"
+                                            />
+                                            <span>Yes</span>
+                                        </label>
+                                        <label className={styles.choice}>
+                                            <input
+                                                type="radio"
+                                                name="first_time_visit"
+                                                value="no"
+                                                defaultChecked
+                                            />
+                                            <span>No</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Actions */}
+                        <div className={styles.formActions}>
+                            <button
+                                type="button"
+                                className={styles.btnGhost}
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </button>
+                            <button type="submit" className={styles.btnPrimary}>
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+        </div>,
+        root
     );
-
-    if (!portalEl) return null; // until effect runs
-
-    return createPortal(modalUI, portalEl);
 }

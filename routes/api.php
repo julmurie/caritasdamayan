@@ -20,7 +20,9 @@ Route::middleware('auth:sanctum')->patch('/users/{user}/reset-attempts', functio
 Route::get('/users/datatable', [UserController::class, 'datatable']);
 Route::post('/users', [UserController::class, 'store']);
 Route::get('/users', [UserController::class, 'index']);
-Route::get('/patients',  [PatientController::class, 'index']);
+
+Route::get('/patients', [PatientController::class, 'index']);
+Route::get('/patients/{id}', [PatientController::class, 'show']);
 Route::post('/patients', [PatientController::class, 'store']);
 
 // TEMP: expose show/update/destroy WITHOUT auth

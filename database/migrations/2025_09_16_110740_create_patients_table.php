@@ -7,29 +7,36 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('patients', function (Blueprint $table) {
-            $table->id('patient_id');
+    Schema::create('patients', function (Blueprint $table) {
+        $table->id('patient_id');
+        $table->string('patient_fname');
+        $table->string('patient_lname');
+        $table->string('patient_mname')->nullable();
+        $table->enum('gender', ['Male', 'Female', 'Others']);
+        $table->date('birthday')->nullable();
+        $table->string('contact_no')->nullable();
+        $table->string('address')->nullable();
+        $table->string('clinic')->nullable();
+        $table->string('parish')->nullable();
 
-            // system / foreign keys (keep nullable for now)
-            $table->unsignedBigInteger('cb_by')->nullable();
-            $table->unsignedBigInteger('pb_id')->nullable();
-            $table->unsignedBigInteger('assessed_by')->nullable();
-            $table->unsignedBigInteger('class_id')->nullable();
-            $table->unsignedBigInteger('assist_id')->nullable();
+        // Classification: FP / NFP
+        $table->enum('classification_cm', ['FP', 'NFP'])->nullable();
 
-            // human fields
-            $table->string('patient_lname', 100);
-            $table->string('patient_fname', 100);
-            $table->string('patient_mname', 100)->nullable();
-            $table->string('address', 255)->nullable();
-            $table->date('birthday')->nullable();
-            $table->enum('gender', ['Male', 'Female'])->nullable();
-            $table->string('contact_no', 20)->nullable();
+        // Sub-questions for FP
+        $table->string('booklet_no')->nullable();
+        $table->boolean('is_head_family')->default(false);
 
-            $table->timestamps();
-        });
-    }
+        // Sub-questions for NFP
+        $table->string('valid_id_no')->nullable();
+        $table->boolean('endorsed_as_fp')->default(false);
+        $table->boolean('first_time_visit')->default(false);
 
+        // Category (see Annex 2 list)
+        $table->string('category')->nullable();
+
+        $table->timestamps();
+    });
+}
     public function down(): void
     {
         Schema::dropIfExists('patients');
