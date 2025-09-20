@@ -119,23 +119,25 @@ export default function Prices({
 
     const buildActionsHtml = (row) => `
   <div class="${styles.pricesActionsCol}">
+  <button type="button" class="${styles.pricesActionBtn} btn-edit" title="Edit" data-id="${row.id}" aria-label="Edit">
+      ${icons.edit}
+    </button>
     <button type="button" class="${styles.pricesActionBtn} btn-archive" title="Archive" data-id="${row.id}" aria-label="Archive">
       ${icons.archive}
     </button>
-    <button type="button" class="${styles.pricesActionBtn} btn-edit" title="Edit" data-id="${row.id}" aria-label="Edit">
-      ${icons.edit}
-    </button>
+    
   </div>
 `;
 
     const buildServiceActionsHtml = (row) => `
   <div class="${styles.pricesActionsCol}">
-    <button type="button" class="${styles.pricesActionBtn} btn-archive-service" title="Archive" data-id="${row.id}" aria-label="Archive">
-      ${icons.archive}
-    </button>
     <button type="button" class="${styles.pricesActionBtn} btn-edit-service" title="Edit" data-id="${row.id}" aria-label="Edit">
       ${icons.edit}
     </button>
+    <button type="button" class="${styles.pricesActionBtn} btn-archive-service" title="Archive" data-id="${row.id}" aria-label="Archive">
+      ${icons.archive}
+    </button>
+    
   </div>
 `;
 

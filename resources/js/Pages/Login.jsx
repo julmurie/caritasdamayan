@@ -328,17 +328,6 @@ export default function Login() {
                                     </p>
                                 )}
                             </div>
-                            <label className="flex items-center gap-2 text-xl">
-                                <input
-                                    type="checkbox"
-                                    className="w-5 h-5"
-                                    checked={remember}
-                                    onChange={(e) =>
-                                        setRemember(e.target.checked)
-                                    }
-                                />
-                                Remember me
-                            </label>
 
                             {/* Login button */}
                             <div className="grid w-full">
@@ -371,7 +360,18 @@ export default function Login() {
                                 </p>
                             )}
 
-                            <div className="text-center mt-2">
+                            <div className="flex justify-between items-center gap-11 mt-4">
+                                <label className="flex items-center gap-3 text-[25px] font-bold text-black">
+                                    <input
+                                        type="checkbox"
+                                        className="w-6 h-6"
+                                        checked={remember}
+                                        onChange={(e) =>
+                                            setRemember(e.target.checked)
+                                        }
+                                    />
+                                    Remember me
+                                </label>
                                 <a
                                     href="#"
                                     className="text-[25px] font-bold underline text-black"

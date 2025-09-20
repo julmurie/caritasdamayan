@@ -105,6 +105,15 @@ Route::middleware('auth', 'nocache')->group(function () {
         Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('volunteer.soa.update');
         Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('volunteer.soa.destroy');
         Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('volunteer.soa.restore');
+
+        Route::inertia('/documents/score-card', 'ClinicVolunteer/Documents/ScoreCard')->name('volunteer.documents.scorecard');
+        Route::inertia('/documents/medicine-request', 'ClinicVolunteer/Documents/MedicineRequest')->name('volunteer.documents.medicine');
+        Route::inertia('/documents/laboratory-request', 'ClinicVolunteer/Documents/LaboratoryRequest')->name('volunteer.documents.laboratory');
+
+        Route::inertia('/appointments/donated-item', 'ClinicVolunteer/Appointments/DonatedItem')->name('volunteer.appointments.donated');
+        Route::inertia('/appointments/referral', 'ClinicVolunteer/Appointments/Referral')->name('volunteer.appointments.referral');
+        Route::inertia('/appointments/initial-assessment', 'ClinicVolunteer/Appointments/InitialAssessment')->name('volunteer.appointments.initial');
+        Route::inertia('/appointments/consultation', 'ClinicVolunteer/Appointments/Consultation')->name('volunteer.appointments.consultation');
     });
 
     Route::get('/merchant/products/datatable', [ProductController::class, 'datatable'])
