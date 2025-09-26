@@ -2,15 +2,31 @@ import { useState, useEffect, useCallback } from "react";
 import { router } from "@inertiajs/react";
 import { Link, usePage } from "@inertiajs/react";
 import CaritasLogo from "../../images/CaritasManilaLogo_White.svg";
+import Avatar from "../../images/Avatar.png";
 import ConfirmDialog from "@/Components/ConfirmDialog";
 import Alert from "@/Components/Alert";
 
 export default function Navbar() {
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const { url, props } = usePage();
+
     const roleFromProps = props?.auth?.user?.role ?? null;
 
     const [open, setOpen] = useState(false);
     const [role, setRole] = useState(roleFromProps);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (
+                !e.target.closest("#user-menu-button") &&
+                !e.target.closest("#user-dropdown")
+            ) {
+                setUserMenuOpen(false);
+            }
+        };
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
+    }, []);
 
     // derive role from Inertia props first, fallback to localStorage ("me")
     useEffect(() => {
@@ -175,25 +191,83 @@ export default function Navbar() {
 
                     {/* Right: icons (always visible) + hamburger */}
                     <div className="navbar-right">
-                        <Link
-                            href="/profile"
-                            aria-label="User Profile"
-                            className="navbar-icon-link"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
+                        {/* User avatar + name with dropdown */}
+                        <div className="relative flex items-center gap-2">
+                            {/* Avatar button */}
+                            <button
+                                type="button"
+                                onClick={() => setUserMenuOpen((v) => !v)}
+                                className="flex items-center text-sm rounded-full focus:ring-2 focus:ring-gray-300"
+                                id="user-menu-button"
+                                aria-expanded={userMenuOpen}
+                                aria-haspopup="true"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                <img
+                                    className="w-8 h-8 rounded-full"
+                                    src={Avatar} // replace with actual avatar if you have one
+                                    alt="user avatar"
                                 />
-                            </svg>
-                        </Link>
+                                <span className="ml-2 font-medium text-white">
+                                    {props?.auth?.user?.name}
+                                </span>
+                                <svg
+                                    className="ml-1 w-4 h-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                    />
+                                </svg>
+                            </button>
+
+                            {/* Dropdown */}
+                            {userMenuOpen && (
+                                <div
+                                    className="absolute right-0 top-full mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                                    role="menu"
+                                    aria-orientation="vertical"
+                                    aria-labelledby="user-menu-button"
+                                >
+                                    <div className="px-4 py-3 border-b border-gray-100">
+                                        <span className="block text-sm font-semibold text-gray-900">
+                                            {props?.auth?.user?.name}{" "}
+                                            <span className="text-gray-500 text-xs font-normal">
+                                                ({props?.auth?.user?.role})
+                                            </span>
+                                        </span>
+                                        <span className="block text-sm text-gray-500 truncate">
+                                            {props?.auth?.user?.email}
+                                        </span>
+                                    </div>
+                                    <ul className="py-1">
+                                        <li>
+                                            <Link
+                                                href="/profile"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                role="menuitem"
+                                            >
+                                                Profile
+                                            </Link>
+                                        </li>
+                                        {/* <li>
+                                            <Link
+                                                href="/settings"
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                role="menuitem"
+                                            >
+                                                Settings
+                                            </Link>
+                                        </li> */}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
 
                         <Link
                             href="/notifications"

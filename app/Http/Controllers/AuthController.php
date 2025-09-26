@@ -7,8 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;            // ⬅️ used for startsWith
-use Inertia\Inertia;                  // ⬅️ used for hard redirects
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Str;            
+use Inertia\Inertia;                  
 use App\Models\User;
 
 class AuthController extends Controller
@@ -89,22 +90,27 @@ class AuthController extends Controller
      * Redirects to role dashboard with guarded intended URL (hard redirects).
      */
     public function sessionLogin(Request $request)
-    {
-        $credentials = $request->validate([
-            'email'    => ['required','email'],
-            'password' => ['required'],
-        ]);
+{
+    $request->validate([
+        'email'    => ['required','email'],
+        'password' => ['required'],
+        'remember' => ['nullable','boolean'],
+    ]);
 
-        $user = \App\Models\User::where('email', $credentials['email'])->first();
-        if ($user) {
-            // Reset if lock expired
-            if ($user->locked_until && now()->greaterThanOrEqualTo($user->locked_until)) {
-                $user->locked_until = null;
-                $user->attempts_left = 5;
-                $user->save();
-            }
+    // Only these two go to attempt()
+    $creds = $request->only('email', 'password');
+    $remember = $request->boolean('remember');
 
-            // 🔐 still locked? flash error + retry_at for countdown
+    $user = \App\Models\User::where('email', $creds['email'])->first();
+    if ($user) {
+        // auto-unlock if expired
+        if ($user->locked_until && now()->greaterThanOrEqualTo($user->locked_until)) {
+            $user->locked_until = null;
+            $user->attempts_left = 5;
+            $user->save();
+        }
+
+        // still locked?
         if ($user->locked_until && now()->lessThan($user->locked_until)) {
             $wait = now()->diffInMinutes($user->locked_until, false);
             return back()
@@ -115,10 +121,10 @@ class AuthController extends Controller
         }
     }
 
-        // Attempt auth
-    if (!\Auth::attempt($credentials, true)) {
+    // Attempt with remember flag
+    if (!Auth::attempt($creds, $remember)) {
         if ($user) {
-            $user->attempts_left = max(0, (int)$user->attempts_left - 1);
+            $user->attempts_left = max(0, (int) $user->attempts_left - 1);
             if ($user->attempts_left <= 0) {
                 $user->locked_until = now()->addMinutes(15);
             }
@@ -128,13 +134,18 @@ class AuthController extends Controller
                 ? 'Too many failed attempts. Try again in 15 minutes.'
                 : ('Invalid credentials. Attempts left: ' . $user->attempts_left);
 
-            // ❌ flash a top error + optional retry_at
             return back()
                 ->withErrors(['email' => $msg])
                 ->with('error', $msg)
                 ->when($user->locked_until, fn ($r) => $r->with('retry_at', $user->locked_until->toIso8601String()))
                 ->onlyInput('email');
         }
+        if ($remember) {
+      \Log::info('Remember cookie should be set', [
+          'recaller' => Auth::guard()->getRecallerName(),
+          ]);
+      }
+
 
         return back()
             ->withErrors(['email' => 'Invalid credentials'])
@@ -142,7 +153,7 @@ class AuthController extends Controller
             ->onlyInput('email');
     }
 
-    // ✅ Success: reset & flash success
+    // success: reset lock state
     if ($user) {
         $user->attempts_left = 5;
         $user->locked_until  = null;
@@ -153,37 +164,41 @@ class AuthController extends Controller
 
     $role = Auth::user()->role ?? 'admin';
     $to = match ($role) {
-        'admin'                                   => route('admin.dashboard'),
-        'clinic', 'volunteer', 'clinic_volunteer' => route('volunteer.dashboard'),
-        'merchant'                                => route('merchant.dashboard'),
-        'accounting'                              => route('accounting.dashboard'),
-        'treasury'                                => route('treasury.dashboard'),
-        default                                   => route('admin.dashboard'),
+        'admin'     => route('admin.dashboard'),
+        'volunteer' => route('volunteer.dashboard'),
+        'merchant'  => route('merchant.dashboard'),
+        'accounting'=> route('accounting.dashboard'),
+        'treasury'  => route('treasury.dashboard'),
+        default     => route('admin.dashboard'),
     };
 
-    // 🌟 flash success **BEFORE** redirect
-$request->session()->flash('success', 'Signed in!');
+    $request->session()->flash('success', 'Signed in!');
 
-
-    // Intended redirect guarded by role
     $intended = session()->pull('url.intended');
     if ($intended) {
         $path = parse_url($intended, PHP_URL_PATH) ?? '/';
         $allowedPrefix = "/{$role}/";
-        if (\Illuminate\Support\Str::startsWith($path, $allowedPrefix)) {
+        if (Str::startsWith($path, $allowedPrefix)) {
             return \Inertia\Inertia::location($intended);
         }
     }
+
     return \Inertia\Inertia::location($to);
 }
 
 public function sessionLogout(Request $request)
 {
-    Auth::logout();
+    $guard = Auth::guard();
+    $guard->logout();
+
+    // ensure the "remember me" cookie is cleared
+    if (method_exists($guard, 'getRecallerName')) {
+        Cookie::queue(Cookie::forget($guard->getRecallerName())); // remember_web_*
+    }
+
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    // 🌟 green alert on login page after logout
     session()->flash('success', 'You have been logged out.');
     return \Inertia\Inertia::location(route('login'));
 }

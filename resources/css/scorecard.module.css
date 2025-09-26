@@ -1,29 +1,100 @@
-/* Scope design tokens to the component wrapper */
-.scorecard {
-    --brand-red: #c61d22;
-    --bar-text: #fff;
-    --line: #e5e7eb;
-    --muted: #6b7280;
+/* ========= THEME VARS ========= */
+:root {
+    --navbar-h: 64px; /* adjust to your Navbar height */
+    --sidebar-w: 260px; /* adjust to your Sidebar width */
 
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --brand-red: #ad2125; /* main red */
+    --brand-red-dark: #9f171b; /* darker red for chevron block */
+    --bar-text: #ffffff;
+
+    --bg: #f3f4f6; /* page background */
+    --card: #f5f5f5; /* scorecard surface */
+    --line: #e5e7eb; /* light divider lines */
+    --muted: #6b7280; /* muted text */
+    --ink: #111827; /* primary text */
+}
+
+/* ========= LAYOUT (fixed sidebar, scrollable content) ========= */
+.body {
+    display: flex;
+    height: calc(100vh - var(--navbar-h));
+    background: var(--bg);
+}
+
+.sidebarWrap {
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    position: sticky;
+    top: var(--navbar-h);
+    align-self: flex-start;
+    height: calc(100vh - var(--navbar-h));
     overflow: hidden;
+    border-right: 1px solid var(--line);
+    background: #ffffff; /* let Sidebar design show cleanly */
+    z-index: 10;
 }
 
-/* Header */
+.content {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: calc(100vh - var(--navbar-h));
+    overflow: auto; /* only this pane scrolls */
+    padding: 16px 20px 40px;
+    background: var(--bg);
+}
+
+/* Toolbar above the scorecard (Back + Print) */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 2rem 8px;
+}
+.toolbarLeft {
+    display: flex;
+    gap: 8px;
+}
+.btn {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: #ffffff;
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn:hover {
+    background: #f9fafb;
+}
+
+/* ========= SCORECARD WRAPPER ========= */
+.scorecard {
+    background: var(--card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 2rem;
+    color: var(--ink);
+}
+
+/* Title at the very top (white background in the ref image) */
 .header {
-    background: var(--brand-red);
-    color: var(--bar-text);
-    padding: 14px 18px;
-    font-weight: 700;
+    background: #ffffff;
+    color: var(--ink);
+    padding: 16px 18px;
+    font-weight: 800;
     text-align: center;
-    font-size: 1.15rem;
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--line);
 }
 
-/* Section frame */
+/* ========= INDICATOR BARS (solid red) ========= */
 .section {
     padding: 0;
-    border-top: 8px solid #f3f4f6;
+    border-top: 8px solid #f3f4f6; /* subtle gap between sections */
 }
 
 .bar {
@@ -33,7 +104,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.25px;
 }
 
@@ -43,6 +114,7 @@
     gap: 0.5rem;
 }
 
+/* search field on the right side of Indicator 3 bar */
 .search {
     background: #fff;
     border: 1px solid var(--line);
@@ -52,14 +124,15 @@
     width: 220px;
 }
 
-/* Indicator 1 & 2 options */
+/* ========= OPTIONS (Indicator 1 & 2) ========= */
 .optionsGrid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
     padding: 12px 14px 16px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--line);
 }
-
 .option {
     display: flex;
     align-items: center;
@@ -71,31 +144,78 @@
     font-weight: 600;
 }
 
-/* Collapsible groups (Indicator 3) */
+/* ========= COLLAPSIBLE GROUPS (Indicator 3) ========= */
 .fold {
     border-top: 1px solid var(--line);
 }
+
+/* Header row for each fold: red background with left dark block and white chevron */
 .foldSummary {
-    list-style: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #f8d7da10;
-    padding: 10px 14px;
-    font-weight: 700;
+
+    background: var(--brand-red);
+    color: var(--bar-text);
+    position: relative;
+
+    /* room for left chevron block */
+    padding: 10px 14px 10px 44px;
+
+    font-weight: 800;
+    letter-spacing: 0.1px;
     border-bottom: 1px solid var(--line);
 }
+
+/* keep same red when open (as in ref); tweak if you prefer lighter */
 .fold[open] .foldSummary {
-    background: #f8d7da33;
+    background: var(--brand-red);
 }
 
-/* Case list */
+/* Hide default disclosure marker to avoid double arrows */
+.foldSummary::-webkit-details-marker {
+    display: none;
+}
+.foldSummary::marker {
+    content: "";
+}
+
+/* Left darker block */
+.foldSummary::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    background: var(--brand-red-dark);
+}
+
+/* White chevron centered inside the block */
+.foldSummary::after {
+    content: "▸";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    color: #ffffff;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: transform 0.18s ease;
+}
+.fold[open] .foldSummary::after {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+/* ========= CASE LIST INSIDE FOLDS ========= */
 .caseList {
     list-style: none;
     counter-reset: item;
     margin: 0;
-    padding: 4px 8px 12px;
+    padding: 6px 8px 12px;
+    background: #ffffff;
 }
 .caseItem {
     position: relative;
@@ -103,7 +223,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 10px 10px 28px;
+    padding: 10px 10px 10px 34px; /* left space for auto number */
     border-bottom: 1px solid var(--line);
 }
 .caseItem:last-child {
@@ -113,54 +233,63 @@
     counter-increment: item;
     content: counter(item) ".";
     position: absolute;
-    left: 8px;
+    left: 12px;
     top: 12px;
-    font-weight: 700;
+    font-weight: 800;
     color: #374151;
 }
 .caseText {
-    color: #111827;
+    color: var(--ink);
     max-width: calc(100% - 40px);
+    line-height: 1.35;
+    font-size: 0.95rem;
 }
 .caseRadio {
     margin-top: 2px;
 }
 
-/* Scoring table */
+/* ========= SCORING TABLE ========= */
 .scoring {
-    margin: 16px;
+    margin-top: 16px;
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;
+    background: #ffffff;
 }
 .scoringTable {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
 }
-.scoringTable th,
+.scoringTable thead th {
+    background: var(--brand-red);
+    color: var(--bar-text);
+    font-weight: 800;
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+}
 .scoringTable td {
     border-bottom: 1px solid var(--line);
     padding: 12px 14px;
-    text-align: left;
-}
-.scoringTable th {
-    background: #f9fafb;
-    font-weight: 700;
+    text-align: center;
+    color: var(--ink);
 }
 .footnote td {
     font-size: 0.9rem;
     color: var(--muted);
-    background: #f9fafb;
+    background: #fafafa;
 }
 
-/* Responsive tweaks */
-@media (max-width: 1024px) {
+/* ========= RESPONSIVE ========= */
+@media (max-width: 1200px) {
     .optionsGrid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .optionsGrid {
+        grid-template-columns: 1fr;
+    }
     .bar {
         flex-direction: column;
         align-items: stretch;
@@ -168,11 +297,15 @@
     }
     .barRight {
         justify-content: flex-end;
+        width: 100%;
     }
     .search {
         width: 100%;
     }
-    .optionsGrid {
-        grid-template-columns: 1fr;
+    .toolbar {
+        margin: 4px 1rem 8px;
+    }
+    .scorecard {
+        margin: 1rem;
     }
 }
