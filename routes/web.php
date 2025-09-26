@@ -84,6 +84,10 @@ Route::middleware('auth')->group(function () {
     Route::prefix('volunteer')->group(function () {
         Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
         Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
+        //Button Documents
+    Route::get('/medicinerequest', function () {
+    return Inertia::render('ClinicVolunteer/MedicineRequest');
+    })->name('medicinerequest');
         Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');
 
         Route::get('/prices', function () {

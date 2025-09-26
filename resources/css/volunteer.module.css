@@ -14,17 +14,31 @@
 /* ===========================
    Layout (sidebar pushes content)
    =========================== */
-.shell {
-    --sideW: 240px; /* overridden inline by Patients.jsx */
+/* .shell {
+    --sideW: 240px; 
     display: grid;
     grid-template-columns: var(--sideW) 1fr;
-    height: calc(100vh - 56px); /* navbar height ≈ 56px */
+    height: calc(100vh - 56px);
     background: #f6f8fa;
+} */
+
+.shell {
+    display: grid;
+    height: calc(100vh - 56px);
+    background: #f6f8fa;
+    transition: grid-template-columns 300ms ease;
+}
+.shellOpen {
+    grid-template-columns: 240px 1fr;
+}
+.shellClosed {
+    grid-template-columns: 72px 1fr;
 }
 
 .main {
     background: #fff;
     height: 100%;
+    padding: 16px;
     overflow: auto;
 }
 
