@@ -192,7 +192,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import styles from "../../../css/volunteer.module.css";
-import { Link } from "@inertiajs/react";
 
 import Information from "@/components/Information";
 import Documents from "@/components/Documents";
@@ -325,18 +324,19 @@ const Patients = () => {
                                     Add Documents
                                 </h4>
                                 <div className={styles.docGrid}>
-                                    <Link
-                                        href="/volunteer/documents/score-card"
-                                        className={styles.docBtn}
-                                    >
+                                    <button className={styles.docBtn}>
                                         Score Card
                                     </button>
-                                    <button className={styles.docBtn}>
+                                    <Link
+                                        href={route("medicinerequest")}
+                                        className={styles.docBtn}
+                                    >
                                         Medicine Request
-                                    </button>
+                                    </Link>
+
                                     <button className={styles.docBtn}>
                                         Laboratory Request
-                                    </Link>
+                                    </button>
                                 </div>
                             </aside>
 
@@ -345,30 +345,18 @@ const Patients = () => {
                                     Add Appointment
                                 </h4>
                                 <div className={styles.docGrid}>
-                                    <Link
-                                        href="/volunteer/appointments/donated-item"
-                                        className={styles.docBtn}
-                                    >
+                                    <button className={styles.docBtn}>
                                         Donated Item
-                                    </Link>
-                                    <Link
-                                        href="/volunteer/appointments/referral"
-                                        className={styles.docBtn}
-                                    >
+                                    </button>
+                                    <button className={styles.docBtn}>
                                         Referral
-                                    </Link>
-                                    <Link
-                                        href="/volunteer/appointments/initial-assessment"
-                                        className={styles.docBtn}
-                                    >
+                                    </button>
+                                    <button className={styles.docBtn}>
                                         Initial Assessment
-                                    </Link>
-                                    <Link
-                                        href="/volunteer/appointments/consultation"
-                                        className={styles.docBtn}
-                                    >
+                                    </button>
+                                    <button className={styles.docBtn}>
                                         Consultation
-                                    </Link>
+                                    </button>
                                 </div>
                             </aside>
                         </div>
