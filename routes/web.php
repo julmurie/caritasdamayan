@@ -9,6 +9,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SOAController;
+use App\Http\Controllers\PatientController;
+
 
 /*
 |--------------------------------------------------------------------------

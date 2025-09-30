@@ -67,8 +67,8 @@ export default function Information({ patient, onEdit }) {
 
                     <div className={styles.cellLabel}>Classification:</div>
                     <div className={styles.cellValue}>
-                        {patient?.classification_to_cm
-                            ? patient.classification_to_cm === "FP"
+                        {patient?.classification_cm
+                            ? patient.classification_cm === "FP"
                                 ? "Beneficiary (FP)"
                                 : "Beneficiary (NFP)"
                             : "–"}
@@ -83,7 +83,7 @@ export default function Information({ patient, onEdit }) {
 
                     <div className={styles.cellLabel}>Category:</div>
                     <div className={styles.cellValue}>
-                        {show(patient?.category_as_client)}
+                        {show(patient?.category)}
                     </div>
                 </div>
 
@@ -111,7 +111,7 @@ export default function Information({ patient, onEdit }) {
                         Is Head of the Family:
                     </div>
                     <div className={styles.cellValue}>
-                        {yesno(patient?.is_head_of_family)}
+                        {yesno(patient?.is_head_family)}
                     </div>
                 </div>
 
@@ -121,8 +121,10 @@ export default function Information({ patient, onEdit }) {
                         {show(patient?.clinic)}
                     </div>
 
-                    <div className={styles.cellLabel}></div>
-                    <div className={styles.cellValue}></div>
+                    <div className={styles.cellLabel}>PhilHealth No:</div>
+                    <div className={styles.cellValue}>
+                        {show(patient?.philhealth_no)}
+                    </div>
                 </div>
             </div>
         </section>
