@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SOAController;
+use App\Http\Controllers\MedicineRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,13 +81,13 @@ Route::middleware('auth', 'nocache')->group(function () {
         Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('admin.soa.restore');
     });
 
-    /* ---------------- Clinic Volunteer---------------- */
-    Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
-        Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
-        Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
-        Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');
+    /* ---------------- Clinic Volunteer ---------------- */
+Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
+    Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
+    Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
+    Route::inertia('/charge-slips', 'ClinicVolunteer/ChargeSlips')->name('volunteer.charge_slips');
 
-        Route::get('/prices', function () {
+    Route::get('/prices', function () {
         return Inertia::render('PartnerMerchant/Prices', [
             'merchant'    => 'Generika',
             'permissions' => ['canManage' => false],
@@ -97,24 +98,29 @@ Route::middleware('auth', 'nocache')->group(function () {
         ]);
     })->name('volunteer.prices');
 
-        Route::inertia('/soa', 'ClinicVolunteer/SOA')->name('volunteer.soa'); // PAGE ONLY
+    Route::inertia('/soa', 'ClinicVolunteer/SOA')->name('volunteer.soa'); // PAGE ONLY
 
-        // SOA API
-        Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('volunteer.soa.datatable');
-        Route::post  ('/soa',              [SOAController::class, 'store'])->name('volunteer.soa.store');
-        Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('volunteer.soa.update');
-        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('volunteer.soa.destroy');
-        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('volunteer.soa.restore');
+    // SOA API
+    Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('volunteer.soa.datatable');
+    Route::post  ('/soa',              [SOAController::class, 'store'])->name('volunteer.soa.store');
+    Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('volunteer.soa.update');
+    Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('volunteer.soa.destroy');
+    Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('volunteer.soa.restore');
 
-        Route::inertia('/documents/score-card', 'ClinicVolunteer/Documents/ScoreCard')->name('volunteer.documents.scorecard');
-        Route::inertia('/documents/medicine-request', 'ClinicVolunteer/Documents/MedicineRequest')->name('volunteer.documents.medicine');
-        Route::inertia('/documents/laboratory-request', 'ClinicVolunteer/Documents/LaboratoryRequest')->name('volunteer.documents.laboratory');
+    // Documents
+    Route::inertia('/documents/score-card', 'ClinicVolunteer/Documents/ScoreCard')->name('volunteer.documents.scorecard');
+    Route::inertia('/documents/medicine-request', 'ClinicVolunteer/Documents/MedicineRequest')->name('volunteer.documents.medicine');
+    Route::inertia('/documents/laboratory-request', 'ClinicVolunteer/Documents/LaboratoryRequest')->name('volunteer.documents.laboratory');
 
-        Route::inertia('/appointments/donated-item', 'ClinicVolunteer/Appointments/DonatedItem')->name('volunteer.appointments.donated');
-        Route::inertia('/appointments/referral', 'ClinicVolunteer/Appointments/Referral')->name('volunteer.appointments.referral');
-        Route::inertia('/appointments/initial-assessment', 'ClinicVolunteer/Appointments/InitialAssessment')->name('volunteer.appointments.initial');
-        Route::inertia('/appointments/consultation', 'ClinicVolunteer/Appointments/Consultation')->name('volunteer.appointments.consultation');
-    });
+    Route::post('/medicine-requests', [MedicineRequestController::class, 'store'])->name('volunteer.medicine_requests.store');
+
+    // Appointments
+    Route::inertia('/appointments/donated-item', 'ClinicVolunteer/Appointments/DonatedItem')->name('volunteer.appointments.donated');
+    Route::inertia('/appointments/referral', 'ClinicVolunteer/Appointments/Referral')->name('volunteer.appointments.referral');
+    Route::inertia('/appointments/initial-assessment', 'ClinicVolunteer/Appointments/InitialAssessment')->name('volunteer.appointments.initial');
+    Route::inertia('/appointments/consultation', 'ClinicVolunteer/Appointments/Consultation')->name('volunteer.appointments.consultation');
+});
+
 
     Route::get('/merchant/products/datatable', [ProductController::class, 'datatable'])
     ->name('products.datatable');

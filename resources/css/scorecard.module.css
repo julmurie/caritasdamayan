@@ -3,8 +3,8 @@
     --navbar-h: 64px; /* adjust to your Navbar height */
     --sidebar-w: 260px; /* adjust to your Sidebar width */
 
-    --brand-red: #ad2125; /* main red */
-    --brand-red-dark: #9f171b; /* darker red for chevron block */
+    --brand-red: #ad2125;
+    --brand-red-dark: #9f171b;
     --bar-text: #ffffff;
     --bar-gray: #f1f1f1;
 
@@ -15,11 +15,14 @@
     --ink: #111827; /* primary text */
 }
 
-/* ========= LAYOUT (fixed sidebar, scrollable content) ========= */
-.body {
-    display: flex;
+/* ===========================
+   Sidebar Layout (collapsible)
+   =========================== */
+.shell {
+    display: grid;
     height: calc(100vh - var(--navbar-h));
-    background: var(--bg);
+    background: #f6f8fa;
+    transition: grid-template-columns 300ms ease;
 }
 
 .content {
@@ -31,7 +34,7 @@
     background: var(--bg);
 }
 
-/* Toolbar above the scorecard (Back + Print) */
+/* ========= TOOLBAR ========= */
 .toolbar {
     display: flex;
     justify-content: space-between;
@@ -67,8 +70,6 @@
     margin: 2rem;
     color: var(--ink);
 }
-
-/* Title at the very top (white background in the ref image) */
 .header {
     background: #ffffff;
     color: var(--ink);
@@ -79,12 +80,11 @@
     border-bottom: 1px solid var(--line);
 }
 
-/* ========= INDICATOR BARS (solid red) ========= */
+/* ========= INDICATORS ========= */
 .section {
     padding: 0;
-    border-top: 8px solid #f3f4f6; /* subtle gap between sections */
+    border-top: 8px solid #f3f4f6;
 }
-
 .bar {
     background: var(--brand-red);
     color: var(--bar-text);
@@ -95,14 +95,11 @@
     font-weight: 800;
     letter-spacing: 0.25px;
 }
-
 .barRight {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
-
-/* search field on the right side of Indicator 3 bar */
 .search {
     background: #fff;
     color: var(--ink);
@@ -183,7 +180,7 @@
     }
 }
 
-/* ========= COLLAPSIBLE GROUPS (Indicator 3) ========= */
+/* ========= COLLAPSIBLE GROUPS ========= */
 .fold {
     margin: 8px 14px 0;
 }
@@ -248,7 +245,7 @@
     white-space: nowrap;
 }
 
-/* ========= CASE LIST INSIDE FOLDS ========= */
+/* ========= CASE LIST ========= */
 .caseList {
     list-style: none;
     counter-reset: item;

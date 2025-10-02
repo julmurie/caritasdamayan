@@ -148,14 +148,17 @@ function ScoreCard() {
 
     return (
         <div className={styles.page}>
+            {/* Navbar */}
             <Navbar />
 
-            {/* BODY: fixed sidebar + scrollable content */}
-            <div className={styles.body}>
-                {/* Fixed (sticky) sidebar */}
-                <aside className={styles.sidebarWrap}>
-                    <Sidebar />
-                </aside>
+            {/* Shell layout (sidebar + content) */}
+            <div
+                className={`${styles.shell} ${
+                    isSidebarOpen ? styles.shellOpen : styles.shellClosed
+                }`}
+            >
+                {/* Sidebar manages its own aside */}
+                <Sidebar onToggle={setIsSidebarOpen} />
 
                 {/* Scrollable content */}
                 <main className={styles.content}>
@@ -202,7 +205,7 @@ function ScoreCard() {
                         </div>
                     </div>
 
-                    {/* Title */}
+                    {/* Scorecard */}
                     <div className={styles.scorecard}>
                         <div className={styles.header}>
                             Caritas Manila Assistance Score Card (CMAS CARD)
@@ -231,7 +234,6 @@ function ScoreCard() {
                                     </div>
                                     <span className={styles.score}>3</span>
                                 </label>
-
                                 <label className={styles.option}>
                                     <input
                                         type="radio"
@@ -246,7 +248,6 @@ function ScoreCard() {
                                     </div>
                                     <span className={styles.score}>2</span>
                                 </label>
-
                                 <label className={styles.option}>
                                     <input
                                         type="radio"
@@ -499,7 +500,7 @@ function ScoreCard() {
                             </div>
                         </section>
 
-                        {/* Scoring table */}
+                        {/* Scoring Table */}
                         <div className={styles.scoring}>
                             <table className={styles.scoringTable}>
                                 <thead>
