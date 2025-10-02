@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Patient extends Model
 {
     protected $primaryKey = 'patient_id';
-    public $incrementing = true;
-    protected $keyType = 'int';
-
     protected $fillable = [
         'patient_fname',
         'patient_lname',
@@ -27,10 +24,11 @@ class Patient extends Model
         'valid_id_no',
         'endorsed_as_fp',
         'first_time_visit',
+        'has_philhealth',
+        'philhealth_no',
+        'archived',
         'patient_no',
         'patient_code',
-        'has_philhealth',     
-        'philhealth_no',     
     ];
 
     protected $casts = [
@@ -40,6 +38,6 @@ class Patient extends Model
         'first_time_visit' => 'boolean',
         'has_philhealth' => 'boolean',
     ];
-
 }
+
 

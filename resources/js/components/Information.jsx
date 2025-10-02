@@ -126,6 +126,34 @@ export default function Information({ patient, onEdit }) {
                         {show(patient?.philhealth_no)}
                     </div>
                 </div>
+
+                <div className={styles.gridRow}>
+                    <div className={styles.cellLabel}>Valid ID #:</div>
+                    <div className={styles.cellValue}>
+                        {show(patient?.valid_id_no)}
+                    </div>
+
+                    <div className={styles.cellLabel}>
+                        Endorsed for CM Family Partner?
+                    </div>
+                    <div className={styles.cellValue}>
+                        {yesno(patient?.endorsed_as_fp)}
+                    </div>
+                </div>
+
+                <div className={styles.gridRow}>
+                    <div className={styles.cellLabel}>First Time Visit?</div>
+                    <div className={styles.cellValue}>
+                        {yesno(patient?.first_time_visit)}
+                    </div>
+
+                    <div className={styles.cellLabel}>PhilHealth No.:</div>
+                    <div className={styles.cellValue}>
+                        {patient?.has_philhealth
+                            ? show(patient?.philhealth_no)
+                            : "–"}
+                    </div>
+                </div>
             </div>
         </section>
     );

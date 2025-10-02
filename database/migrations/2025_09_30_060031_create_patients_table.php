@@ -13,40 +13,32 @@ return new class extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->id('patient_id');
-
-            // Basic info
-            $table->string('patient_no')->nullable();
-            $table->string('patient_code')->nullable();
             $table->string('patient_fname');
             $table->string('patient_lname');
             $table->string('patient_mname')->nullable();
-            $table->enum('gender', ['Male', 'Female', 'Others']);
+            $table->enum('gender', ['Male', 'Female', 'Others'])->nullable();
             $table->date('birthday')->nullable();
             $table->string('contact_no')->nullable();
             $table->string('address')->nullable();
-
-            // Extra info
             $table->string('clinic')->nullable();
             $table->string('parish')->nullable();
 
-            // Classification FP / NFP
             $table->enum('classification_cm', ['FP', 'NFP'])->nullable();
-            $table->string('booklet_no')->nullable();
-            $table->boolean('is_head_family')->default(false);
-
-            // NFP fields
-            $table->string('valid_id_no')->nullable();
-            $table->boolean('endorsed_as_fp')->default(false);
-            $table->boolean('first_time_visit')->default(false);
-
-            // Category
             $table->string('category')->nullable();
 
-            // PhilHealth
+            // FP
+            $table->string('booklet_no')->nullable();
+            $table->boolean('is_head_family')->nullable();
+
+            // NFP
+            $table->string('valid_id_no')->nullable();
+            $table->boolean('endorsed_as_fp')->nullable()->after('valid_id_no');
+            $table->boolean('first_time_visit')->nullable()->after('endorsed_as_fp');
+
+            // Philhealth
             $table->boolean('has_philhealth')->default(false);
             $table->string('philhealth_no')->nullable();
 
-            // Archive support
             $table->boolean('archived')->default(false);
 
             $table->timestamps();

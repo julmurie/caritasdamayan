@@ -20,6 +20,13 @@ export default function AddPatientModal({ open, onClose, onSave }) {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
 
+        // helper to coerce to real boolean
+        const toBool = (val) => {
+            if (val === "1" || val === 1 || val === true) return true;
+            if (val === "0" || val === 0 || val === false) return false;
+            return false; // default to false if empty
+        };
+
         const payload = {
             patient_fname: fd.get("patient_fname")?.trim() || "",
             patient_lname: fd.get("patient_lname")?.trim() || "",
@@ -36,15 +43,15 @@ export default function AddPatientModal({ open, onClose, onSave }) {
 
             // FP
             booklet_no: fd.get("booklet_no")?.trim() || null,
-            is_head_family: fd.get("is_head_family") === "1" ? true : false,
+            is_head_family: toBool(fd.get("is_head_family")),
 
             // NFP
             valid_id_no: fd.get("valid_id_no")?.trim() || null,
-            endorsed_as_fp: fd.get("endorsed_as_fp") === "1",
-            first_time_visit: fd.get("first_time_visit") === "1",
+            endorsed_as_fp: toBool(fd.get("endorsed_as_fp")),
+            first_time_visit: toBool(fd.get("first_time_visit")),
 
-            // PhilHealth
-            has_philhealth: fd.get("has_philhealth") === "1",
+            // Philhealth
+            has_philhealth: toBool(fd.get("has_philhealth")),
             philhealth_no: fd.get("philhealth_no")?.trim() || null,
         };
 
