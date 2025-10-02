@@ -6,10 +6,11 @@
     --brand-red: #ad2125; /* main red */
     --brand-red-dark: #9f171b; /* darker red for chevron block */
     --bar-text: #ffffff;
+    --bar-gray: #f1f1f1;
 
     --bg: #f3f4f6; /* page background */
     --card: #f5f5f5; /* scorecard surface */
-    --line: #e5e7eb; /* light divider lines */
+    --line: #d7d8da; /* light divider lines */
     --muted: #6b7280; /* muted text */
     --ink: #111827; /* primary text */
 }
@@ -21,25 +22,12 @@
     background: var(--bg);
 }
 
-.sidebarWrap {
-    width: var(--sidebar-w);
-    flex: 0 0 var(--sidebar-w);
-    position: sticky;
-    top: var(--navbar-h);
-    align-self: flex-start;
-    height: calc(100vh - var(--navbar-h));
-    overflow: hidden;
-    border-right: 1px solid var(--line);
-    background: #ffffff; /* let Sidebar design show cleanly */
-    z-index: 10;
-}
-
 .content {
     flex: 1 1 auto;
     min-width: 0;
     height: calc(100vh - var(--navbar-h));
     overflow: auto; /* only this pane scrolls */
-    padding: 16px 20px 40px;
+    padding: 16px 10rem 40px 16px; /* add right + bottom padding */
     background: var(--bg);
 }
 
@@ -117,7 +105,7 @@
 /* search field on the right side of Indicator 3 bar */
 .search {
     background: #fff;
-    border: 1px solid var(--line);
+    color: var(--ink);
     border-radius: 6px;
     height: 34px;
     padding: 0 10px;
@@ -125,55 +113,107 @@
 }
 
 /* ========= OPTIONS (Indicator 1 & 2) ========= */
-.optionsGrid {
+/* One row, all options share width evenly */
+.optionsRow {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 8px;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr); /* equal flexible columns */
+    gap: 10px;
     padding: 12px 14px 16px;
     background: #ffffff;
     border-bottom: 1px solid var(--line);
 }
+
+/* Each option is a horizontal row: radio | text (flexes) | score (right) */
 .option {
     display: flex;
     align-items: center;
     gap: 10px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 10px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 10px;
     background: #fff;
     font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.option:hover {
+    background: #f9fafb;
+    border-color: var(--brand-red);
+}
+
+.option input[type="radio"] {
+    flex: 0 0 auto;
+    accent-color: var(--brand-red);
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+/* Text block grows and truncates nicely if space is tight */
+.optionText {
+    flex: 1 1 auto;
+    min-width: 0; /* allow text to shrink/truncate */
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+.optionText span {
+    font-weight: 700;
+    color: #111827;
+}
+.optionText small {
+    font-weight: 500;
+    color: var(--muted);
+}
+
+/* Score pinned to the right, no wrap */
+.score {
+    flex: 0 0 auto;
+    margin-left: auto;
+    font-weight: 800;
+    color: var(--brand-red);
+    white-space: nowrap;
+}
+
+/* Optional: on very narrow screens, let options wrap to multiple rows */
+@media (max-width: 700px) {
+    .optionsRow {
+        grid-auto-flow: row;
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ========= COLLAPSIBLE GROUPS (Indicator 3) ========= */
 .fold {
-    border-top: 1px solid var(--line);
+    margin: 8px 14px 0;
 }
 
-/* Header row for each fold: red background with left dark block and white chevron */
+/* Header row: [radio] [label] ........ [score] ▸ */
 .foldSummary {
-    cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-
-    background: var(--brand-red);
-    color: var(--bar-text);
-    position: relative;
-
-    /* room for left chevron block */
-    padding: 10px 14px 10px 44px;
-
-    font-weight: 800;
-    letter-spacing: 0.1px;
-    border-bottom: 1px solid var(--line);
+    gap: 10px;
+    background: #fff;
+    color: #111827;
+    font-weight: 700;
+    padding: 20px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    transition: background 0.15s, border-color 0.15s;
 }
 
-/* keep same red when open (as in ref); tweak if you prefer lighter */
+/* hover feedback like Indicator 1/2 options */
+.foldSummary:hover {
+    background: #f9fafb;
+    border-color: var(--brand-red);
+}
+
+/* subtle open feedback (optional) */
 .fold[open] .foldSummary {
-    background: var(--brand-red);
+    background: #f3f4f6;
 }
 
-/* Hide default disclosure marker to avoid double arrows */
+/* hide native disclosure triangle */
 .foldSummary::-webkit-details-marker {
     display: none;
 }
@@ -181,32 +221,31 @@
     content: "";
 }
 
-/* Left darker block */
-.foldSummary::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 28px;
-    background: var(--brand-red-dark);
-}
-
-/* White chevron centered inside the block */
+/* chevron on far right */
 .foldSummary::after {
     content: "▸";
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: 900;
-    color: #ffffff;
-    font-size: 0.9rem;
-    line-height: 1;
+    font-size: 0.95rem;
+    color: #374151;
     transition: transform 0.18s ease;
+    margin-left: 8px;
 }
 .fold[open] .foldSummary::after {
-    transform: translateY(-50%) rotate(90deg);
+    transform: rotate(90deg);
+}
+
+/* summary radio (left) */
+.caseRadio {
+    accent-color: var(--brand-red);
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+/* summary score pushes to the right */
+.caseScore {
+    margin-left: auto;
+    font-weight: 800;
+    color: var(--brand-red);
+    white-space: nowrap;
 }
 
 /* ========= CASE LIST INSIDE FOLDS ========= */
@@ -217,35 +256,32 @@
     padding: 6px 8px 12px;
     background: #ffffff;
 }
+
 .caseItem {
-    position: relative;
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    align-items: center;
     gap: 12px;
-    padding: 10px 10px 10px 34px; /* left space for auto number */
+    padding: 10px 12px;
     border-bottom: 1px solid var(--line);
 }
 .caseItem:last-child {
     border-bottom: 0;
 }
+
+/* auto numbering before text */
 .caseItem::before {
     counter-increment: item;
     content: counter(item) ".";
-    position: absolute;
-    left: 12px;
-    top: 12px;
     font-weight: 800;
     color: #374151;
 }
+
+/* case text */
 .caseText {
+    flex: 1;
     color: var(--ink);
-    max-width: calc(100% - 40px);
     line-height: 1.35;
     font-size: 0.95rem;
-}
-.caseRadio {
-    margin-top: 2px;
 }
 
 /* ========= SCORING TABLE ========= */

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "@inertiajs/react";
 import Navbar from "@/components/Navbar";
 import UserModal from "@/components/UserModal";
 import styles from "../../../css/users.module.css";
@@ -447,20 +448,44 @@ function Users() {
             <div className={styles.content}>
                 <main>
                     <div className={styles.header}>
-                        <div className={styles.headerContent}>
+                        <div
+                            className={`${styles.headerContent} flex items-center justify-between`}
+                        >
+                            {/* Title on the left */}
                             <h1 className={styles.title}>Users</h1>
-                            <div>
+
+                            {/* Buttons on the right */}
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleOpenModal}
                                     className={styles.addButton}
                                 >
                                     + Add User
                                 </button>
-                                {/* <button className={styles.archivedButton}>
-                                    Archives
-                                </button> */}
+
+                                <Link
+                                    href="/archives"
+                                    className={`${styles.archivedButton} flex items-center gap-1`}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="w-5 h-5"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                                        />
+                                    </svg>
+                                    <span>Archives</span>
+                                </Link>
                             </div>
                         </div>
+
                         <hr className={styles.divider} />
                     </div>
 

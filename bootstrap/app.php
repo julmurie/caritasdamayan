@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
     $middleware->alias([
         // 'idle' => IdleLogout::class,
+        'auth'    => \App\Http\Middleware\Authenticate::class,
         'role'    => \App\Http\Middleware\EnsureRole::class,
         'nocache' => \App\Http\Middleware\PreventBackHistory::class,
     ]);

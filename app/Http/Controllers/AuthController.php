@@ -162,6 +162,9 @@ class AuthController extends Controller
 
     $request->session()->regenerate();
 
+    // ✅ clear any expired-session flag before redirect
+    $request->session()->forget('sessionExpired');
+
     $role = Auth::user()->role ?? 'admin';
     $to = match ($role) {
         'admin'     => route('admin.dashboard'),

@@ -14,6 +14,16 @@ export default function UserModal({
 }) {
     if (!isOpen) return null;
 
+    // Small helper to render label with red *
+    const RequiredLabel = ({ htmlFor, children }) => (
+        <label
+            htmlFor={htmlFor}
+            className="block mb-2 text-sm font-medium text-gray-900"
+        >
+            {children} <span className="text-red-600">*</span>
+        </label>
+    );
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
@@ -31,12 +41,7 @@ export default function UserModal({
 
                 <form onSubmit={onSubmit}>
                     <div className="mb-6">
-                        <label
-                            htmlFor="role"
-                            className="block mb-2 text-sm font-medium text-gray-900"
-                        >
-                            User Role
-                        </label>
+                        <RequiredLabel htmlFor="role">User Role</RequiredLabel>
                         <select
                             id="role"
                             value={selectedRole}
@@ -66,18 +71,16 @@ export default function UserModal({
                     {selectedRole === "merchant" ? (
                         <>
                             <div className="mb-6">
-                                <label
-                                    htmlFor="branchName"
-                                    className="block mb-2 text-sm font-medium text-gray-900"
-                                >
+                                <RequiredLabel htmlFor="branchName">
                                     Branch Name
-                                </label>
+                                </RequiredLabel>
                                 <input
                                     type="text"
                                     id="branchName"
                                     value={formData.branchName}
                                     onChange={onChange}
                                     placeholder="e.g. Generika - Main Branch"
+                                    maxLength={55}
                                     className={`bg-gray-50 border ${
                                         errors.branchName
                                             ? "border-red-500"
@@ -91,12 +94,9 @@ export default function UserModal({
                                 )}
                             </div>
                             <div className="mb-6">
-                                <label
-                                    htmlFor="branchItem"
-                                    className="block mb-2 text-sm font-medium text-gray-900"
-                                >
+                                <RequiredLabel htmlFor="branchItem">
                                     Branch Item
-                                </label>
+                                </RequiredLabel>
                                 <select
                                     id="branchItem"
                                     value={formData.branchItem}
@@ -126,18 +126,16 @@ export default function UserModal({
                         <>
                             <div className="grid gap-6 mb-6 md:grid-cols-2">
                                 <div>
-                                    <label
-                                        htmlFor="firstName"
-                                        className="block mb-2 text-sm font-medium text-gray-900"
-                                    >
+                                    <RequiredLabel htmlFor="firstName">
                                         First Name
-                                    </label>
+                                    </RequiredLabel>
                                     <input
                                         type="text"
                                         id="firstName"
                                         value={formData.firstName}
                                         onChange={onChange}
                                         placeholder="John"
+                                        maxLength={50}
                                         className={`bg-gray-50 border ${
                                             errors.firstName
                                                 ? "border-red-500"
@@ -151,18 +149,16 @@ export default function UserModal({
                                     )}
                                 </div>
                                 <div>
-                                    <label
-                                        htmlFor="lastName"
-                                        className="block mb-2 text-sm font-medium text-gray-900"
-                                    >
+                                    <RequiredLabel htmlFor="lastName">
                                         Last Name
-                                    </label>
+                                    </RequiredLabel>
                                     <input
                                         type="text"
                                         id="lastName"
                                         value={formData.lastName}
                                         onChange={onChange}
                                         placeholder="Doe"
+                                        maxLength={25}
                                         className={`bg-gray-50 border ${
                                             errors.lastName
                                                 ? "border-red-500"
@@ -178,18 +174,16 @@ export default function UserModal({
                             </div>
 
                             <div className="mb-6">
-                                <label
-                                    htmlFor="jobDescription"
-                                    className="block mb-2 text-sm font-medium text-gray-900"
-                                >
+                                <RequiredLabel htmlFor="jobDescription">
                                     Job Description
-                                </label>
+                                </RequiredLabel>
                                 <input
                                     type="text"
                                     id="jobDescription"
                                     value={formData.jobDescription}
                                     onChange={onChange}
                                     placeholder="e.g. Executive Director"
+                                    maxLength={50}
                                     className={`bg-gray-50 border ${
                                         errors.jobDescription
                                             ? "border-red-500"
@@ -206,18 +200,16 @@ export default function UserModal({
                     )}
 
                     <div className="mb-6">
-                        <label
-                            htmlFor="email"
-                            className="block mb-2 text-sm font-medium text-gray-900"
-                        >
+                        <RequiredLabel htmlFor="email">
                             Email Address
-                        </label>
+                        </RequiredLabel>
                         <input
                             type="email"
                             id="email"
                             value={formData.email}
                             onChange={onChange}
                             placeholder="myemail@example.com"
+                            maxLength={55}
                             className={`bg-gray-50 border ${
                                 errors.email
                                     ? "border-red-500"

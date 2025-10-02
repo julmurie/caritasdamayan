@@ -183,4 +183,8 @@ Route::middleware('auth', 'nocache')->group(function () {
 
     /* ---------------- Logout ---------------- */
     Route::post('/logout', [AuthController::class, 'sessionLogout'])->name('logout');
+
+    // archives (general)
+    Route::inertia('/archives', 'Archives')->name('archives');
+
 });
