@@ -167,7 +167,7 @@ export default function Login() {
                         <FlashAlerts autoDismissMs={6000} />
 
                         {/* Client-side login error/lock alert */}
-                        {bannerErr && (
+                        {/* {bannerErr && (
                             <div className="fixed top-4 right-4 z-[101] w-full max-w-sm pointer-events-none">
                                 <Alert
                                     variant="danger"
@@ -179,7 +179,7 @@ export default function Login() {
                                         : bannerErr}
                                 </Alert>
                             </div>
-                        )}
+                        )} */}
                         {/* Logo + Title */}
                         <img
                             src={LogoWithTextRed}

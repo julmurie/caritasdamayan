@@ -153,7 +153,7 @@
     background-color: #16a34a;
     color: white;
     padding: 0.5rem 1rem;
-    border-radius: 4px;
+    border-radius: 10px;
     text-decoration: none;
 }
 
@@ -161,7 +161,7 @@
     background-color: #1f2937;
     color: white;
     padding: 0.5rem 1rem;
-    border-radius: 4px;
+    border-radius: 10px;
     text-decoration: none;
 }
 
@@ -173,49 +173,88 @@
     background-color: #111827;
 }
 
+/* ===== Modern Red Table Skin (applies to Products/Services + Archived modals) ===== */
 .pricesTableWrapper {
+    background: #ffffff;
+    /* border: 1px solid #f1c9c9; */
+    /* border-radius: 12px; */
+    overflow: hidden; /* round the header corners */
+    /* box-shadow: 0 10px 18px rgba(17, 24, 39, 0.06); */
+    /* keep horizontal scroll for very wide tables */
     overflow-x: auto;
+    padding: 1rem;
 }
 
 .pricesTable {
     width: 100%;
-    border-collapse: collapse;
-    text-align: center;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
     margin-top: 0.5rem;
+    text-align: left; /* left align by default */
+    border-bottom: 0 !important; /* remove default DT bottom border */
 }
 
-.pricesTable th,
-.pricesTable td {
-    border: 1px solid #000;
-    padding: 0.5rem;
+/* Header */
+.pricesTable thead th {
+    background: #fff1f1; /* soft red header */
+    color: #4d0c0c;
+    padding: 12px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #f1c9c9;
+    letter-spacing: 0.2px;
 }
 
-.pricesTable thead {
-    background-color: #d1d5db;
-    color: #000;
-    font-weight: bold;
+/* Body cells & row separators */
+.pricesTable tbody td {
+    padding: 12px 16px;
+    border-top: 1px solid #f7e0e0; /* light divider between rows */
+    vertical-align: middle;
 }
 
-.pricesNoData {
-    padding: 1rem;
-    color: #6b7280;
+/* Hover row */
+.pricesTable tbody tr:hover td {
+    background: #fff8f8;
 }
 
+/* Numeric columns (2nd & 3rd are prices/rates in both tables) */
+.pricesTable thead th:nth-child(2),
+.pricesTable thead th:nth-child(3),
+.pricesTable tbody td:nth-child(2),
+.pricesTable tbody td:nth-child(3) {
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Actions column */
 .pricesActionsCol {
-    justify-content: center;
-    gap: 0.5rem;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-start; /* right-align action buttons */
+    align-items: center;
 }
-
 .pricesActionBtn {
     cursor: pointer;
-    font-size: 1.1rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 6px;
+    line-height: 0;
     color: #4b5563;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s,
+        transform 0.08s, color 0.2s;
 }
-
 .pricesActionBtn:hover {
+    background: #fff5f5;
+    border-color: #ef4444; /* red-500 */
+    /* box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12); */
     color: #b91c1c;
 }
+.pricesActionBtn:active {
+    transform: translateY(1px);
+}
 
+/* Legacy pagination styles (unused if DataTables paginate is on) */
 .pricesPagination {
     display: flex;
     justify-content: flex-end;
@@ -225,7 +264,6 @@
     padding-left: 0;
     text-align: left;
 }
-
 .pricesPagination button {
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
@@ -234,18 +272,105 @@
     border: none;
     cursor: pointer;
 }
-
 .pricesPagination button.active {
     background-color: #4b5563;
 }
 
-/* Container */
+/* ===== DataTables (Buttons / Filter / Length / Pagination) ===== */
+:global(.dataTables_wrapper) {
+    padding: 8px 12px 12px;
+}
+
+/* length dropdown */
+:global(.dataTables_wrapper .dataTables_length) {
+    margin: 8px 12px 8px 0;
+}
+:global(.dataTables_wrapper .dataTables_length select) {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: #fff;
+    outline: none;
+}
+
+/* search filter */
+:global(.dataTables_wrapper .dataTables_filter) {
+    margin: 8px 0;
+}
+:global(.dataTables_wrapper .dataTables_filter input) {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+:global(.dataTables_wrapper .dataTables_filter input:focus) {
+    border-color: #410c0c;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* export / utility buttons */
+:global(.dt-buttons .dt-button) {
+    background: #ef444400 !important;
+    color: #000000 !important;
+    /* border: 1px solid #5c1111 !important; */
+    border-radius: 5px !important;
+    padding: 8px 12px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    margin: 6px 6px 6px 0 !important;
+}
+:global(.dt-buttons .dt-button:hover) {
+    background: #f1c9c9 !important;
+    border-color: #f1c9c9 !important;
+}
+
+/* info text */
+:global(.dataTables_wrapper .dataTables_info) {
+    color: #6b7280;
+    padding: 0 12px 12px;
+}
+
+/* pagination */
+:global(.dataTables_wrapper .dataTables_paginate) {
+    padding: 12px;
+}
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button) {
+    border: 1px solid #f1c9c9 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #7f1d1d !important;
+    margin: 0 3px !important;
+    padding: 6px 10px !important;
+    box-shadow: none !important;
+}
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button:hover) {
+    background: #ffe5e5 !important;
+    border-color: #ef4444 !important;
+    color: #7f1d1d !important;
+}
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button.current) {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button.disabled) {
+    opacity: 0.5 !important;
+}
+
+/* remove DT default borders that clash with card */
+:global(table.dataTable.no-footer) {
+    border-bottom: 0 !important;
+}
+
+/* ===== SOA PAGE ===== */
 .soaContainer {
     padding: 2rem;
     background-color: white;
 }
 
-/* Header */
 .soaTitle {
     font-size: 2rem;
     font-weight: 700;
@@ -258,7 +383,6 @@
     margin-bottom: 1.5rem;
 }
 
-/* Buttons */
 .soaBtnRed {
     background-color: #b32025;
     color: white;
@@ -294,7 +418,6 @@
     background-color: #1e7e34;
 }
 
-/* Table */
 .soaTable {
     width: 100%;
     border-collapse: collapse;
@@ -320,7 +443,6 @@
     border: 1px solid #ccc;
 }
 
-/* Pagination */
 .soaPagination {
     display: flex;
     align-items: center;
@@ -346,7 +468,7 @@
     color: white;
     border: 1px solid #b32025;
 }
-/* ===== CHARGE SLIP PAGE (scoped) ===== */
+
 /* ===== CHARGE SLIP PAGE (scoped) ===== */
 .csContainer {
     padding: 1.5rem;

@@ -33,6 +33,60 @@ const icons = {
   `,
 };
 
+// ===== Validation Helpers =====
+function validateProductForm(form) {
+    const errors = {};
+    if (!form.name || form.name.trim().length < 2) {
+        errors.name = "Name must be at least 2 characters.";
+    } else if (form.name.trim().length > 100) {
+        errors.name = "Name cannot exceed 100 characters.";
+    }
+
+    if (!form.standard_price || Number(form.standard_price) <= 0) {
+        errors.standard_price = "Standard price must be greater than 0.";
+    } else if (String(form.standard_price).length > 10) {
+        errors.standard_price = "Standard price is too long.";
+    }
+
+    if (form.discounted_price) {
+        if (Number(form.discounted_price) < 0) {
+            errors.discounted_price = "Discounted price cannot be negative.";
+        } else if (
+            Number(form.discounted_price) > Number(form.standard_price)
+        ) {
+            errors.discounted_price =
+                "Discounted price cannot exceed standard price.";
+        } else if (String(form.discounted_price).length > 10) {
+            errors.discounted_price = "Discounted price is too long.";
+        }
+    }
+    return errors;
+}
+
+function validateServiceForm(form) {
+    const errors = {};
+    if (!form.name || form.name.trim().length < 2) {
+        errors.name = "Service name must be at least 2 characters.";
+    } else if (form.name.trim().length > 100) {
+        errors.name = "Service name cannot exceed 100 characters.";
+    }
+    if (!form.standard_rate || Number(form.standard_rate) <= 0) {
+        errors.standard_rate = "Standard rate must be greater than 0.";
+    } else if (String(form.standard_rate).length > 10) {
+        errors.standard_rate = "Standard rate is too long.";
+    }
+    if (form.discounted_rate) {
+        if (Number(form.discounted_rate) < 0) {
+            errors.discounted_rate = "Discounted rate cannot be negative.";
+        } else if (Number(form.discounted_rate) > Number(form.standard_rate)) {
+            errors.discounted_rate =
+                "Discounted rate cannot exceed standard rate.";
+        } else if (String(form.discounted_rate).length > 10) {
+            errors.discounted_rate = "Discounted rate is too long.";
+        }
+    }
+    return errors;
+}
 export default function Prices({
     merchant = "Generika",
     permissions = {},
@@ -71,6 +125,7 @@ export default function Prices({
         discounted_price: "",
     });
     const [form, setForm] = useState(resetForm());
+    const [errors, setErrors] = useState({});
 
     // ===== SERVICES state =====
     const serviceTableRef = useRef(null);
@@ -85,6 +140,7 @@ export default function Prices({
         discounted_rate: "",
     });
     const [serviceForm, setServiceForm] = useState(resetServiceForm());
+    const [serviceErrors, setServiceErrors] = useState({});
 
     // Archived services (fetch only when merchant)
     const [archivedServices, setArchivedServices] = useState([]);
@@ -125,7 +181,7 @@ export default function Prices({
     <button type="button" class="${styles.pricesActionBtn} btn-archive" title="Archive" data-id="${row.id}" aria-label="Archive">
       ${icons.archive}
     </button>
-    
+
   </div>
 `;
 
@@ -137,7 +193,7 @@ export default function Prices({
     <button type="button" class="${styles.pricesActionBtn} btn-archive-service" title="Archive" data-id="${row.id}" aria-label="Archive">
       ${icons.archive}
     </button>
-    
+
   </div>
 `;
 
@@ -402,6 +458,12 @@ export default function Prices({
     // ===== Merchant-only actions =====
     const addService = (e) => {
         e.preventDefault();
+        const errs = validateServiceForm(serviceForm);
+        if (Object.keys(errs).length > 0) {
+            setServiceErrors(errs);
+            return;
+        }
+        setServiceErrors({});
         router.post(
             "/merchant/services",
             {
@@ -421,6 +483,12 @@ export default function Prices({
 
     const saveServiceEdit = (e) => {
         e.preventDefault();
+        const errs = validateServiceForm(serviceForm);
+        if (Object.keys(errs).length > 0) {
+            setServiceErrors(errs);
+            return;
+        }
+        setServiceErrors({});
         if (!serviceEditing) return;
         router.patch(
             `/merchant/services/${serviceEditing.id}`,
@@ -442,6 +510,7 @@ export default function Prices({
     const cancelServiceEdit = () => {
         setServiceEditing(null);
         setServiceForm(resetServiceForm());
+        setServiceErrors({});
     };
 
     const restoreService = (id) => {
@@ -462,6 +531,15 @@ export default function Prices({
 
     const addRow = (e) => {
         e.preventDefault();
+
+        // run validation
+        const errs = validateProductForm(form);
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs); // show errors in UI
+            return;
+        }
+        setErrors({}); // clear errors if valid
+
         router.post(
             "/merchant/products",
             {
@@ -481,6 +559,15 @@ export default function Prices({
 
     const saveEdit = (e) => {
         e.preventDefault();
+
+        // run validation
+        const errs = validateProductForm(form);
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs); // show errors
+            return;
+        }
+        setErrors({}); // clear errors
+
         if (!editing) return;
         router.patch(
             `/merchant/products/${editing.id}`,
@@ -502,20 +589,7 @@ export default function Prices({
     const cancelEdit = () => {
         setEditing(null);
         setForm(resetForm());
-    };
-
-    const restoreRow = (id) => {
-        router.post(
-            `/merchant/products/${id}/restore`,
-            {},
-            {
-                onSuccess: () => {
-                    setArchived((list) => list.filter((x) => x.id !== id));
-                    setArchivedCount((n) => Math.max(0, n - 1)); // <-- drop
-                    reloadTable();
-                },
-            }
-        );
+        setErrors({}); // also clear errors when canceling
     };
 
     return (
@@ -679,6 +753,8 @@ export default function Prices({
                             }
                             required
                             autoFocus
+                            maxLength={100}
+                            error={errors.name}
                         />
                         <Field
                             label="Standard Price"
@@ -688,6 +764,8 @@ export default function Prices({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, standard_price: v }))
                             }
+                            maxLength={10}
+                            error={errors.standard_price}
                         />
                         <Field
                             label="Discounted Price"
@@ -697,6 +775,8 @@ export default function Prices({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, discounted_price: v }))
                             }
+                            maxLength={10}
+                            error={errors.discounted_price}
                         />
                         <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -725,6 +805,8 @@ export default function Prices({
                             }
                             required
                             autoFocus
+                            maxLength={100}
+                            error={errors.name}
                         />
                         <Field
                             label="Standard Price"
@@ -734,6 +816,8 @@ export default function Prices({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, standard_price: v }))
                             }
+                            maxLength={10}
+                            error={errors.standard_price}
                         />
                         <Field
                             label="Discounted Price"
@@ -743,6 +827,8 @@ export default function Prices({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, discounted_price: v }))
                             }
+                            maxLength={10}
+                            error={errors.discounted_price}
                         />
                         <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -852,6 +938,8 @@ export default function Prices({
                             }
                             required
                             autoFocus
+                            maxLength={100}
+                            error={serviceErrors.name}
                         />
                         <Field
                             label="Standard Rate"
@@ -864,6 +952,8 @@ export default function Prices({
                                     standard_rate: v,
                                 }))
                             }
+                            maxLength={10}
+                            error={serviceErrors.standard_rate}
                         />
                         <Field
                             label="Discounted Rate"
@@ -876,6 +966,8 @@ export default function Prices({
                                     discounted_rate: v,
                                 }))
                             }
+                            maxLength={10}
+                            error={serviceErrors.discounted_rate}
                         />
                         <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -907,6 +999,8 @@ export default function Prices({
                             }
                             required
                             autoFocus
+                            maxLength={100}
+                            error={serviceErrors.name}
                         />
                         <Field
                             label="Standard Rate"
@@ -919,6 +1013,8 @@ export default function Prices({
                                     standard_rate: v,
                                 }))
                             }
+                            maxLength={10}
+                            error={serviceErrors.standard_rate}
                         />
                         <Field
                             label="Discounted Rate"
@@ -931,6 +1027,8 @@ export default function Prices({
                                     discounted_rate: v,
                                 }))
                             }
+                            maxLength={10}
+                            error={serviceErrors.discounted_rate}
                         />
                         <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -1069,6 +1167,8 @@ function Field({
     step,
     required,
     autoFocus,
+    error,
+    maxLength = { maxLength },
 }) {
     const id = useMemo(() => `f_${Math.random().toString(36).slice(2)}`, []);
     return (
@@ -1084,8 +1184,13 @@ function Field({
                 step={step}
                 required={required}
                 autoFocus={autoFocus}
-                className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring focus:ring-gray-200"
+                className={`border rounded-lg px-3 py-2 outline-none focus:ring ${
+                    error
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-gray-200"
+                }`}
             />
+            {error && <p className="text-red-600 text-sm">{error}</p>}
         </div>
     );
 }

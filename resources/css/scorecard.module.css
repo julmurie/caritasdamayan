@@ -3,47 +3,98 @@
     --navbar-h: 64px; /* adjust to your Navbar height */
     --sidebar-w: 260px; /* adjust to your Sidebar width */
 
-    --brand-red: #ad2125; /* main red */
-    --brand-red-dark: #9f171b; /* darker red for chevron block */
+    --brand-red: #ad2125;
+    --brand-red-dark: #9f171b;
     --bar-text: #ffffff;
 
-    --bg: #f3f4f6; /* page background */
-    --card: #f5f5f5; /* scorecard surface */
-    --line: #e5e7eb; /* light divider lines */
-    --muted: #6b7280; /* muted text */
-    --ink: #111827; /* primary text */
+    --bg: #f3f4f6;
+    --card: #f5f5f5;
+    --line: #e5e7eb;
+    --muted: #6b7280;
+    --ink: #111827;
+
+    /* Sidebar tokens */
+    --caritas-red: #b71c1c;
+    --side-bg: #f8f9fa;
+    --side-border: #dee2e6;
+    --btn-green: #2e7d32;
+    --btn-green-hover: #276b2b;
+    --btn-dark: #495057;
+    --btn-dark-hover: #3e454b;
 }
 
-/* ========= LAYOUT (fixed sidebar, scrollable content) ========= */
-.body {
+/* ===========================
+   Sidebar Layout (collapsible)
+   =========================== */
+.shell {
+    display: grid;
+    height: calc(100vh - var(--navbar-h));
+    background: #f6f8fa;
+    transition: grid-template-columns 300ms ease;
+}
+.shellOpen {
+    grid-template-columns: 240px 1fr;
+}
+.shellClosed {
+    grid-template-columns: 72px 1fr;
+}
+
+.side {
+    position: relative;
+    background: var(--side-bg);
+    border-right: 1px solid var(--side-border);
+    height: 100%;
     display: flex;
-    height: calc(100vh - var(--navbar-h));
-    background: var(--bg);
+    flex-direction: column;
+    transition: width 300ms ease;
+    overflow: visible; /* let handle float outside */
+    z-index: 2;
+}
+.sideOpen {
+    width: 240px;
+}
+.sideClosed {
+    width: 72px;
 }
 
-.sidebarWrap {
-    width: var(--sidebar-w);
-    flex: 0 0 var(--sidebar-w);
-    position: sticky;
-    top: var(--navbar-h);
-    align-self: flex-start;
-    height: calc(100vh - var(--navbar-h));
-    overflow: hidden;
-    border-right: 1px solid var(--line);
-    background: #ffffff; /* let Sidebar design show cleanly */
+.main {
+    background: #fff;
+    height: 100%;
+    padding: 16px;
+    overflow: auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Floating handle */
+.sideHandle {
+    position: absolute;
+    top: 3%;
+    right: -44px;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    background: #fff;
+    color: #374151;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
     z-index: 10;
+    font-size: 0;
+    user-select: none;
+}
+.handleIcon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    pointer-events: none;
 }
 
-.content {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: calc(100vh - var(--navbar-h));
-    overflow: auto; /* only this pane scrolls */
-    padding: 16px 20px 40px;
-    background: var(--bg);
-}
-
-/* Toolbar above the scorecard (Back + Print) */
+/* ========= TOOLBAR ========= */
 .toolbar {
     display: flex;
     justify-content: space-between;
@@ -79,8 +130,6 @@
     margin: 2rem;
     color: var(--ink);
 }
-
-/* Title at the very top (white background in the ref image) */
 .header {
     background: #ffffff;
     color: var(--ink);
@@ -91,12 +140,11 @@
     border-bottom: 1px solid var(--line);
 }
 
-/* ========= INDICATOR BARS (solid red) ========= */
+/* ========= INDICATORS ========= */
 .section {
     padding: 0;
-    border-top: 8px solid #f3f4f6; /* subtle gap between sections */
+    border-top: 8px solid #f3f4f6;
 }
-
 .bar {
     background: var(--brand-red);
     color: var(--bar-text);
@@ -107,14 +155,11 @@
     font-weight: 800;
     letter-spacing: 0.25px;
 }
-
 .barRight {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
-
-/* search field on the right side of Indicator 3 bar */
 .search {
     background: #fff;
     border: 1px solid var(--line);
@@ -124,7 +169,7 @@
     width: 220px;
 }
 
-/* ========= OPTIONS (Indicator 1 & 2) ========= */
+/* ========= OPTIONS ========= */
 .optionsGrid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -144,44 +189,32 @@
     font-weight: 600;
 }
 
-/* ========= COLLAPSIBLE GROUPS (Indicator 3) ========= */
+/* ========= COLLAPSIBLE GROUPS ========= */
 .fold {
     border-top: 1px solid var(--line);
 }
-
-/* Header row for each fold: red background with left dark block and white chevron */
 .foldSummary {
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     background: var(--brand-red);
     color: var(--bar-text);
     position: relative;
-
-    /* room for left chevron block */
     padding: 10px 14px 10px 44px;
-
     font-weight: 800;
     letter-spacing: 0.1px;
     border-bottom: 1px solid var(--line);
 }
-
-/* keep same red when open (as in ref); tweak if you prefer lighter */
 .fold[open] .foldSummary {
     background: var(--brand-red);
 }
-
-/* Hide default disclosure marker to avoid double arrows */
 .foldSummary::-webkit-details-marker {
     display: none;
 }
 .foldSummary::marker {
     content: "";
 }
-
-/* Left darker block */
 .foldSummary::before {
     content: "";
     position: absolute;
@@ -191,8 +224,6 @@
     width: 28px;
     background: var(--brand-red-dark);
 }
-
-/* White chevron centered inside the block */
 .foldSummary::after {
     content: "▸";
     position: absolute;
@@ -209,7 +240,7 @@
     transform: translateY(-50%) rotate(90deg);
 }
 
-/* ========= CASE LIST INSIDE FOLDS ========= */
+/* ========= CASE LIST ========= */
 .caseList {
     list-style: none;
     counter-reset: item;
@@ -223,7 +254,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 10px 10px 34px; /* left space for auto number */
+    padding: 10px 10px 10px 34px;
     border-bottom: 1px solid var(--line);
 }
 .caseItem:last-child {
