@@ -11,17 +11,28 @@ class PatientController extends Controller
     /**
      * GET /api/patients
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        // Return a lightweight list for the sidebar
-        $patients = Patient::query()
-            ->orderBy('patient_lname')
+        $query = Patient::query();
+
+        if ($request->has('archived')) {
+            $archived = filter_var($request->archived, FILTER_VALIDATE_BOOLEAN);
+            $query->where('archived', $archived);
+        } else {
+            // default: only active patients
+            $query->where('archived', false);
+        }
+
+        $patients = $query->orderBy('patient_lname')
             ->orderBy('patient_fname')
             ->get([
                 'patient_id',
+                'patient_no',
+                'patient_code',
                 'patient_fname',
                 'patient_lname',
                 'patient_mname',
+                'archived',
             ]);
 
         return response()->json($patients);
@@ -58,18 +69,22 @@ class PatientController extends Controller
             'address'         => ['nullable', 'string', 'max:500'],
             'clinic'          => ['nullable', 'string', 'max:255'],
             'parish'          => ['nullable', 'string', 'max:255'],
-            'classification_cm' => ['nullable', 'string', 'max:50'], // FP/NFP
+            'classification_cm' => ['nullable', 'in:FP,NFP'],
             'category'        => ['nullable', 'string', 'max:255'],
+
             'booklet_no'      => ['nullable', 'string', 'max:50'],
             'is_head_family'  => ['nullable', 'boolean'],
+
             'valid_id_no'     => ['nullable', 'string', 'max:100'],
             'endorsed_as_fp'  => ['nullable', 'boolean'],
             'first_time_visit'=> ['nullable', 'boolean'],
+
+            'has_philhealth'  => ['required', 'boolean'],
+            'philhealth_no'   => ['nullable', 'string', 'max:50'],
         ]);
 
         $patient = Patient::create($validated);
 
         return response()->json($patient, 201);
     }
-
 }
