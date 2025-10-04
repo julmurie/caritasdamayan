@@ -44,7 +44,21 @@ export default function Information({ patient, onEdit }) {
                     className={styles.editLink}
                     onClick={onEdit}
                 >
-                    edit →
+                    Edit
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="size-4"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3"
+                        />
+                    </svg>
                 </button>
             </div>
 
@@ -53,9 +67,13 @@ export default function Information({ patient, onEdit }) {
                     <div className={styles.cellLabel}>Name:</div>
                     <div className={styles.cellValue}>{fullName(patient)}</div>
 
-                    <div className={styles.cellLabel}>Parish:</div>
+                    <div className={styles.cellLabel}>Classification:</div>
                     <div className={styles.cellValue}>
-                        {show(patient?.parish)}
+                        {patient?.classification_cm
+                            ? patient.classification_cm === "FP"
+                                ? "Beneficiary (FP)"
+                                : "Beneficiary (NFP)"
+                            : "–"}
                     </div>
                 </div>
 
@@ -65,13 +83,9 @@ export default function Information({ patient, onEdit }) {
                         {ageFromBirthday(patient?.birthday)}
                     </div>
 
-                    <div className={styles.cellLabel}>Classification:</div>
+                    <div className={styles.cellLabel}>Category:</div>
                     <div className={styles.cellValue}>
-                        {patient?.classification_to_cm
-                            ? patient.classification_to_cm === "FP"
-                                ? "Beneficiary (FP)"
-                                : "Beneficiary (NFP)"
-                            : "–"}
+                        {show(patient?.category)}
                     </div>
                 </div>
 
@@ -79,18 +93,6 @@ export default function Information({ patient, onEdit }) {
                     <div className={styles.cellLabel}>Gender:</div>
                     <div className={styles.cellValue}>
                         {show(patient?.gender)}
-                    </div>
-
-                    <div className={styles.cellLabel}>Category:</div>
-                    <div className={styles.cellValue}>
-                        {show(patient?.category_as_client)}
-                    </div>
-                </div>
-
-                <div className={styles.gridRow}>
-                    <div className={styles.cellLabel}>Address:</div>
-                    <div className={styles.cellValue}>
-                        {show(patient?.address)}
                     </div>
 
                     <div className={styles.cellLabel}>Booklet#:</div>
@@ -111,7 +113,37 @@ export default function Information({ patient, onEdit }) {
                         Is Head of the Family:
                     </div>
                     <div className={styles.cellValue}>
-                        {yesno(patient?.is_head_of_family)}
+                        {patient?.classification_cm === "FP"
+                            ? yesno(patient?.is_head_family)
+                            : "–"}
+                    </div>
+                </div>
+
+                <div className={styles.gridRow}>
+                    <div className={styles.cellLabel}>Contact No:</div>
+                    <div className={styles.cellValue}>
+                        {patient?.contact_no || "–"}
+                    </div>
+
+                    <div className={styles.cellLabel}>Valid ID #:</div>
+                    <div className={styles.cellValue}>
+                        {show(patient?.valid_id_no)}
+                    </div>
+                </div>
+
+                <div className={styles.gridRow}>
+                    <div className={styles.cellLabel}>Address:</div>
+                    <div className={styles.cellValue}>
+                        {show(patient?.address)}
+                    </div>
+
+                    <div className={styles.cellLabel}>
+                        Endorsed for CM Family Partner?
+                    </div>
+                    <div className={styles.cellValue}>
+                        {patient?.classification_cm === "NFP"
+                            ? yesno(patient?.endorsed_as_fp)
+                            : "–"}
                     </div>
                 </div>
 
@@ -121,8 +153,26 @@ export default function Information({ patient, onEdit }) {
                         {show(patient?.clinic)}
                     </div>
 
-                    <div className={styles.cellLabel}></div>
-                    <div className={styles.cellValue}></div>
+                    <div className={styles.cellLabel}>First Time Visit?</div>
+                    <div className={styles.cellValue}>
+                        {patient?.classification_cm === "NFP"
+                            ? yesno(patient?.first_time_visit)
+                            : "–"}
+                    </div>
+                </div>
+
+                <div className={styles.gridRow}>
+                    <div className={styles.cellLabel}>Parish:</div>
+                    <div className={styles.cellValue}>
+                        {show(patient?.parish)}
+                    </div>
+
+                    <div className={styles.cellLabel}>PhilHealth No.:</div>
+                    <div className={styles.cellValue}>
+                        {patient?.has_philhealth
+                            ? show(patient?.philhealth_no)
+                            : "–"}
+                    </div>
                 </div>
             </div>
         </section>

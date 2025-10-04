@@ -585,6 +585,9 @@
     font-size: 14px;
 }
 .editLink {
+    display: inline-flex; /* make text + svg sit side by side */
+    align-items: center; /* vertically center them */
+    gap: 4px; /* space between text and icon */
     background: #fff;
     color: #1f2937;
     border-radius: 4px;
@@ -592,6 +595,7 @@
     font-size: 13px;
     font-weight: 600;
     border: 1px solid #e5e7eb;
+    cursor: pointer; /* pointer cursor for better UX */
 }
 
 /* Grid "table" (labels gray, values light) */
@@ -623,86 +627,73 @@
     color: #111827;
 }
 
-/* Modal shell */
 .modalOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(17, 24, 39, 0.45);
+    background: rgba(0, 0, 0, 0.35);
     display: grid;
     place-items: center;
-    z-index: 2000;
+    z-index: 1000;
 }
-
-.modalCard {
-    width: min(760px, calc(100vw - 32px));
-    max-height: 90vh; /* <— keeps it from getting too tall */
+.modal {
+    width: min(880px, 92vw);
     background: #fff;
     border-radius: 10px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* clip rounding while body scrolls */
-    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
-        Arial;
+    max-height: 90vh;
 }
-
 .modalHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
+    padding: 14px 16px;
     border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-
 .modalTitle {
-    font-size: 18px;
     font-weight: 700;
-    margin: 0;
 }
-
 .modalClose {
-    border: 1px solid #d1d5db;
-    background: #fff;
-    border-radius: 9999px;
-    width: 28px;
-    height: 28px;
-    display: grid;
-    place-items: center;
+    background: transparent;
+    border: 0;
+    font-size: 20px;
     cursor: pointer;
 }
-.modalClose:hover {
-    background: #f3f4f6;
+.modalBodyScrollable {
+    padding: 16px;
+    overflow: auto;
+}
+.formRow {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
-/* Scrollable body */
-.modalBody {
-    flex: 1;
-    padding: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+.formInput {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
 }
 
-/* Form layout */
+.req {
+    color: #b91c1c;
+}
+
 .formGrid {
     padding: 16px 18px 18px;
     display: grid;
-    grid-template-columns: 1fr; /* mobile first */
-    gap: 12px;
-}
-
-.formRow {
-    display: grid;
-    grid-template-columns: 200px 1fr; /* label | control */
-    align-items: center;
+    /* mobile first */
+    grid-template-columns: 1fr;
     gap: 12px;
 }
 
 .formLabel {
     font-weight: 600;
     color: #111827;
-}
-.req {
-    color: #b91c1c;
 }
 
 .formControl {
@@ -714,51 +705,35 @@
     background: #fff;
 }
 
-.inlineChoices {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-}
-.choice {
+.inlineGroup {
     display: inline-flex;
-    gap: 6px;
-    align-items: center;
+    gap: 16px;
 }
-
-.formActions {
+.radioItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.modalFooter {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #e5e7eb;
-    margin-top: 6px;
+    gap: 8px;
+    padding-top: 8px;
 }
-
-/* Buttons */
 .btnPrimary {
     background: #2e7d32;
     color: #fff;
     border: 0;
-    border-radius: 8px;
     padding: 8px 14px;
-    font-weight: 600;
+    border-radius: 8px;
     cursor: pointer;
 }
-.btnPrimary:hover {
-    background: #276b2b;
-}
-
 .btnGhost {
-    background: #fff;
-    color: #111827;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.btnGhost:hover {
     background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 /* Responsive: stack label & field on narrow */

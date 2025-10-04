@@ -32,9 +32,8 @@
     border-radius: 0.375rem;
     font-weight: 500;
     transition: background-color 0.2s;
-    margin-right: 1rem;
+    margin-right: 0.5rem;
 }
-
 .addButton:hover {
     background-color: #15803d;
 }
@@ -47,7 +46,6 @@
     font-weight: 500;
     transition: background-color 0.2s;
 }
-
 .archivedButton:hover {
     background-color: #233127;
 }
@@ -56,83 +54,48 @@
     border-color: #e2e8f0;
 }
 
+/* === Modern Red Table Skin (SOA/Prices style) === */
 .tableContainer {
-    background-color: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-.dataTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.dataTables_filter {
-    margin-bottom: 1rem;
-}
-
-.tableCell {
+    background: #ffffff;
+    overflow-x: auto;
     padding: 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    color: #475569;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-.roleColumn {
-    width: 15%;
+.usersTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+    text-align: left;
 }
 
-.nameColumn {
-    width: 20%;
+/* Header */
+.usersTable thead th {
+    background: #fff1f1; /* soft red header */
+    color: #4d0c0c;
+    padding: 12px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #f1c9c9;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
 }
 
-.branchColumn {
-    width: 20%;
+/* Body cells */
+.usersTable tbody td {
+    padding: 12px 16px;
+    border-top: 1px solid #f7e0e0;
+    vertical-align: middle;
 }
 
-.jobColumn {
-    width: 20%;
+/* Hover row */
+.usersTable tbody tr:hover td {
+    background: #fff8f8;
 }
 
-.emailColumn {
-    width: 15%;
-}
-
-.actionsColumn {
-    width: 10%;
-}
-
-.actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.editBtn {
-    background-color: #3b82f6;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    transition: opacity 0.2s;
-}
-
-.editBtn:hover {
-    opacity: 0.9;
-}
-
-.deleteBtn {
-    background-color: #ef4444;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    transition: opacity 0.2s;
-}
-
-.deleteBtn:hover {
-    opacity: 0.9;
-}
-
+/* Role badges */
 .badge {
     display: inline-block;
     padding: 0.15rem 0.5rem;
@@ -152,37 +115,88 @@
     border: 1px solid #e5e7eb;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .content {
-        padding: 1rem;
-    }
-
-    .headerContent {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
+/* Action buttons column */
+.usersActionCell {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
+}
+.usersActionBtn {
+    cursor: pointer;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 6px;
+    line-height: 0;
+    color: #4b5563;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 
-/* Add to your users.module.css */
-@media (max-width: 768px) {
-    .tableContainer {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .dataTable {
-        min-width: 100%;
-    }
-
-    .tableHeader,
-    .tableCell {
-        white-space: nowrap;
-    }
+.usersActionBtn:hover {
+    background: #fff5f5; /* soft red tint */
+    border-color: #ef4444; /* red border highlight */
+    color: #b91c1c; /* red icon/text */
 }
 
-/* for delete modal */
+.usersActionBtn svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+}
+
+/* Top bar for search + buttons */
+.usersTopBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+.usersTopBar :global(.dt-buttons .dt-button) {
+    border: 1px solid #000;
+    background: #fff;
+    color: #111;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    margin-left: 8px;
+    cursor: pointer;
+}
+.usersTopBar :global(.dt-buttons .dt-button:hover) {
+    background: #f3f3f3;
+}
+.usersTopBar :global(.dataTables_filter input) {
+    font: inherit;
+    color: #111;
+    padding: 6px 8px;
+    border: 1px solid #cfcfcf;
+    border-radius: 3px;
+    background: #f5f5f5;
+    outline: none;
+}
+
+/* Pagination styling */
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button) {
+    border: 1px solid #f1c9c9 !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #7f1d1d !important;
+    margin: 0 3px !important;
+    padding: 6px 10px !important;
+}
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button:hover) {
+    background: #ffe5e5 !important;
+    border-color: #ef4444 !important;
+    color: #7f1d1d !important;
+}
+:global(.dataTables_wrapper .dataTables_paginate .paginate_button.current) {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+/* === Modal (delete confirm) === */
 .modalOverlay {
     position: fixed;
     top: 0;
@@ -222,24 +236,20 @@
     padding: 0.5rem;
     border-radius: 50%;
 }
-
 .closeButton:hover {
     background-color: #f3f4f6;
     color: #6b7280;
 }
-
 .closeIcon {
     width: 0.75rem;
     height: 0.75rem;
 }
-
 .warningIcon {
     width: 3rem;
     height: 3rem;
     margin: 0 auto 1rem;
     color: #9ca3af;
 }
-
 .confirmationText {
     margin-bottom: 1.25rem;
     font-size: 1.125rem;
@@ -247,13 +257,11 @@
     color: #6b7280;
     font-weight: 400;
 }
-
 .buttonGroup {
     display: flex;
     justify-content: center;
     gap: 0.75rem;
 }
-
 .confirmButton {
     background-color: #dc2626;
     color: white;
@@ -264,11 +272,9 @@
     cursor: pointer;
     font-size: 0.875rem;
 }
-
 .confirmButton:hover {
     background-color: #b91c1c;
 }
-
 .cancelButton {
     background-color: white;
     color: #374151;
@@ -279,123 +285,29 @@
     font-size: 0.875rem;
     font-weight: 500;
 }
-
 .cancelButton:hover {
     background-color: #f9fafb;
 }
 
-/* ===== Scoped SOA-style grid ONLY for Users table ===== */
-.usersTableWrapper {
-    overflow: auto;
-}
-
-.usersTable {
-    width: 100%;
-    border-collapse: collapse; /* single-pixel grid */
-    border: 1px solid #000; /* outer border */
-    font-size: 13px;
-}
-
-/* Black grid lines on every cell */
-.usersTable thead th,
-.usersTable tbody td {
-    border: 1px solid #000;
-}
-
-/* Red header like SOA + thicker bottom line */
-.usersTable thead tr:first-child th {
-    background: #b22222;
-    color: #fff;
-    text-align: left;
-    padding: 10px 12px;
-    border-bottom: 2px solid #000;
-    white-space: nowrap;
-}
-
-/* Body cells */
-.usersTable tbody td {
-    padding: 10px 12px;
-    vertical-align: middle;
-    background: #fff;
-}
-
-/* Action buttons inside the Action column */
-.usersActionCell {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    justify-content: center;
-}
-.usersActionBtn {
-    border: 1px solid #000; /* keep black grid vibe */
-    background: #fff;
-    border-radius: 4px;
-    padding: 4px 6px;
-    cursor: pointer;
-    line-height: 0; /* icon snug */
-}
-.usersActionBtn:hover {
-    background: #f3f3f3;
-}
-
-.tableContainer :global(.dataTables_wrapper .dataTables_scroll) {
-    padding: 1rem 0;
-}
-
-/* Make the icon strokes visible (SVGs use currentColor) */
-.usersActionBtn {
-    color: #111 !important; /* ← forces a dark stroke */
-    background: #fff !important; /* keep SOA-style button */
-    border: 1px solid #000;
-    border-radius: 4px;
-    padding: 4px 6px;
-    cursor: pointer;
-    line-height: 1; /* avoid weird vertical trim */
-}
-
-.usersActionBtn:hover {
-    background: #f3f3f3;
-}
-
-/* Be explicit about SVG sizing & stroke inheritance */
-.usersActionBtn svg {
-    display: block;
-    width: 18px;
-    height: 18px;
-    stroke: currentColor; /* in case a global style changed it */
-    fill: none;
-}
-
-/* Top bar container with search on the left and buttons on the right */
-.usersTopBar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-}
-
-/* Style Buttons controls similar to SOA (white + black border) */
-.usersTopBar :global(.dt-buttons .dt-button) {
-    border: 1px solid #000;
-    background: #fff;
-    color: #111;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-weight: 700;
-    margin-left: 8px;
-    cursor: pointer;
-}
-.usersTopBar :global(.dt-buttons .dt-button:hover) {
-    background: #f3f3f3;
-}
-
-/* Make the search field look like the SOA “recessed” inputs */
-.usersTopBar :global(.dataTables_filter input) {
-    font: inherit;
-    color: #111;
-    padding: 6px 8px;
-    border: 1px solid #cfcfcf;
-    border-radius: 3px;
-    background: #f5f5f5;
-    outline: none;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem;
+    }
+    .headerContent {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .tableContainer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .usersTable {
+        min-width: 100%;
+    }
+    .usersTable thead th,
+    .usersTable tbody td {
+        white-space: nowrap;
+    }
 }

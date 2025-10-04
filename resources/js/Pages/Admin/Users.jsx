@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "@inertiajs/react";
 import Navbar from "@/components/Navbar";
 import UserModal from "@/components/UserModal";
 import styles from "../../../css/users.module.css";
@@ -266,14 +267,24 @@ function Users() {
                         searchable: false,
                         render: (data, type, row) => `
   <div class="${styles.actions} ${styles.usersActionCell}">
-    <button class="${styles.usersActionBtn} ${styles.editBtn}" data-id="${row.id}" title="Edit" aria-label="Edit">
+    <button 
+      class="${styles.usersActionBtn}" 
+      data-id="${row.id}" 
+      data-action="edit" 
+      title="Edit" 
+      aria-label="Edit">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
            stroke-width="1.5" stroke="currentColor" width="18" height="18" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round"
-          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
       </svg>
     </button>
-    <button class="${styles.usersActionBtn} ${styles.deleteBtn}" data-id="${row.id}" title="Archive" aria-label="Archive">
+    <button 
+      class="${styles.usersActionBtn}" 
+      data-id="${row.id}" 
+      data-action="delete" 
+      title="Archive" 
+      aria-label="Archive">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
            stroke-width="1.5" stroke="currentColor" width="18" height="18" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round"
@@ -333,19 +344,15 @@ function Users() {
 
             window.addEventListener("resize", handleResize);
 
-            // Edit button handler
-            $(tableRef.current).on("click", `.${styles.editBtn}`, function () {
-                const userId = $(this).data("id");
-                handleEditUser(userId);
-            });
-
-            // Delete button handler
             $(tableRef.current).on(
                 "click",
-                `.${styles.deleteBtn}`,
+                `.${styles.usersActionBtn}`,
                 function () {
                     const userId = $(this).data("id");
-                    handleDeleteUser(userId);
+                    const action = $(this).data("action");
+
+                    if (action === "edit") handleEditUser(userId);
+                    if (action === "delete") handleDeleteUser(userId);
                 }
             );
         }
@@ -447,20 +454,44 @@ function Users() {
             <div className={styles.content}>
                 <main>
                     <div className={styles.header}>
-                        <div className={styles.headerContent}>
+                        <div
+                            className={`${styles.headerContent} flex items-center justify-between`}
+                        >
+                            {/* Title on the left */}
                             <h1 className={styles.title}>Users</h1>
-                            <div>
+
+                            {/* Buttons on the right */}
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleOpenModal}
                                     className={styles.addButton}
                                 >
                                     + Add User
                                 </button>
-                                {/* <button className={styles.archivedButton}>
-                                    Archives
-                                </button> */}
+
+                                <Link
+                                    href="/archives"
+                                    className={`${styles.archivedButton} flex items-center gap-1`}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="w-5 h-5"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                                        />
+                                    </svg>
+                                    <span>Archives</span>
+                                </Link>
                             </div>
                         </div>
+
                         <hr className={styles.divider} />
                     </div>
 

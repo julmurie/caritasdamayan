@@ -27,10 +27,15 @@ export default function FlashAlerts({
 
     return (
         <div
-            // fixed, top-right, stacked; pointer-events so clicks only hit alerts
             className={`fixed ${topOffset} right-4 z-[100] w-full max-w-sm pointer-events-none space-y-3 sm:${topOffset}`}
             aria-live="polite"
         >
+            {props.sessionExpired && (
+                <div className="bg-red-100 text-red-800 px-4 py-2 rounded mb-3">
+                    Your session has expired. Please log in again.
+                </div>
+            )}
+
             {open.success && flash.success && (
                 <Alert
                     variant="success"

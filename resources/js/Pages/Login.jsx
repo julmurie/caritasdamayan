@@ -9,6 +9,10 @@ import FlashAlerts from "@/Components/FlashAlerts";
 import Alert from "@/Components/Alert";
 
 export default function Login() {
+    useEffect(() => {
+        // force-refresh CSRF cookie
+        fetch("/sanctum/csrf-cookie", { credentials: "include" });
+    }, []);
     const { props } = usePage();
 
     const [email, setEmail] = useState("");
@@ -166,8 +170,8 @@ export default function Login() {
                         {/* Global server flashes (success/error/info/warning) */}
                         <FlashAlerts autoDismissMs={6000} />
 
-                        {/* Client-side login error/lock alert */}
-                        {/* {bannerErr && (
+                        {/* Client-side login error/lock alert
+                        {bannerErr && (
                             <div className="fixed top-4 right-4 z-[101] w-full max-w-sm pointer-events-none">
                                 <Alert
                                     variant="danger"

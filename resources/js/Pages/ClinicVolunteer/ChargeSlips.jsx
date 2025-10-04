@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 
 function ChargeSlips() {
     return (
-        <div>
+        <div className="min-h-screen bg-[#f6f8fa]">
             <Navbar />
         </div>
     );

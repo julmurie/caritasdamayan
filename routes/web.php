@@ -9,6 +9,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SOAController;
+use App\Http\Controllers\PatientController;
+
 use App\Http\Controllers\MedicineRequestController;
 
 /*
@@ -189,4 +191,8 @@ Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
 
     /* ---------------- Logout ---------------- */
     Route::post('/logout', [AuthController::class, 'sessionLogout'])->name('logout');
+
+    // archives (general)
+    Route::inertia('/archives', 'Archives')->name('archives');
+
 });

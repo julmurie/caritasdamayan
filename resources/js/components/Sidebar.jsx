@@ -10,10 +10,30 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
 
     const idOf = (row) => row?.patient_id ?? row?.id;
 
+    const [showArchived, setShowArchived] = useState(false);
+    // async function load({ selectFirstIfNone = true } = {}) {
+    //     try {
+    //         const url = showArchived
+    //             ? "/api/patients?archived=1"
+    //             : "/api/patients?archived=0";
+    //         const data = await jsonFetch(url);
+    //         setPatients(data);
+    //         if (selectFirstIfNone && !selectedId && data?.length) {
+    //             onSelect?.(idOf(data[0]));
+    //         }
+    //     } catch (e) {
+    //         console.error("fetchPatients failed:", e);
+    //         setPatients([]);
+    //     }
+    // }
+
     async function load({ selectFirstIfNone = true } = {}) {
         try {
-            const data = await fetchPatients();
+            const data = await fetchPatients(
+                showArchived ? { archived: 1 } : { archived: 0 }
+            );
             setPatients(data);
+
             if (selectFirstIfNone && !selectedId && data?.length) {
                 onSelect?.(idOf(data[0]));
             }
@@ -32,9 +52,15 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
         try {
             const created = await createPatient(form);
             setShowAdd(false);
+
+            // reload full list to include new patient
             await load({ selectFirstIfNone: false });
+
+            // select the new patient if it has ID
             const newId = idOf(created);
-            if (newId) onSelect?.(newId);
+            if (newId) {
+                onSelect?.(newId);
+            }
         } catch (e) {
             console.error("createPatient failed:", e);
             alert(e.message || "Failed to save patient");
@@ -103,8 +129,15 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                 </button>
 
                 <button
-                    className={`${styles.btn} ${styles.btnDark}`}
+                    className={`${styles.btn} ${styles.btnDark} ${
+                        showArchived ? styles.btnActive : ""
+                    }`}
                     type="button"
+                    onClick={() => {
+                        setShowArchived(!showArchived);
+                        // reload patients with new filter
+                        load({ selectFirstIfNone: false });
+                    }}
                 >
                     <span className={styles.iconLeft}>
                         <svg viewBox="0 0 24 24" fill="currentColor">
