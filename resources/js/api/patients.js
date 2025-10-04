@@ -38,3 +38,16 @@ export async function createPatient(payload) {
         return jsonFetch("/api/patients", { method: "POST", body: fd });
     }
 }
+
+export async function updatePatient(id, payload) {
+    const res = await fetch(`/api/patients/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to update patient");
+    }
+    return res.json();
+}

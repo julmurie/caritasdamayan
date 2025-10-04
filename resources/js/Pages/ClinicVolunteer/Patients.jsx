@@ -193,11 +193,14 @@ import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import styles from "../../../css/volunteer.module.css";
 import { Link } from "@inertiajs/react";
+import { updatePatient } from "@/api/patients";
 
 import Information from "@/components/Information";
 import Documents from "@/components/Documents";
 import RequestApproval from "@/components/RequestApproval";
 import AssistanceRecord from "@/components/AssistanceRecord";
+
+import EditPatientModal from "@/components/modals/EditPatientModal";
 
 import { fetchPatientById } from "@/api/patients";
 
@@ -206,6 +209,7 @@ const Patients = () => {
     const [selectedId, setSelectedId] = useState(null);
     const [patient, setPatient] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showEdit, setShowEdit] = useState(false);
 
     // 🔥 NEW: sync sidebar state for smooth shift
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -248,7 +252,13 @@ const Patients = () => {
     const renderTab = () => {
         switch (activeTab) {
             case "information":
-                return <Information patient={withAge} loading={loading} />;
+                return (
+                    <Information
+                        patient={withAge}
+                        loading={loading}
+                        onEdit={() => setShowEdit(true)}
+                    />
+                );
             case "documents":
                 return <Documents patientId={selectedId} />;
             case "approval":
@@ -402,6 +412,30 @@ const Patients = () => {
                     </ul>
 
                     <div className={styles.tabContent}>{renderTab()}</div>
+
+                    {showEdit && patient && (
+                        <EditPatientModal
+                            open={showEdit}
+                            patient={patient}
+                            onClose={() => setShowEdit(false)}
+                            onUpdate={async (updated) => {
+                                try {
+                                    const data = await updatePatient(
+                                        patient.patient_id,
+                                        updated
+                                    );
+                                    setPatient(data); // refresh with updated patient
+                                    setShowEdit(false);
+                                } catch (err) {
+                                    console.error(err);
+                                    alert(
+                                        err.message ||
+                                            "Failed to update patient"
+                                    );
+                                }
+                            }}
+                        />
+                    )}
                 </main>
             </div>
         </>
