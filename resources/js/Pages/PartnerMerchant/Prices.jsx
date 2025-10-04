@@ -126,6 +126,7 @@ export default function Prices({
     });
     const [form, setForm] = useState(resetForm());
     const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
 
     // ===== SERVICES state =====
     const serviceTableRef = useRef(null);
@@ -529,16 +530,85 @@ export default function Prices({
         );
     };
 
+    // const addRow = (e) => {
+    //     e.preventDefault();
+
+    //     // run validation
+    //     const errs = validateProductForm(form);
+    //     if (Object.keys(errs).length > 0) {
+    //         setErrors(errs); // show errors in UI
+    //         return;
+    //     }
+    //     setErrors({}); // clear errors if valid
+
+    //     router.post(
+    //         "/merchant/products",
+    //         {
+    //             name: form.name,
+    //             standard_price: form.standard_price || 0,
+    //             discounted_price: form.discounted_price || 0,
+    //         },
+    //         {
+    //             onSuccess: () => {
+    //                 setShowAdd(false);
+    //                 setForm(resetForm());
+    //                 reloadTable();
+    //             },
+    //         }
+    //     );
+    // };
+
+    // const saveEdit = (e) => {
+    //     e.preventDefault();
+
+    //     // run validation
+    //     const errs = validateProductForm(form);
+    //     if (Object.keys(errs).length > 0) {
+    //         setErrors(errs); // show errors
+    //         return;
+    //     }
+    //     setErrors({}); // clear errors
+
+    //     if (!editing) return;
+    //     router.patch(
+    //         `/merchant/products/${editing.id}`,
+    //         {
+    //             name: form.name,
+    //             standard_price: form.standard_price || 0,
+    //             discounted_price: form.discounted_price || 0,
+    //         },
+    //         {
+    //             onSuccess: () => {
+    //                 setEditing(null);
+    //                 setForm(resetForm());
+    //                 reloadTable();
+    //             },
+    //         }
+    //     );
+    // };
+
     const addRow = (e) => {
         e.preventDefault();
 
-        // run validation
         const errs = validateProductForm(form);
+
         if (Object.keys(errs).length > 0) {
-            setErrors(errs); // show errors in UI
+            // 🔸 set errors
+            setErrors(errs);
+
+            // 🔸 mark ALL errored fields as touched (so all red borders show)
+            const allTouched = Object.keys(errs).reduce((acc, key) => {
+                acc[key] = true;
+                return acc;
+            }, {});
+            setTouched((t) => ({ ...t, ...allTouched }));
+
             return;
         }
-        setErrors({}); // clear errors if valid
+
+        // ✅ clear errors and touched when valid
+        setErrors({});
+        setTouched({});
 
         router.post(
             "/merchant/products",
@@ -560,15 +630,25 @@ export default function Prices({
     const saveEdit = (e) => {
         e.preventDefault();
 
-        // run validation
         const errs = validateProductForm(form);
+
         if (Object.keys(errs).length > 0) {
-            setErrors(errs); // show errors
+            // 🔸 show errors and mark touched
+            setErrors(errs);
+            const allTouched = Object.keys(errs).reduce((acc, key) => {
+                acc[key] = true;
+                return acc;
+            }, {});
+            setTouched(allTouched);
+
             return;
         }
-        setErrors({}); // clear errors
+
+        setErrors({});
+        setTouched({});
 
         if (!editing) return;
+
         router.patch(
             `/merchant/products/${editing.id}`,
             {
@@ -589,8 +669,16 @@ export default function Prices({
     const cancelEdit = () => {
         setEditing(null);
         setForm(resetForm());
-        setErrors({}); // also clear errors when canceling
+        setErrors({});
+        setTouched({}); // ✅ clear when canceling too
     };
+
+    // const cancelEdit = () => {
+    //     setEditing(null);
+    //     setForm(resetForm());
+    //     setErrors({});
+    //     setTouched({});
+    // };
 
     return (
         <>
@@ -807,6 +895,7 @@ export default function Prices({
                             autoFocus
                             maxLength={100}
                             error={errors.name}
+                            touched={touched.name}
                         />
                         <Field
                             label="Standard Price"
@@ -818,6 +907,7 @@ export default function Prices({
                             }
                             maxLength={10}
                             error={errors.standard_price}
+                            touched={touched.standard_price}
                         />
                         <Field
                             label="Discounted Price"
@@ -829,6 +919,7 @@ export default function Prices({
                             }
                             maxLength={10}
                             error={errors.discounted_price}
+                            touched={touched.discounted_price}
                         />
                         <div className="flex justify-end gap-2 pt-2">
                             <button
@@ -1169,6 +1260,7 @@ function Field({
     autoFocus,
     error,
     maxLength = { maxLength },
+    touched,
 }) {
     const id = useMemo(() => `f_${Math.random().toString(36).slice(2)}`, []);
     return (
@@ -1184,6 +1276,7 @@ function Field({
                 step={step}
                 required={required}
                 autoFocus={autoFocus}
+                maxLength={maxLength}
                 className={`border rounded-lg px-3 py-2 outline-none focus:ring ${
                     error
                         ? "border-red-500 focus:ring-red-200"

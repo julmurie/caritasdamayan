@@ -394,13 +394,52 @@ function MedicineRequest() {
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     };
 
+    // const handleSave = useCallback(() => {
+    //     const errs = validateAll();
+    //     if (Object.keys(errs).length > 0) {
+    //         scrollToFirstError(errs);
+    //         return;
+    //     }
+
+    //     router.post(
+    //         "/volunteer/medicine-requests",
+    //         {
+    //             ...meta,
+    //             partner_type: partnerType,
+    //             ...patient,
+    //             age: parseInt(patient.age || "0", 10) || 0,
+    //             ...summary,
+    //             items: medicines,
+    //         },
+    //         {
+    //             onSuccess: () => alert("Medicine request saved successfully!"),
+    //             onError: (serverErrors) => {
+    //                 const mapped = {};
+    //                 Object.entries(serverErrors || {}).forEach(([k, v]) => {
+    //                     mapped[k] = Array.isArray(v) ? v[0] : v;
+    //                 });
+    //                 setErrors((e) => ({ ...e, ...mapped }));
+    //                 scrollToFirstError(mapped);
+    //             },
+    //         }
+    //     );
+    // }, [validateAll, meta, partnerType, patient, summary, medicines]);
     const handleSave = useCallback(() => {
         const errs = validateAll();
+
         if (Object.keys(errs).length > 0) {
+            // 🔸 Mark all errored fields as touched so their red borders show
+            const allTouched = Object.keys(errs).reduce((acc, key) => {
+                acc[key] = true;
+                return acc;
+            }, {});
+            setTouched((t) => ({ ...t, ...allTouched }));
+
             scrollToFirstError(errs);
             return;
         }
 
+        // ✅ proceed to save if valid
         router.post(
             "/volunteer/medicine-requests",
             {
@@ -752,7 +791,7 @@ function MedicineRequest() {
                                                 patient.mi
                                             )
                                         }
-                                        maxLength={LIMITS.mi.max}
+                                        maxLength={1}
                                     />
                                     {err("patient.mi")}
                                 </Field>
@@ -767,16 +806,32 @@ function MedicineRequest() {
                                         inputMode="numeric"
                                         className={cls("patient.age")}
                                         value={patient.age}
-                                        onInput={shield}
-                                        onChange={setPatientField("age")}
+                                        onChange={(e) => {
+                                            let val = e.target.value.replace(
+                                                /\D+/g,
+                                                ""
+                                            ); // keep only digits
+                                            if (val) {
+                                                const num = parseInt(val, 10);
+                                                if (num > 120) {
+                                                    val = "120"; // ✅ clamp to max age
+                                                } else {
+                                                    val = String(num);
+                                                }
+                                            }
+                                            setPatient((p) => ({
+                                                ...p,
+                                                age: val,
+                                            }));
+                                        }}
                                         onBlur={() =>
                                             onBlurValidate(
                                                 "patient.age",
                                                 patient.age
                                             )
                                         }
-                                        min={LIMITS.age.min}
-                                        max={LIMITS.age.max}
+                                        min={0}
+                                        max={120} // browser validation too
                                     />
                                     {err("patient.age")}
                                 </Field>
@@ -812,10 +867,16 @@ function MedicineRequest() {
                                             "patient.contact_number"
                                         )}
                                         value={patient.contact_number}
-                                        onInput={shield}
-                                        onChange={setPatientField(
-                                            "contact_number"
-                                        )}
+                                        // remove all non-digits and cut to 11
+                                        onChange={(e) => {
+                                            const digits = e.target.value
+                                                .replace(/\D+/g, "")
+                                                .slice(0, 11);
+                                            setPatient((p) => ({
+                                                ...p,
+                                                contact_number: digits,
+                                            }));
+                                        }}
                                         onBlur={() =>
                                             onBlurValidate(
                                                 "patient.contact_number",
@@ -823,7 +884,8 @@ function MedicineRequest() {
                                             )
                                         }
                                         placeholder="+63 912 345 6789"
-                                        maxLength={20} // UI length; validation checks digits 10–15
+                                        inputMode="numeric" // mobile keyboards show digits
+                                        maxLength={11} // UI cap, validation enforces 11
                                     />
                                     {err("patient.contact_number")}
                                 </Field>
