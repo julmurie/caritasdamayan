@@ -1,3 +1,5 @@
+// resources/js/components/Sidebar.jsx (or your path)
+
 import React, { useEffect, useState } from "react";
 import { fetchPatients, createPatient } from "@/api/patients";
 import styles from "../../css/volunteer.module.css";
@@ -7,32 +9,18 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
     const [open, setOpen] = useState(true);
     const [patients, setPatients] = useState([]);
     const [showAdd, setShowAdd] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
 
     const idOf = (row) => row?.patient_id ?? row?.id;
 
-    const [showArchived, setShowArchived] = useState(false);
-    // async function load({ selectFirstIfNone = true } = {}) {
-    //     try {
-    //         const url = showArchived
-    //             ? "/api/patients?archived=1"
-    //             : "/api/patients?archived=0";
-    //         const data = await jsonFetch(url);
-    //         setPatients(data);
-    //         if (selectFirstIfNone && !selectedId && data?.length) {
-    //             onSelect?.(idOf(data[0]));
-    //         }
-    //     } catch (e) {
-    //         console.error("fetchPatients failed:", e);
-    //         setPatients([]);
-    //     }
-    // }
-
     async function load({ selectFirstIfNone = true } = {}) {
         try {
+            // If your fetchPatients accepts query params, this works:
             const data = await fetchPatients(
                 showArchived ? { archived: 1 } : { archived: 0 }
             );
-            setPatients(data);
+            // If not, switch this to separate endpoints or your own jsonFetch.
+            setPatients(Array.isArray(data) ? data : []);
 
             if (selectFirstIfNone && !selectedId && data?.length) {
                 onSelect?.(idOf(data[0]));
@@ -43,24 +31,30 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
         }
     }
 
+    // Notify parent about width changes
     useEffect(() => onToggle?.(open), [open, onToggle]);
+
+    // Initial load
     useEffect(() => {
         load({ selectFirstIfNone: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Reload when archived filter toggles
+    useEffect(() => {
+        load({ selectFirstIfNone: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showArchived]);
 
     async function handleCreate(form) {
         try {
             const created = await createPatient(form);
             setShowAdd(false);
 
-            // reload full list to include new patient
             await load({ selectFirstIfNone: false });
 
-            // select the new patient if it has ID
             const newId = idOf(created);
-            if (newId) {
-                onSelect?.(newId);
-            }
+            if (newId) onSelect?.(newId);
         } catch (e) {
             console.error("createPatient failed:", e);
             alert(e.message || "Failed to save patient");
@@ -80,7 +74,6 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                 onClick={() => setOpen(!open)}
                 aria-label={open ? "Collapse" : "Expand"}
             >
-                {/* chevrons unchanged */}
                 {open ? (
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -133,11 +126,8 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                         showArchived ? styles.btnActive : ""
                     }`}
                     type="button"
-                    onClick={() => {
-                        setShowArchived(!showArchived);
-                        // reload patients with new filter
-                        load({ selectFirstIfNone: false });
-                    }}
+                    onClick={() => setShowArchived((v) => !v)}
+                    title={showArchived ? "Showing archived" : "Showing active"}
                 >
                     <span className={styles.iconLeft}>
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -166,8 +156,9 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
             </div>
 
             <div className={styles.listWrap}>
-                {patients.map((p) => {
-                    const id = idOf(p);
+                {(patients ?? []).map((p) => {
+                    const id =
+                        idOf(p) ?? `${p.patient_lname}-${p.patient_fname}`;
                     const active = id === selectedId;
                     return (
                         <button

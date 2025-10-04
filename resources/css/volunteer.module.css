@@ -377,7 +377,7 @@
     /* Left grows more: min 560px, up to 2fr; Right stays tighter: min 420px, 1fr */
     grid-template-columns: minmax(560px, 2fr) minmax(420px, 1fr);
     gap: 20px;
-    align-items: start;
+    align-items: center;
     padding: 16px;
 }
 
@@ -389,13 +389,17 @@
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 75%;
+    justify-content: center;
 }
 
 .pHeaderInner {
     display: grid;
     grid-template-columns: 72px 1fr; /* slightly larger avatar like the UI */
-    gap: 16px;
-    padding: 16px;
+    gap: 40px;
+    padding: 50px 25px;
 }
 
 /* Ensure long text never spills out of the left column */
@@ -405,8 +409,9 @@
 }
 .pName {
     font-family: "Inter", sans-serif;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 22px; /* was 18px */
+    line-height: 1.2;
+    font-weight: 700;
     margin: 0;
     max-width: 100%;
     white-space: nowrap;
@@ -416,7 +421,7 @@
 
 .pCodes {
     display: flex;
-    gap: 24px;
+    gap: 12px;
     flex-wrap: wrap;
     width: 100%;
 }
@@ -444,8 +449,8 @@
 }
 
 .pAvatar {
-    width: 64px;
-    height: 64px;
+    width: 90px;
+    height: 95px;
     border-radius: 8px;
     background: #e9ecef;
     position: relative;
@@ -459,11 +464,11 @@
 }
 .pMeta {
     display: grid;
-    gap: 6px;
+    gap: 4px;
 }
 
 .pSub {
-    font-size: 13px;
+    font-size: 14px;
     color: #6b7280;
 }
 
@@ -544,7 +549,7 @@
 /* Tabs under the header */
 .tabBar {
     display: flex;
-    gap: 8px;
+    gap: 5px;
     flex-wrap: wrap;
     padding: 0 16px 8px;
 }
@@ -552,7 +557,7 @@
     background: #e5e7eb;
     color: #111827;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 3px;
     padding: 6px 10px;
     font-weight: 700;
     font-size: 13px;
@@ -567,8 +572,8 @@
 /* Section blocks (red title bar like the mock) */
 .section {
     background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    /* border: 1px solid #e5e7eb; */
+    /* border-radius: 6px; */
     margin: 0 16px 16px;
     overflow: hidden;
 }
@@ -580,6 +585,7 @@
     color: #fff;
     padding: 8px 10px;
     font-weight: 800;
+    margin-bottom: 0.5rem;
 }
 .sectionTitle {
     font-size: 14px;
@@ -736,6 +742,8 @@
     cursor: pointer;
 }
 
+/* tab css */
+
 /* Responsive: stack label & field on narrow */
 @media (max-width: 640px) {
     .formRow {
@@ -744,6 +752,20 @@
     }
     .formLabel {
         padding-bottom: 2px;
+    }
+    .pHeaderInner {
+        padding: 10px;
+        gap: 10px;
+    }
+    .pName {
+        font-size: 20px;
+    }
+    .pSub,
+    .pCodeValue {
+        font-size: 13.5px;
+    }
+    .pCodes {
+        gap: 10px;
     }
 }
 

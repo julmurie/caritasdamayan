@@ -12,6 +12,8 @@ use App\Http\Controllers\SOAController;
 use App\Http\Controllers\PatientController;
 
 use App\Http\Controllers\MedicineRequestController;
+use App\Http\Controllers\LaboratoryRequestController;
+use App\Http\Controllers\ReferralController;
 
 /*
 |--------------------------------------------------------------------------
@@ -115,12 +117,16 @@ Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
     Route::inertia('/documents/laboratory-request', 'ClinicVolunteer/Documents/LaboratoryRequest')->name('volunteer.documents.laboratory');
 
     Route::post('/medicine-requests', [MedicineRequestController::class, 'store'])->name('volunteer.medicine_requests.store');
+    Route::post('/laboratory-requests', [LaboratoryRequestController::class, 'store'])->name('volunteer.laboratory_requests.store');
 
     // Appointments
     Route::inertia('/appointments/donated-item', 'ClinicVolunteer/Appointments/DonatedItem')->name('volunteer.appointments.donated');
     Route::inertia('/appointments/referral', 'ClinicVolunteer/Appointments/Referral')->name('volunteer.appointments.referral');
     Route::inertia('/appointments/initial-assessment', 'ClinicVolunteer/Appointments/InitialAssessment')->name('volunteer.appointments.initial');
     Route::inertia('/appointments/consultation', 'ClinicVolunteer/Appointments/Consultation')->name('volunteer.appointments.consultation');
+
+    Route::post('/referrals', [ReferralController::class, 'store'])
+    ->name('volunteer.referrals.store');
 });
 
 

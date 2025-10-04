@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import LogoWithTextRed from "../../images/logo_with_text_red.svg";
 import LogoForLogin from "../../images/logo_for_login.svg";
 
-// Reusable alerts
 import FlashAlerts from "@/Components/FlashAlerts";
 import Alert from "@/Components/Alert";
 
+/* ⬇️ CSS Module */
+import styles from "../../css/Login.module.css";
+
 export default function Login() {
     useEffect(() => {
-        // force-refresh CSRF cookie
         fetch("/sanctum/csrf-cookie", { credentials: "include" });
     }, []);
     const { props } = usePage();
@@ -21,19 +22,15 @@ export default function Login() {
     const [remember, setRemember] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // field-level errors
     const [formErrs, setFormErrs] = useState({ email: "", password: "" });
-    // top banner (attempts left / locked)
     const [bannerErr, setBannerErr] = useState("");
 
-    // lock state
-    const [lockUntil, setLockUntil] = useState(null); // ms timestamp
-    const [remaining, setRemaining] = useState(0); // seconds
+    const [lockUntil, setLockUntil] = useState(null);
+    const [remaining, setRemaining] = useState(0);
 
     const canLogin = email.trim() !== "" && pwd.trim() !== "";
     const locked = !!lockUntil;
 
-    // If server flashed a retry_at (optional), start countdown
     useEffect(() => {
         const retryAt = props?.flash?.retry_at;
         if (retryAt) {
@@ -42,7 +39,6 @@ export default function Login() {
         }
     }, [props?.flash?.retry_at]);
 
-    // --- Countdown effect ---
     useEffect(() => {
         if (!lockUntil) return;
         const tick = () => {
@@ -53,10 +49,10 @@ export default function Login() {
             setRemaining(secs);
             if (secs <= 0) {
                 setLockUntil(null);
-                setBannerErr(""); // clear banner on unlock
+                setBannerErr("");
             }
         };
-        tick(); // initialize immediately
+        tick();
         const id = setInterval(tick, 1000);
         return () => clearInterval(id);
     }, [lockUntil]);
@@ -70,7 +66,6 @@ export default function Login() {
         e.preventDefault();
         if (loading || locked) return;
 
-        // simple client validation
         const errs = {
             email: email.trim() ? "" : "Email is required",
             password: pwd.trim() ? "" : "Password is required",
@@ -81,7 +76,6 @@ export default function Login() {
 
         setLoading(true);
         try {
-            // 1) API login to enforce attempts/lock
             const apiRes = await fetch("/api/login", {
                 method: "POST",
                 headers: {
@@ -94,7 +88,6 @@ export default function Login() {
             const apiData = await apiRes.json().catch(() => ({}));
 
             if (!apiRes.ok) {
-                // Locked now (423) or just hit 0 attempts (401 with retry info)
                 if (
                     apiRes.status === 423 ||
                     apiData?.retry_after ||
@@ -130,7 +123,6 @@ export default function Login() {
                 return;
             }
 
-            // 2) Establish session via /session-login (server decides redirect)
             const csrf =
                 document.querySelector('meta[name="csrf-token"]')?.content ||
                 "";
@@ -140,7 +132,6 @@ export default function Login() {
                     "/session-login",
                     { email, password: pwd, remember, _token: csrf },
                     {
-                        // 👇 added explicit CSRF header (small but important)
                         headers: { "X-CSRF-TOKEN": csrf },
                         onSuccess: () => resolve(),
                         onError: () => {
@@ -161,72 +152,68 @@ export default function Login() {
     const lockSuffix = locked && remaining > 0 ? ` (${fmt(remaining)})` : "";
 
     return (
-        <div className="w-full min-h-screen">
+        <div className={styles.page}>
             <Head title="Login" />
-            <div className="flex h-screen">
-                {/* Left */}
-                <div className="flex-1 bg-white flex items-center justify-center px-4">
-                    <div className="w-full max-w-[532px] relative">
-                        {/* Global server flashes (success/error/info/warning) */}
-                        <FlashAlerts autoDismissMs={6000} />
 
-                        {/* Client-side login error/lock alert
-                        {bannerErr && (
-                            <div className="fixed top-4 right-4 z-[101] w-full max-w-sm pointer-events-none">
-                                <Alert
-                                    variant="danger"
-                                    onClose={() => setBannerErr("")}
-                                    className="pointer-events-auto shadow-lg"
-                                >
-                                    {locked && remaining > 0
-                                        ? `${bannerErr} (${fmt(remaining)})`
-                                        : bannerErr}
-                                </Alert>
-                            </div>
-                        )} */}
-                        {/* Logo + Title */}
+            {/* Global flashes */}
+            <FlashAlerts autoDismissMs={6000} />
+
+            <div className={styles.layout}>
+                {/* Left / Form */}
+                <div className={styles.left}>
+                    <img
+                        src={LogoWithTextRed}
+                        alt="Logo"
+                        className={styles.logoFixed}
+                    />
+
+                    <div className={styles.card}>
                         <img
                             src={LogoWithTextRed}
-                            alt="Logo with Text (Red)"
-                            className="fixed top-[15px] left-[15px] h-[50px]"
+                            alt="Logo"
+                            className={styles.logoInline}
                         />
-                        <h2 className="text-[50px] font-bold text-center mb-2">
-                            Welcome
-                        </h2>
+                        <h2 className={styles.title}>Welcome</h2>
 
-                        {/* JS submit to show attempts/lock */}
                         <form
-                            className="space-y-6"
+                            className={styles.form}
                             onSubmit={handleSubmit}
                             autoComplete="on"
                         >
                             {/* Email */}
                             <div>
-                                <label
-                                    htmlFor="email"
-                                    className="block text-[25px] font-bold mb-1"
-                                >
-                                    Email
-                                </label>
+                                <div className={styles.labelRow}>
+                                    <label
+                                        htmlFor="email"
+                                        className={styles.label}
+                                    >
+                                        Email
+                                    </label>
+                                </div>
+
                                 <div
-                                    className={`mt-1 flex items-center h-[60px] rounded border-2 pl-[10px] shadow-[0_8px_12px_rgba(0,0,0,0.2)] gap-[10px] ${
-                                        formErrs.email
-                                            ? "border-red-500"
-                                            : "border-[#c61d23]"
-                                    } ${locked ? "opacity-60" : ""}`}
+                                    className={[
+                                        styles.inputGroup,
+                                        formErrs.email ? styles.error : "",
+                                        locked ? styles.locked : "",
+                                    ]
+                                        .join(" ")
+                                        .trim()}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 24 24"
                                         fill="currentColor"
-                                        className="w-10 h-10 shrink-0"
+                                        className={styles.svgIcon}
                                     >
                                         <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
                                         <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
                                     </svg>
+
                                     <input
                                         id="email"
                                         type="email"
+                                        maxLength={55}
                                         required
                                         autoComplete="username"
                                         value={email}
@@ -235,11 +222,12 @@ export default function Login() {
                                         }
                                         aria-invalid={!!formErrs.email}
                                         disabled={locked || loading}
-                                        className="h-full flex-1 text-[25px] pl-2 pr-14 border-l-2 border-l-[#c61d23] focus:outline-none focus:ring-0 disabled:bg-gray-100"
+                                        className={styles.textInput}
                                     />
                                 </div>
+
                                 {formErrs.email && (
-                                    <p className="mt-1 text-sm text-red-600">
+                                    <p className={styles.fieldError}>
                                         {formErrs.email}
                                     </p>
                                 )}
@@ -247,24 +235,37 @@ export default function Login() {
 
                             {/* Password */}
                             <div>
-                                <label
-                                    htmlFor="password"
-                                    className="block text-[25px] font-bold mb-1"
-                                >
-                                    Password
-                                </label>
+                                <div className={styles.labelRow}>
+                                    <label
+                                        htmlFor="password"
+                                        className={styles.label}
+                                    >
+                                        Password
+                                    </label>
+
+                                    {/* Use your actual route if you have Ziggy: href={route('password.request')} */}
+                                    <a
+                                        href="/forgot-password"
+                                        className={styles.forgotLink}
+                                    >
+                                        Forgot password?
+                                    </a>
+                                </div>
+
                                 <div
-                                    className={`mt-1 relative flex items-center h-[60px] rounded border-2 pl-[10px] shadow-[0_8px_12px_rgba(0,0,0,0.2)] gap-[10px] ${
-                                        formErrs.password
-                                            ? "border-red-500"
-                                            : "border-[#c61d23]"
-                                    } ${locked ? "opacity-60" : ""}`}
+                                    className={[
+                                        styles.inputGroup,
+                                        formErrs.password ? styles.error : "",
+                                        locked ? styles.locked : "",
+                                    ]
+                                        .join(" ")
+                                        .trim()}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 24 24"
                                         fill="currentColor"
-                                        className="w-10 h-10 shrink-0"
+                                        className={styles.svgIcon}
                                     >
                                         <path
                                             fillRule="evenodd"
@@ -272,16 +273,18 @@ export default function Login() {
                                             clipRule="evenodd"
                                         />
                                     </svg>
+
                                     <input
                                         id="password"
                                         type={showPwd ? "text" : "password"}
+                                        maxLength={55}
                                         required
                                         autoComplete="current-password"
                                         value={pwd}
                                         onChange={(e) => setPwd(e.target.value)}
                                         aria-invalid={!!formErrs.password}
                                         disabled={locked || loading}
-                                        className="h-full flex-1 text-[25px] pl-2 pr-14 border-l-2 border-l-[#c61d23] focus:outline-none focus:ring-0 disabled:bg-gray-100"
+                                        className={styles.textInput}
                                     />
 
                                     <button
@@ -293,29 +296,36 @@ export default function Login() {
                                         }
                                         onClick={() => setShowPwd(!showPwd)}
                                         disabled={locked || loading}
-                                        className="absolute right-2 p-0 bg-transparent disabled:opacity-50"
+                                        className={styles.eyeBtn}
                                     >
                                         {/* Closed eye */}
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
-                                            className={`w-10 h-10 ${
-                                                showPwd ? "hidden" : ""
-                                            }`}
+                                            className={styles.eyeIcon}
+                                            style={{
+                                                display: showPwd
+                                                    ? "none"
+                                                    : "block",
+                                            }}
                                         >
                                             <path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
                                             <path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z" />
                                             <path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
                                         </svg>
+
                                         {/* Open eye */}
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 24 24"
                                             fill="currentColor"
-                                            className={`w-10 h-10 ${
-                                                showPwd ? "" : "hidden"
-                                            }`}
+                                            className={styles.eyeIcon}
+                                            style={{
+                                                display: showPwd
+                                                    ? "block"
+                                                    : "none",
+                                            }}
                                         >
                                             <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                                             <path
@@ -326,24 +336,24 @@ export default function Login() {
                                         </svg>
                                     </button>
                                 </div>
+
                                 {formErrs.password && (
-                                    <p className="mt-1 text-sm text-red-600">
+                                    <p className={styles.fieldError}>
                                         {formErrs.password}
                                     </p>
                                 )}
                             </div>
 
-                            {/* Login button */}
-                            <div className="grid w-full">
+                            {/* Submit */}
+                            <div>
                                 <button
                                     type="submit"
                                     disabled={!canLogin || loading || locked}
-                                    className={`text-white text-center font-bold text-[35px] rounded-full border-0 transition-colors shadow-[0_8px_12px_rgba(0,0,0,0.2)] py-2
-                    ${
-                        !canLogin || loading || locked
-                            ? "bg-[#bababa] cursor-not-allowed"
-                            : "bg-[#c61d23] cursor-pointer"
-                    }`}
+                                    className={`${styles.submitBtn} ${
+                                        !canLogin || loading || locked
+                                            ? styles.disabled
+                                            : ""
+                                    }`}
                                 >
                                     {locked
                                         ? `Try again in ${fmt(remaining)}`
@@ -352,23 +362,22 @@ export default function Login() {
                                         : "Login"}
                                 </button>
                             </div>
+
                             {/* Banner */}
                             {bannerErr && (
-                                <p
-                                    role="alert"
-                                    className="text-center text-red-600 text-[18px]"
-                                >
+                                <p role="alert" className={styles.banner}>
                                     {locked && remaining > 0
                                         ? `${bannerErr} (${fmt(remaining)})`
                                         : bannerErr}
                                 </p>
                             )}
 
-                            <div className="flex justify-between items-center gap-11 mt-4">
-                                <label className="flex items-center gap-3 text-[25px] font-bold text-black">
+                            {/* Remember me */}
+                            <div className={styles.rememberRow}>
+                                <label className={styles.rememberLabel}>
                                     <input
                                         type="checkbox"
-                                        className="w-6 h-6"
+                                        className={styles.checkbox}
                                         checked={remember}
                                         onChange={(e) =>
                                             setRemember(e.target.checked)
@@ -376,28 +385,25 @@ export default function Login() {
                                     />
                                     Remember me
                                 </label>
-                                <a
-                                    href="#"
-                                    className="text-[25px] font-bold underline text-black"
-                                >
-                                    Forgot Password?
-                                </a>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                {/* Right */}
+                {/* Right / Background (desktop) */}
                 <div
-                    className="flex-1 bg-[#c61d23] bg-center bg-no-repeat bg-cover hidden sm:block"
-                    style={{ backgroundImage: `url(${LogoForLogin})` }}
+                    className={styles.right}
+                    style={{
+                        backgroundImage: `url(${LogoForLogin})`,
+                        backgroundColor: "var(--brand)",
+                    }}
                     aria-hidden="true"
                 />
             </div>
 
-            {/* Mobile background */}
+            {/* Mobile background (shows behind centered form) */}
             <div
-                className="sm:hidden fixed inset-0 -z-10 bg-[#c61d23] bg-center bg-no-repeat bg-cover"
+                className={styles.bgMobile}
                 style={{ backgroundImage: `url(${LogoForLogin})` }}
                 aria-hidden="true"
             />

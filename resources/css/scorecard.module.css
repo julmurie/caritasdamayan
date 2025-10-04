@@ -342,3 +342,35 @@
         margin: 1rem;
     }
 }
+
+/* Force a 2-column shell without touching volunteer.module.css */
+.shellRow {
+    display: grid !important; /* overrule any inherited display */
+    grid-template-columns: var(--sideW, 240px) 1fr;
+    align-items: stretch;
+    min-height: calc(100vh - 64px); /* adjust if your Navbar height differs */
+}
+
+/* Make sure main area can shrink and scroll nicely */
+.mainFix {
+    min-width: 0; /* prevents overflow pushing layout */
+    overflow: hidden; /* keep internal sections in control */
+}
+
+/* Optional: allow vertical scrolling inside main content */
+.mainScroll {
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* If Sidebar internally collapses, respect its narrower width */
+.shellRow > aside {
+    width: auto; /* grid column defines width */
+}
+
+/* (Optional) On very small screens, stack instead of squeezing */
+@media (max-width: 640px) {
+    .shellRow {
+        grid-template-columns: 1fr; /* stack: sidebar above main */
+    }
+}
