@@ -129,7 +129,7 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                 </button>
 
                 <button
-                    className={`${styles.btn} ${
+                    className={`${styles.btn} ${styles.btnDark} ${
                         showArchived ? styles.btnActive : ""
                     }`}
                     type="button"

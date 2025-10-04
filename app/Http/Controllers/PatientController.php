@@ -60,13 +60,13 @@ class PatientController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'patient_fname'   => ['required', 'string', 'max:255'],
-            'patient_lname'   => ['required', 'string', 'max:255'],
-            'patient_mname'   => ['nullable', 'string', 'max:255'],
+            'patient_fname'   => ['required', 'string', 'max:100'],
+            'patient_lname'   => ['required', 'string', 'max:100'],
+            'patient_mname'   => ['nullable', 'string', 'max:50'],
             'gender'          => ['nullable', 'in:Male,Female,Others'],
             'birthday'        => ['nullable', 'date'],
             'contact_no'      => ['nullable', 'string', 'max:50'],
-            'address'         => ['nullable', 'string', 'max:500'],
+            'address'         => ['nullable', 'string', 'max:255'],
             'clinic'          => ['nullable', 'string', 'max:255'],
             'parish'          => ['nullable', 'string', 'max:255'],
             'classification_cm' => ['nullable', 'in:FP,NFP'],
@@ -82,6 +82,13 @@ class PatientController extends Controller
             'has_philhealth'  => ['required', 'boolean'],
             'philhealth_no'   => ['nullable', 'string', 'max:50'],
         ]);
+
+        $lastNo = Patient::max('patient_no');
+        $nextNo = $lastNo ? intval($lastNo) + 1 : 1000; // start from 1000
+        $validated['patient_no'] = str_pad($nextNo, 6, '0', STR_PAD_LEFT);
+
+        $initials = strtoupper(substr($validated['patient_fname'], 0, 1) . substr($validated['patient_lname'], 0, 1));
+        $validated['patient_code'] = $initials . '-' . strtoupper(uniqid());
 
         $patient = Patient::create($validated);
 

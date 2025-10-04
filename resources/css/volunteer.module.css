@@ -585,6 +585,9 @@
     font-size: 14px;
 }
 .editLink {
+    display: inline-flex; /* make text + svg sit side by side */
+    align-items: center; /* vertically center them */
+    gap: 4px; /* space between text and icon */
     background: #fff;
     color: #1f2937;
     border-radius: 4px;
@@ -592,6 +595,7 @@
     font-size: 13px;
     font-weight: 600;
     border: 1px solid #e5e7eb;
+    cursor: pointer; /* pointer cursor for better UX */
 }
 
 /* Grid "table" (labels gray, values light) */
@@ -667,15 +671,40 @@
     align-items: center;
     margin-bottom: 10px;
 }
-.formLabel {
-    font-weight: 600;
-}
+
 .formInput {
     width: 100%;
     padding: 8px 10px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
 }
+
+.req {
+    color: #b91c1c;
+}
+
+.formGrid {
+    padding: 16px 18px 18px;
+    display: grid;
+    /* mobile first */
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.formLabel {
+    font-weight: 600;
+    color: #111827;
+}
+
+.formControl {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cfd6dc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+}
+
 .inlineGroup {
     display: inline-flex;
     gap: 16px;

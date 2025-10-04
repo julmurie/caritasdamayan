@@ -158,7 +158,7 @@ function ScoreCard() {
                 }`}
             >
                 {/* Sidebar manages its own aside */}
-                <Sidebar onToggle={setIsSidebarOpen} />
+                {/* <Sidebar onToggle={setIsSidebarOpen} /> */}
 
                 {/* Scrollable content */}
                 <main className={styles.content}>

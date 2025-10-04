@@ -82,28 +82,54 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                     onSubmit={handleSubmit}
                     className={styles.modalBodyScrollable}
                 >
-                    {/* Basic Info */}
+                    {/* Names */}
                     <div className={styles.formRow}>
-                        <label className={styles.formLabel}>First Name</label>
+                        <label
+                            htmlFor="patient_fname"
+                            className={styles.formLabel}
+                        >
+                            First Name <span className={styles.req}>*</span>
+                        </label>
                         <input
+                            id="patient_fname"
                             name="patient_fname"
-                            className={styles.formInput}
                             required
+                            className={styles.formControl}
+                            type="text"
+                            placeholder="e.g. Juan"
                         />
                     </div>
+
                     <div className={styles.formRow}>
-                        <label className={styles.formLabel}>Last Name *</label>
+                        <label
+                            htmlFor="patient_lname"
+                            className={styles.formLabel}
+                        >
+                            Last Name <span className={styles.req}>*</span>
+                        </label>
                         <input
+                            id="patient_lname"
                             name="patient_lname"
-                            className={styles.formInput}
                             required
+                            className={styles.formControl}
+                            type="text"
+                            placeholder="e.g. Dela Cruz"
                         />
                     </div>
+
                     <div className={styles.formRow}>
-                        <label className={styles.formLabel}>Middle Name</label>
+                        <label
+                            htmlFor="patient_mname"
+                            className={styles.formLabel}
+                        >
+                            Middle Name
+                        </label>
                         <input
+                            id="patient_mname"
                             name="patient_mname"
-                            className={styles.formInput}
+                            className={styles.formControl}
+                            type="text"
+                            placeholder="(optional)"
                         />
                     </div>
                     <div className={styles.formRow}>
@@ -132,13 +158,34 @@ export default function AddPatientModal({ open, onClose, onSave }) {
 
                     {/* Contact */}
                     <div className={styles.formRow}>
-                        <label className={styles.formLabel}>Contact No</label>
-                        <input name="contact_no" className={styles.formInput} />
+                        <label
+                            htmlFor="contact_no"
+                            className={styles.formLabel}
+                        >
+                            Contact No
+                        </label>
+                        <input
+                            id="contact_no"
+                            name="contact_no"
+                            className={styles.formControl}
+                            type="text"
+                            placeholder="e.g. 09xxxxxxxxx"
+                        />
                     </div>
+
                     <div className={styles.formRow}>
-                        <label className={styles.formLabel}>Address</label>
-                        <input name="address" className={styles.formInput} />
+                        <label htmlFor="address" className={styles.formLabel}>
+                            Address
+                        </label>
+                        <input
+                            id="address"
+                            name="address"
+                            className={styles.formControl}
+                            type="text"
+                            placeholder="Street / Barangay / City"
+                        />
                     </div>
+
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>Clinic</label>
                         <input name="clinic" className={styles.formInput} />
