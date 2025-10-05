@@ -1,3 +1,5 @@
+// resources/js/components/Sidebar.jsx (or your path)
+
 import React, { useEffect, useState } from "react";
 import { fetchPatients, createPatient } from "@/api/patients";
 import styles from "../../css/volunteer.module.css";

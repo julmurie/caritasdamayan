@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link, router } from "@inertiajs/react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import layout from "../../../../css/volunteer.module.css";
@@ -170,9 +171,14 @@ function ScoreCard() {
                     {" "}
                     {/* Toolbar */}
                     <div className="flex items-center justify-between mb-4 mx-8">
-                        <button className="px-3 py-1.5 border rounded bg-white hover:bg-gray-50 text-sm">
+                        <Link
+                            href="/volunteer/patients"
+                            as="button"
+                            type="button"
+                            className="px-3 py-1.5 border rounded bg-white hover:bg-gray-50 text-sm"
+                        >
                             ← Return
-                        </button>
+                        </Link>
                         <div className="flex items-center gap-3">
                             <button className="h-9 px-3 rounded border bg-white text-sm flex items-center gap-2 hover:bg-gray-50">
                                 {/* edit icon */}

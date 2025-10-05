@@ -1,0 +1,317 @@
+:root {
+    --brand: #c61d23;
+    --ink: #000;
+}
+
+/* Global guard rails */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Page wrapper */
+.page {
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Two-column layout that collapses on small screens */
+.layout {
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden; /* prevent sideways jiggle */
+    overflow-y: visible; /* allow shadows to show */
+}
+
+/* Left: form column */
+.left {
+    flex: 1 1 0%;
+    min-width: 0; /* allow child to shrink instead of overflow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: #fff;
+    position: relative; /* for absolute logo */
+}
+
+/* Right: image/background column (hidden on small) */
+.right {
+    flex: 1 1 0%;
+    min-width: 0;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: none;
+}
+@media (min-width: 640px) {
+    .right {
+        display: block;
+    }
+}
+
+/* Logo constrained to the pane */
+.logoFixed {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    height: 50px;
+    z-index: 2;
+}
+.logoInline {
+    display: block;
+    height: 29px;
+    margin-bottom: 1rem;
+}
+
+/* ===== Card / Form container =====
+   Mobile: actual white card with shadow
+   Desktop: transparent (use left pane white background) */
+.card {
+    width: 100%;
+    max-width: clamp(320px, 90vw, 420px);
+    position: relative;
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    overflow: visible; /* ensure inner elements aren't clipped */
+    margin: 24px; /* breathing room from edges */
+}
+@media (min-width: 640px) {
+    .left {
+        background: #fff;
+        padding: 1rem;
+    }
+    .card {
+        background: transparent;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+        margin: 0;
+        max-width: clamp(320px, 84%, 420px);
+    }
+    .logoInline {
+        display: none;
+    } /* desktop/tablet: use fixed logo */
+}
+
+/* Heading — smaller and fluid */
+.title {
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 40px);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Form spacing */
+.form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+/* Field label row (label + forgot) */
+.labelRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+.label {
+    font-weight: 700;
+    font-size: clamp(14px, 3.8vw, 20px);
+}
+.forgotLink {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--brand);
+    text-decoration: none;
+}
+.forgotLink:hover,
+.forgotLink:focus {
+    text-decoration: underline;
+}
+
+/* Input group (container with icon + input + eye) */
+.inputGroup {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%; /* explicit to avoid overflow */
+    height: clamp(44px, 6vh, 56px);
+    border-radius: 0.5rem;
+    border: 2px solid var(--brand);
+    padding-left: 10px;
+    gap: 10px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+.inputGroup.error {
+    border-color: #ef4444;
+} /* red-500 */
+.inputGroup.locked {
+    opacity: 0.6;
+}
+
+.svgIcon {
+    width: clamp(24px, 6vw, 32px);
+    height: clamp(24px, 6vw, 32px);
+    flex-shrink: 0;
+}
+
+.textInput {
+    height: 100%;
+    flex: 1 1 auto;
+    width: 100%; /* guarantee full-width inside the group */
+    font-size: clamp(14px, 4vw, 18px);
+    padding-left: 0.5rem;
+    padding-right: 3rem; /* space for eye */
+    border-left: 2px solid var(--brand);
+    border: none;
+    outline: none;
+}
+.textInput:disabled {
+    background: #f3f4f6;
+} /* gray-100 */
+
+.eyeBtn {
+    position: absolute;
+    right: 0.5rem;
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+.eyeIcon {
+    width: clamp(22px, 6vw, 30px);
+    height: clamp(22px, 6vw, 30px);
+}
+
+/* Error text under fields */
+.fieldError {
+    margin-top: 0.25rem;
+    color: #dc2626; /* red-600 */
+    font-size: 0.875rem;
+}
+
+/* Submit */
+.submitBtn {
+    border: 0;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: clamp(18px, 4.5vw, 26px);
+    color: #fff;
+    padding: 0.6rem 1rem;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+    background: var(--brand);
+    cursor: pointer;
+    text-align: center;
+    width: 100%; /* full-width button */
+    display: block;
+}
+.submitBtn.disabled {
+    background: #bababa;
+    cursor: not-allowed;
+}
+
+/* Banner (invalid creds / lock) */
+.banner {
+    text-align: center;
+    color: #dc2626;
+    font-size: 18px;
+}
+
+/* Remember me row */
+.rememberRow {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+}
+.rememberLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: #000;
+    font-size: clamp(14px, 3.8vw, 18px);
+}
+.checkbox {
+    width: clamp(16px, 4.5vw, 20px);
+    height: clamp(16px, 4.5vw, 20px);
+}
+
+/* Mobile background (visible when right column is hidden) */
+.bgMobile {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: block;
+    background: var(--brand);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+@media (min-width: 640px) {
+    .bgMobile {
+        display: none;
+    }
+}
+
+/* Center form better on mobile (safe spacing) + remove white frame */
+@media (max-width: 639px) {
+    .left {
+        background: transparent; /* show the red/bg image behind */
+        padding: 0; /* remove the white “frame” */
+        display: grid;
+        place-items: center; /* perfect centering */
+    }
+    .form {
+        gap: 1rem;
+    }
+    .logoFixed {
+        display: none;
+    } /* mobile: hide fixed corner logo */
+}
+
+/* iPad mini / small tablets in portrait (768–900px) */
+@media (min-width: 640px) and (max-width: 900px) {
+    .card {
+        max-width: 400px;
+    }
+    .title {
+        font-size: clamp(26px, 4.2vw, 34px);
+    }
+    .inputGroup {
+        height: 52px;
+    }
+    .svgIcon {
+        width: 28px;
+        height: 28px;
+    }
+    .eyeIcon {
+        width: 26px;
+        height: 26px;
+    }
+    .textInput {
+        font-size: 16px;
+        padding-right: 2.5rem;
+    }
+    .rememberLabel {
+        font-size: 16px;
+    }
+    .checkbox {
+        width: 18px;
+        height: 18px;
+    }
+    .right {
+        background-size: cover;
+    }
+}
+
+/* Optional: slightly narrower card on very small devices */
+@media (max-width: 380px) {
+    .card {
+        max-width: 92vw;
+    }
+}
