@@ -1,0 +1,103 @@
+/* CSS for printing */
+
+/* ===== PRINT LAYOUT ===== */
+@page {
+    size: A4;
+    margin: 16mm 14mm;
+}
+
+/* hide print layout on screen */
+.print-only {
+    display: none;
+}
+
+/* show ONLY the printable layout when printing */
+@media print {
+    html,
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* hide the entire app chrome */
+    .screen-only {
+        display: none !important;
+    }
+
+    /* show our printable document */
+    .print-only {
+        display: block !important;
+    }
+
+    /* Formal styles */
+    .print-title {
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        margin: 0 0 6mm;
+    }
+    .print-sub {
+        font-size: 12px;
+        color: #555;
+        text-align: center;
+        margin: -4mm 0 6mm;
+    }
+
+    .print-section {
+        margin: 6mm 0;
+    }
+    .print-section h3 {
+        font-size: 13px;
+        margin: 0 0 2mm;
+    }
+
+    .print-grid {
+        display: grid;
+        grid-template-columns: 35mm 1fr 35mm 1fr; /* Label/Value x2 */
+        gap: 2mm 5mm;
+    }
+    .print-label {
+        font-size: 11px;
+        color: #666;
+    }
+    .print-value {
+        font-size: 12px;
+        border-bottom: 1px solid #ddd;
+        padding: 1mm 0 0.5mm;
+        min-height: 6mm;
+    }
+
+    .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    .print-table th,
+    .print-table td {
+        border: 1px solid #ccc;
+        padding: 2mm;
+        vertical-align: top;
+    }
+    .print-table thead th {
+        background: #f2f2f2;
+    }
+    .print-table tfoot td {
+        font-weight: 600;
+    }
+    .print-table thead {
+        display: table-header-group;
+    } /* repeat header each page */
+    .print-table tfoot {
+        display: table-footer-group;
+    }
+
+    .print-footer {
+        position: fixed;
+        bottom: 10mm;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 10px;
+        color: #666;
+    }
+}

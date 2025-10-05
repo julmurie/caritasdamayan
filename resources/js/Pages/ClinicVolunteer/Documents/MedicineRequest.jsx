@@ -4,8 +4,204 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 import styles from "../../../../css/volunteer.module.css";
+import "../../../../css/print.css";
 
 /* ================== Limits & Helpers ================== */
+const buildPrintableHTML = ({
+    meta,
+    patient,
+    partnerType,
+    medicines,
+    summary,
+    title,
+}) => {
+    const rows = (
+        medicines && medicines.length
+            ? medicines
+            : Array.from({ length: 6 }).map(() => ({
+                  unitCost: "",
+                  qty: "",
+                  packaging: "",
+                  name: "",
+                  dosage: "",
+                  remarks: "",
+              }))
+    )
+        .map(
+            (m) => `
+    <tr>
+      <td>${m.unitCost ?? ""}</td>
+      <td>${m.qty ?? ""}</td>
+      <td>${m.packaging ?? ""}</td>
+      <td>${m.name ?? ""}</td>
+      <td>${m.dosage ?? ""}</td>
+      <td>${(Number(m.unitCost || 0) * Number(m.qty || 0))
+          .toFixed(2)
+          .replace("NaN", "")}</td>
+      <td>${m.remarks ?? ""}</td>
+    </tr>`
+        )
+        .join("");
+
+    return `
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  .print-title{font-size:18px;font-weight:700;text-align:center;margin:0 0 6mm;}
+  .print-sub{font-size:12px;color:#555;text-align:center;margin:-4mm 0 6mm;}
+  .print-section{margin:6mm 0;}
+  .print-section h3{font-size:13px;margin:0 0 2mm;}
+  .grid{display:grid;grid-template-columns:35mm 1fr 35mm 1fr;gap:2mm 5mm;}
+  .label{font-size:11px;color:#666;}
+  .value{font-size:12px;border-bottom:1px solid #ddd;padding:1mm 0 .5mm;min-height:6mm;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th,td{border:1px solid #ccc;padding:2mm;vertical-align:top;}
+  thead th{background:#f2f2f2;}
+  tfoot td{font-weight:600;}
+  thead{display:table-header-group;} tfoot{display:table-footer-group;}
+  .footer{position:fixed;bottom:10mm;left:0;right:0;text-align:center;font-size:10px;color:#666;}
+</style>
+</head>
+<body>
+  <div class="print-title">Medicine Charge Slip</div>
+  <div class="print-sub">${title}</div>
+
+  <section class="print-section">
+    <h3>General Information</h3>
+    <div class="grid">
+      <div class="label">Date</div><div class="value">${meta.date || "—"}</div>
+      <div class="label">All is Well</div><div class="value">${
+          meta.all_is_well || "—"
+      }</div>
+      <div class="label">Partner Inst. & Branch</div><div class="value">${
+          meta.partner_institution_branch || "—"
+      }</div>
+      <div class="label">Clinic Name</div><div class="value">${
+          meta.clinic_name || "—"
+      }</div>
+      <div class="label">Partner Inst. Name & Branch</div><div class="value">${
+          meta.partner_institution_name || "—"
+      }</div>
+      <div class="label">Parish Name</div><div class="value">${
+          meta.parish_name || "—"
+      }</div>
+      <div class="label">Parish Address</div><div class="value">${
+          meta.parish_address || "—"
+      }</div>
+      <div class="label">Partner Type</div><div class="value">${
+          partnerType || "—"
+      }</div>
+    </div>
+  </section>
+
+  <section class="print-section">
+    <h3>Patient Details</h3>
+    <div class="grid">
+      <div class="label">Surname</div><div class="value">${
+          patient.surname || "—"
+      }</div>
+      <div class="label">First Name</div><div class="value">${
+          patient.firstname || "—"
+      }</div>
+      <div class="label">Middle Initial</div><div class="value">${
+          patient.mi || "—"
+      }</div>
+      <div class="label">Age</div><div class="value">${patient.age || "—"}</div>
+      <div class="label">Address</div><div class="value" style="grid-column: span 3;">${
+          patient.address || "—"
+      }</div>
+      <div class="label">Contact Number</div><div class="value">${
+          patient.contact_number || "—"
+      }</div>
+      <div class="label">Government ID</div><div class="value">${
+          patient.government_id || "—"
+      }</div>
+      <div class="label">Diagnosis</div><div class="value" style="grid-column: span 3;">${
+          patient.diagnosis || "—"
+      }</div>
+    </div>
+  </section>
+
+  <section class="print-section">
+    <h3>Medicines</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:18mm">Unit Cost</th>
+          <th style="width:14mm">Qty</th>
+          <th>Unit Packaging</th>
+          <th>Name of Medicine</th>
+          <th style="width:28mm">Dosage</th>
+          <th style="width:22mm">Amount</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr><td colspan="5">Subtotal A</td><td colspan="2">${
+            summary.subtotal_a
+        }</td></tr>
+        <tr><td colspan="5">Subtotal B</td><td colspan="2">${
+            summary.subtotal_b
+        }</td></tr>
+        <tr><td colspan="5">Grand Total</td><td colspan="2">${
+            summary.grand_total
+        }</td></tr>
+        <tr><td colspan="7">Amount in Words: ${
+            summary.total_amount_words
+        }</td></tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <div class="footer">Generated by Medicine Request</div>
+</body>
+</html>`;
+};
+
+const printHTML = (html, filenameHint = document.title) => {
+    const prev = document.title;
+    document.title = filenameHint; // helps some browsers name the PDF
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.srcdoc = html;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+        const win = iframe.contentWindow;
+        win.focus();
+        win.print();
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+            document.title = prev;
+        }, 1000);
+    };
+};
+
+// === Print helpers (Manila date + slug) ===
+const manilaDate = () =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(
+        new Date()
+    ); // YYYY-MM-DD
+
+const slugify = (s) =>
+    String(s || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+const baseName = (key, scope) => `${manilaDate()}-${key}-${slugify(scope)}`;
 
 // Sensible defaults; adjust as needed
 const LIMITS = {
@@ -424,22 +620,37 @@ function MedicineRequest() {
     //         }
     //     );
     // }, [validateAll, meta, partnerType, patient, summary, medicines]);
+    // put this alongside your other top-level callbacks
+    const handlePrint = useCallback(() => {
+        const scope =
+            `${patient.surname || "patient"}_${
+                patient.firstname || ""
+            }`.trim() || "request";
+        const filename = `${manilaDate()}-medicine-request-${slugify(scope)}`;
+        const html = buildPrintableHTML({
+            meta,
+            patient,
+            partnerType,
+            medicines,
+            summary,
+            title: filename,
+        });
+        printHTML(html, filename);
+    }, [meta, patient, partnerType, medicines, summary]);
+
     const handleSave = useCallback(() => {
         const errs = validateAll();
 
         if (Object.keys(errs).length > 0) {
-            // 🔸 Mark all errored fields as touched so their red borders show
             const allTouched = Object.keys(errs).reduce((acc, key) => {
                 acc[key] = true;
                 return acc;
             }, {});
             setTouched((t) => ({ ...t, ...allTouched }));
-
             scrollToFirstError(errs);
             return;
         }
 
-        // ✅ proceed to save if valid
         router.post(
             "/volunteer/medicine-requests",
             {
@@ -500,7 +711,10 @@ function MedicineRequest() {
                             <button className="h-9 px-3 rounded border bg-white text-sm hover:bg-gray-50">
                                 Edit
                             </button>
-                            <button className="h-9 px-3 rounded border bg-white text-sm hover:bg-gray-50">
+                            <button
+                                className="h-9 px-3 rounded border bg-white text-sm hover:bg-gray-50"
+                                onClick={handlePrint}
+                            >
                                 Print
                             </button>
                         </div>
@@ -1190,13 +1404,222 @@ function MedicineRequest() {
                     </section>
 
                     {/* Bottom actions */}
-                    <div className="fixed bottom-4 right-6 flex gap-3">
+                    <div className="fixed bottom-4 right-6 flex gap-3 ">
                         <button
                             onClick={handleSave}
                             className="px-4 h-9 bg-[#2e7d32] text-white rounded hover:bg-[#276b2b]"
                         >
                             Save Form
                         </button>
+                    </div>
+
+                    {/* PRINT LAYOUT */}
+                    <div id="print-area" className="print-only">
+                        <div className="print-title">Medicine Charge Slip</div>
+                        <div className="print-sub">
+                            {baseName(
+                                "medicine-request",
+                                `${patient.surname || "patient"}_${
+                                    patient.firstname || ""
+                                }`
+                            )}
+                        </div>
+
+                        {/* Meta */}
+                        <section className="print-section">
+                            <h3>General Information</h3>
+                            <div className="print-grid">
+                                <div className="print-label">Date</div>
+                                <div className="print-value">
+                                    {meta.date || "—"}
+                                </div>
+
+                                <div className="print-label">All is Well</div>
+                                <div className="print-value">
+                                    {meta.all_is_well || "—"}
+                                </div>
+
+                                <div className="print-label">
+                                    Partner Inst. & Branch
+                                </div>
+                                <div className="print-value">
+                                    {meta.partner_institution_branch || "—"}
+                                </div>
+
+                                <div className="print-label">Clinic Name</div>
+                                <div className="print-value">
+                                    {meta.clinic_name || "—"}
+                                </div>
+
+                                <div className="print-label">
+                                    Partner Inst. Name & Branch
+                                </div>
+                                <div className="print-value">
+                                    {meta.partner_institution_name || "—"}
+                                </div>
+
+                                <div className="print-label">Parish Name</div>
+                                <div className="print-value">
+                                    {meta.parish_name || "—"}
+                                </div>
+
+                                <div className="print-label">
+                                    Parish Address
+                                </div>
+                                <div className="print-value">
+                                    {meta.parish_address || "—"}
+                                </div>
+
+                                <div className="print-label">Partner Type</div>
+                                <div className="print-value">
+                                    {partnerType || "—"}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Patient */}
+                        <section className="print-section">
+                            <h3>Patient Details</h3>
+                            <div className="print-grid">
+                                <div className="print-label">Surname</div>
+                                <div className="print-value">
+                                    {patient.surname || "—"}
+                                </div>
+
+                                <div className="print-label">First Name</div>
+                                <div className="print-value">
+                                    {patient.firstname || "—"}
+                                </div>
+
+                                <div className="print-label">
+                                    Middle Initial
+                                </div>
+                                <div className="print-value">
+                                    {patient.mi || "—"}
+                                </div>
+
+                                <div className="print-label">Age</div>
+                                <div className="print-value">
+                                    {patient.age || "—"}
+                                </div>
+
+                                <div className="print-label">Address</div>
+                                <div
+                                    className="print-value"
+                                    style={{ gridColumn: "span 3" }}
+                                >
+                                    {patient.address || "—"}
+                                </div>
+
+                                <div className="print-label">
+                                    Contact Number
+                                </div>
+                                <div className="print-value">
+                                    {patient.contact_number || "—"}
+                                </div>
+
+                                <div className="print-label">Government ID</div>
+                                <div className="print-value">
+                                    {patient.government_id || "—"}
+                                </div>
+
+                                <div className="print-label">Diagnosis</div>
+                                <div
+                                    className="print-value"
+                                    style={{ gridColumn: "span 3" }}
+                                >
+                                    {patient.diagnosis || "—"}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Medicines */}
+                        <section className="print-section">
+                            <h3>Medicines</h3>
+                            <table className="print-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: "18mm" }}>
+                                            Unit Cost
+                                        </th>
+                                        <th style={{ width: "14mm" }}>Qty</th>
+                                        <th>Unit Packaging</th>
+                                        <th>Name of Medicine</th>
+                                        <th style={{ width: "28mm" }}>
+                                            Dosage
+                                        </th>
+                                        <th style={{ width: "22mm" }}>
+                                            Amount
+                                        </th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {medicines.length === 0
+                                        ? Array.from({ length: 6 }).map(
+                                              (_, i) => (
+                                                  <tr key={i}>
+                                                      <td>&nbsp;</td>
+                                                      <td></td>
+                                                      <td></td>
+                                                      <td></td>
+                                                      <td></td>
+                                                      <td></td>
+                                                      <td></td>
+                                                  </tr>
+                                              )
+                                          )
+                                        : medicines.map((m, i) => (
+                                              <tr key={`${m.name}-${i}`}>
+                                                  <td>{m.unitCost}</td>
+                                                  <td>{m.qty}</td>
+                                                  <td>{m.packaging}</td>
+                                                  <td>{m.name}</td>
+                                                  <td>{m.dosage}</td>
+                                                  <td>
+                                                      {(
+                                                          Number(
+                                                              m.unitCost || 0
+                                                          ) * Number(m.qty || 0)
+                                                      ).toFixed(2)}
+                                                  </td>
+                                                  <td>{m.remarks}</td>
+                                              </tr>
+                                          ))}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colSpan={5}>Subtotal A</td>
+                                        <td colSpan={2}>
+                                            {summary.subtotal_a}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan={5}>Subtotal B</td>
+                                        <td colSpan={2}>
+                                            {summary.subtotal_b}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan={5}>Grand Total</td>
+                                        <td colSpan={2}>
+                                            {summary.grand_total}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan={7}>
+                                            Amount in Words:{" "}
+                                            {summary.total_amount_words}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </section>
+
+                        {/* Optional footer */}
+                        <div className="print-footer">
+                            Generated by Medicine Request
+                        </div>
                     </div>
                 </main>
             </div>

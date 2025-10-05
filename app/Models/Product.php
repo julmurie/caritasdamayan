@@ -13,7 +13,8 @@ class Product extends Model
     public const DELETED_AT = 'archived_at';
 
     protected $fillable = [
-        'name',
+        'brand_name',
+        'generic_name',
         'standard_price',
         'discounted_price',
     ];
@@ -23,4 +24,7 @@ class Product extends Model
         'discounted_price' => 'decimal:2',
         'archived_at'       => 'datetime',
     ];
+
+     public function getNameAttribute() { return $this->generic_name; }
+    public function setNameAttribute($v) { $this->generic_name = $v; }
 }
