@@ -1,4 +1,3 @@
-// resources/js/components/SoaLayout.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { router, usePage } from "@inertiajs/react"; // ⬅️ added usePage
 import Navbar from "./Navbar";
@@ -22,9 +21,76 @@ const icons = {
   `,
 };
 
+// === filename helpers (Manila date + slug-safe scope) ===
+const manilaDate = () =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(
+        new Date()
+    ); // YYYY-MM-DD
+
+const slugify = (s) =>
+    String(s)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+const baseName = (key, scope) => `${manilaDate()}-${key}-${slugify(scope)}`;
+// e.g., baseName('soa', 'merchant') => 2025-10-05-soa-merchant
+
+// ===== Validation Helpers =====
+function validateSoaForm(form) {
+    const errors = {};
+
+    // SOA Number
+    if (!form.number?.trim()) {
+        errors.number = "SOA Number is required.";
+    } else if (form.number.length < 2) {
+        errors.number = "SOA Number must be at least 2 characters.";
+    } else if (form.number.length > 15) {
+        errors.number = "SOA Number cannot exceed 15 characters.";
+    }
+
+    // SOA Date
+    if (!form.soa_date) {
+        errors.soa_date = "SOA Date is required.";
+    }
+
+    // Cover Period
+    if (form.cover_period && form.cover_period.length > 25) {
+        errors.cover_period = "Cover Period cannot exceed 25 characters.";
+    }
+
+    // Charge Slip
+    if (!form.charge_slip?.trim()) {
+        errors.charge_slip = "Charge Slip is required.";
+    } else if (form.charge_slip.length > 5) {
+        errors.charge_slip = "Charge Slip cannot exceed 5 characters.";
+    }
+
+    // Total Amount (required, numeric only, positive, max 12 digits)
+    if (!form.total_amount) {
+        errors.total_amount = "Total Amount is required.";
+    } else if (!/^\d+(\.\d{0,2})?$/.test(form.total_amount)) {
+        errors.total_amount =
+            "Total Amount must be a number (letters and symbols not allowed).";
+    } else if (form.total_amount.replace(".", "").length > 12) {
+        errors.total_amount = "Total Amount cannot exceed 12 digits.";
+    } else if (Number(form.total_amount) <= 0) {
+        errors.total_amount = "Total Amount must be greater than 0.";
+    }
+    return errors;
+}
+
 const initDT = (
     tableEl,
-    { ajaxUrl, exportTitle, columns, order = [[1, "desc"]], dom = "Bfrtip" }
+    {
+        ajaxUrl,
+        exportTitle,
+        filename,
+        columns,
+        order = [[1, "desc"]],
+        dom = "Bfrtip",
+    }
 ) => {
     const $t = window.$(tableEl);
     if (window.$?.fn?.dataTable?.isDataTable(tableEl)) {
@@ -44,9 +110,23 @@ const initDT = (
         buttons: [
             "pageLength",
             "colvis",
-            { extend: "csv", title: exportTitle },
-            { extend: "excel", title: exportTitle },
-            { extend: "print", title: exportTitle },
+            {
+                extend: "csv",
+                filename, // <-- NEW
+                title: exportTitle,
+                exportOptions: { columns: ":visible" },
+            },
+            {
+                extend: "excel",
+                filename, // <-- NEW
+                title: exportTitle,
+                exportOptions: { columns: ":visible" },
+            },
+            {
+                extend: "print",
+                title: exportTitle,
+                exportOptions: { columns: ":visible" },
+            },
         ],
         columns,
     });
@@ -75,7 +155,7 @@ export default function SoaLayout({
     datatablesDom = "Bfrtip",
     showAddButton = true,
 }) {
-    // ⬇️ Get role from Inertia shared props
+    // Get role from Inertia shared props
     const { auth } = usePage().props;
     const role = auth?.user?.role || "";
     const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "";
@@ -116,6 +196,7 @@ export default function SoaLayout({
     });
     const [form, setForm] = useState(resetForm());
     const [file, setFile] = useState(null);
+    const [errors, setErrors] = useState({});
 
     // ===== Edit modal state =====
     const [showEdit, setShowEdit] = useState(false);
@@ -130,7 +211,8 @@ export default function SoaLayout({
 
         const dt = initDT(tableRef.current, {
             ajaxUrl: resolvedAjaxUrl,
-            exportTitle,
+            exportTitle: `${title} — ${roleLabel || urlPrefix}`,
+            filename: () => baseName("soa", roleLabel || urlPrefix),
             order: [[1, "desc"]],
             dom: datatablesDom,
             columns: [
@@ -202,6 +284,14 @@ export default function SoaLayout({
     /* ====== Create record ====== */
     const addRecord = (e) => {
         e.preventDefault();
+
+        const errs = validateSoaForm(form);
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+        setErrors({});
+
         if (!form.number || !form.soa_date) {
             alert("SOA Number and SOA Date are required.");
             return;
@@ -218,7 +308,10 @@ export default function SoaLayout({
         if (file) {
             const ok = ["image/png", "image/jpeg", "application/pdf"];
             if (!ok.includes(file.type)) {
-                alert("Attachment must be a PNG, JPG/JPEG, or PDF file.");
+                setErrors((e) => ({
+                    ...e,
+                    attachment: "Attachment must be PNG, JPG/JPEG, or PDF.",
+                }));
                 return;
             }
             fd.append("attachment", file);
@@ -230,6 +323,7 @@ export default function SoaLayout({
                 setShowAdd(false);
                 setForm(resetForm());
                 setFile(null);
+                setErrors({});
                 reloadTable();
             },
         });
@@ -238,6 +332,14 @@ export default function SoaLayout({
     /* ====== Update record (PATCH) ====== */
     const updateRecord = (e) => {
         e.preventDefault();
+
+        const errs = validateSoaForm(form);
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+        setErrors({});
+
         if (!editId) return;
         if (!form.number || !form.soa_date) {
             alert("SOA Number and SOA Date are required.");
@@ -256,7 +358,10 @@ export default function SoaLayout({
         if (editFile) {
             const ok = ["image/png", "image/jpeg", "application/pdf"];
             if (!ok.includes(editFile.type)) {
-                alert("Attachment must be a PNG, JPG/JPEG, or PDF file.");
+                setErrors((e) => ({
+                    ...e,
+                    attachment: "Attachment must be PNG, JPG/JPEG, or PDF.",
+                }));
                 return;
             }
             fd.append("attachment", editFile);
@@ -269,6 +374,7 @@ export default function SoaLayout({
                 setEditId(null);
                 setEditFile(null);
                 setForm(resetForm());
+                setErrors({});
                 reloadTable();
             },
             onError: () => {
@@ -343,6 +449,8 @@ export default function SoaLayout({
                             }
                             required
                             autoFocus
+                            maxLength={15}
+                            error={errors.number}
                         />
                         <Field
                             label="SOA Date"
@@ -352,6 +460,8 @@ export default function SoaLayout({
                                 setForm((f) => ({ ...f, soa_date: v }))
                             }
                             required
+                            maxLength={10}
+                            error={errors.soa_date}
                         />
                         <Field
                             label="Cover Period"
@@ -360,6 +470,8 @@ export default function SoaLayout({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, cover_period: v }))
                             }
+                            maxLength={25}
+                            error={errors.cover_period}
                         />
                         <Field
                             label="Charge Slip"
@@ -367,6 +479,8 @@ export default function SoaLayout({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, charge_slip: v }))
                             }
+                            maxLength={5}
+                            error={errors.charge_slip}
                         />
                         <Field
                             label="Total Amount"
@@ -376,6 +490,8 @@ export default function SoaLayout({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, total_amount: v }))
                             }
+                            maxLength={12}
+                            error={errors.total_amount}
                         />
 
                         <div className="flex flex-col gap-1">
@@ -448,6 +564,8 @@ export default function SoaLayout({
                             }
                             required
                             autoFocus
+                            maxLength={15}
+                            error={errors.number}
                         />
                         <Field
                             label="SOA Date"
@@ -457,6 +575,8 @@ export default function SoaLayout({
                                 setForm((f) => ({ ...f, soa_date: v }))
                             }
                             required
+                            maxLength={10}
+                            error={errors.soa_date}
                         />
                         <Field
                             label="Cover Period"
@@ -464,6 +584,8 @@ export default function SoaLayout({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, cover_period: v }))
                             }
+                            maxLength={25}
+                            error={errors.cover_period}
                         />
                         <Field
                             label="Charge Slip"
@@ -471,6 +593,8 @@ export default function SoaLayout({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, charge_slip: v }))
                             }
+                            maxLength={5}
+                            error={errors.charge_slip}
                         />
                         <Field
                             label="Total Amount"
@@ -480,6 +604,8 @@ export default function SoaLayout({
                             onChange={(v) =>
                                 setForm((f) => ({ ...f, total_amount: v }))
                             }
+                            maxLength={12}
+                            error={errors.total_amount}
                         />
 
                         {/* Optional new attachment */}
@@ -584,11 +710,25 @@ function Field({
     required,
     autoFocus,
     placeholder,
+    error,
+    maxLength,
 }) {
     const id = React.useMemo(
         () => `f_${Math.random().toString(36).slice(2)}`,
         []
     );
+
+    // Restrict to numeric + optional single dot for type="number"
+    const handleInput = (e) => {
+        let val = e.target.value;
+        if (type === "number") {
+            val = val.replace(/[^0-9.]/g, ""); // remove letters and symbols
+            const parts = val.split(".");
+            if (parts.length > 2)
+                val = parts[0] + "." + parts.slice(1).join(""); // only one dot
+        }
+        onChange(val);
+    };
     return (
         <div className="flex flex-col gap-1">
             <label htmlFor={id} className="text-sm font-medium opacity-80">
@@ -597,14 +737,20 @@ function Field({
             <input
                 id={id}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={handleInput}
                 type={type}
                 step={step}
                 required={required}
                 autoFocus={autoFocus}
                 placeholder={placeholder}
-                className="border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring focus:ring-gray-200"
+                maxLength={maxLength}
+                className={`border rounded-lg px-3 py-2 outline-none focus:ring transition ${
+                    error
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-gray-200"
+                }`}
             />
+            {error && <p className="text-red-600 text-sm">{error}</p>}
         </div>
     );
 }

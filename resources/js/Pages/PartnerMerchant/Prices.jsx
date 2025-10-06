@@ -33,13 +33,32 @@ const icons = {
   `,
 };
 
+// === filename helpers (Manila date + slug-safe merchant) ===
+const manilaDate = () =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(
+        new Date()
+    ); // YYYY-MM-DD
+
+const slugify = (s) =>
+    String(s)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+const baseName = (key, merchant) =>
+    `${manilaDate()}-${key}-${slugify(merchant)}`;
+// usage: baseName('products', merchant) => 2025-10-05-products-generika
 // ===== Validation Helpers =====
 function validateProductForm(form) {
     const errors = {};
-    if (!form.name || form.name.trim().length < 2) {
-        errors.name = "Name must be at least 2 characters.";
-    } else if (form.name.trim().length > 100) {
-        errors.name = "Name cannot exceed 100 characters.";
+    if (!form.generic_name || form.generic_name.trim().length < 2) {
+        errors.generic_name = "Generic name must be at least 2 characters.";
+    } else if (form.generic_name.trim().length > 100) {
+        errors.generic_name = "Generic name cannot exceed 100 characters.";
+    }
+    if (form.brand_name && form.brand_name.trim().length > 100) {
+        errors.brand_name = "Brand name cannot exceed 100 characters.";
     }
 
     if (!form.standard_price || Number(form.standard_price) <= 0) {
@@ -117,10 +136,11 @@ export default function Prices({
     // Modals & forms
     const [showAdd, setShowAdd] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
-    const [editing, setEditing] = useState(null); // {id,name,standard_price,discounted_price}
+    const [editing, setEditing] = useState(null); // {id,generic_name,brand_name,standard_price,discounted_price}
 
     const resetForm = () => ({
-        name: "",
+        generic_name: "",
+        brand_name: "",
         standard_price: "",
         discounted_price: "",
     });
@@ -234,7 +254,8 @@ export default function Prices({
 
         // columns base (no Action when !canManage)
         const productColumns = [
-            { data: "name", title: "Medicine Name" },
+            { data: "generic_name", title: "Generic Name" },
+            { data: "brand_name", title: "Brand Name" },
             { data: "standard_price", title: "Standard Price" },
             { data: "discounted_price", title: "Discounted Price" },
         ];
@@ -262,10 +283,25 @@ export default function Prices({
             buttons: [
                 "pageLength",
                 "colvis",
-                { extend: "csv", title: `products_${merchant}` },
-                { extend: "excel", title: `products_${merchant}` },
-                { extend: "print", title: `Products – ${merchant}` },
+                {
+                    extend: "csv",
+                    filename: () => baseName("products", merchant), // <-- CHANGED
+                    title: `Products — ${merchant}`, // header/title inside file
+                    exportOptions: { columns: ":visible" },
+                },
+                {
+                    extend: "excel",
+                    filename: () => baseName("products", merchant), // <-- CHANGED
+                    title: `Products — ${merchant}`,
+                    exportOptions: { columns: ":visible" },
+                },
+                {
+                    extend: "print",
+                    title: `Products — ${merchant}`, // print header (no filename here)
+                    exportOptions: { columns: ":visible" },
+                },
             ],
+
             columns: productColumns,
             order: [[0, "asc"]],
         });
@@ -278,7 +314,8 @@ export default function Prices({
                 if (!rowData) return;
                 setEditing({
                     id: rowData.id,
-                    name: rowData.name,
+                    generic_name: rowData.generic_name ?? "",
+                    brand_name: rowData.brand_name ?? "",
                     standard_price: String(rowData.standard_price).replace(
                         /,/g,
                         ""
@@ -289,7 +326,8 @@ export default function Prices({
                     ),
                 });
                 setForm({
-                    name: rowData.name,
+                    generic_name: rowData.generic_name ?? "",
+                    brand_name: rowData.brand_name ?? "",
                     standard_price: String(rowData.standard_price).replace(
                         /,/g,
                         ""
@@ -370,10 +408,25 @@ export default function Prices({
             buttons: [
                 "pageLength",
                 "colvis",
-                { extend: "csv", title: `services_${merchant}` },
-                { extend: "excel", title: `services_${merchant}` },
-                { extend: "print", title: `Services – ${merchant}` },
+                {
+                    extend: "csv",
+                    filename: () => baseName("services", merchant), // <-- CHANGED
+                    title: `Services — ${merchant}`,
+                    exportOptions: { columns: ":visible" },
+                },
+                {
+                    extend: "excel",
+                    filename: () => baseName("services", merchant), // <-- CHANGED
+                    title: `Services — ${merchant}`,
+                    exportOptions: { columns: ":visible" },
+                },
+                {
+                    extend: "print",
+                    title: `Services — ${merchant}`,
+                    exportOptions: { columns: ":visible" },
+                },
             ],
+
             columns: serviceColumns,
             order: [[0, "asc"]],
         });
@@ -613,7 +666,8 @@ export default function Prices({
         router.post(
             "/merchant/products",
             {
-                name: form.name,
+                generic_name: form.generic_name,
+                brand_name: form.brand_name || null,
                 standard_price: form.standard_price || 0,
                 discounted_price: form.discounted_price || 0,
             },
@@ -652,7 +706,8 @@ export default function Prices({
         router.patch(
             `/merchant/products/${editing.id}`,
             {
-                name: form.name,
+                generic_name: form.generic_name,
+                brand_name: form.brand_name || null,
                 standard_price: form.standard_price || 0,
                 discounted_price: form.discounted_price || 0,
             },
@@ -761,7 +816,8 @@ export default function Prices({
                             >
                                 <thead>
                                     <tr>
-                                        <th>Medicine Name</th>
+                                        <th>Generic Name</th>
+                                        <th>Brand Name</th>
                                         <th>Standard Price</th>
                                         <th>Discounted Price</th>
                                         {canManage && <th>Action</th>}
@@ -834,15 +890,26 @@ export default function Prices({
                 <Modal onClose={() => setShowAdd(false)} title="Add Product">
                     <form onSubmit={addRow} className="space-y-3">
                         <Field
-                            label="Medicine Name"
-                            value={form.name}
+                            label="Generic Name"
+                            value={form.generic_name}
                             onChange={(v) =>
-                                setForm((f) => ({ ...f, name: v }))
+                                setForm((f) => ({ ...f, generic_name: v }))
                             }
                             required
                             autoFocus
                             maxLength={100}
-                            error={errors.name}
+                            error={errors.generic_name}
+                        />
+                        <Field
+                            label="Brand Name"
+                            value={form.brand_name}
+                            onChange={(v) =>
+                                setForm((f) => ({ ...f, brand_name: v }))
+                            }
+                            required
+                            autoFocus
+                            maxLength={100}
+                            error={errors.brand_name}
                         />
                         <Field
                             label="Standard Price"
@@ -883,19 +950,32 @@ export default function Prices({
             )}
 
             {canManage && editing && (
-                <Modal onClose={cancelEdit} title={`Edit: ${editing.name}`}>
+                <Modal
+                    onClose={cancelEdit}
+                    title={`Edit: ${editing?.generic_name || ""}`}
+                >
                     <form onSubmit={saveEdit} className="space-y-3">
                         <Field
-                            label="Medicine Name"
-                            value={form.name}
+                            label="Generic Name"
+                            value={form.generic_name}
                             onChange={(v) =>
-                                setForm((f) => ({ ...f, name: v }))
+                                setForm((f) => ({ ...f, generic_name: v }))
                             }
                             required
                             autoFocus
                             maxLength={100}
-                            error={errors.name}
-                            touched={touched.name}
+                            error={errors.generic_name}
+                        />
+                        <Field
+                            label="Brand Name"
+                            value={form.brand_name}
+                            onChange={(v) =>
+                                setForm((f) => ({ ...f, brand_name: v }))
+                            }
+                            required
+                            autoFocus
+                            maxLength={100}
+                            error={errors.brand_name}
                         />
                         <Field
                             label="Standard Price"
@@ -952,7 +1032,8 @@ export default function Prices({
                             <table className={styles.pricesTable}>
                                 <thead>
                                     <tr>
-                                        <th>Medicine Name</th>
+                                        <th>Generic Name</th>
+                                        <th>Brand Name</th>
                                         <th>Standard Price</th>
                                         <th>Discounted Price</th>
                                         <th>Archived At</th>
@@ -962,7 +1043,8 @@ export default function Prices({
                                 <tbody>
                                     {archived.map((item) => (
                                         <tr key={item.id}>
-                                            <td>{item.name}</td>
+                                            <td>{item.generic_name}</td>
+                                            <td>{item.brand_name}</td>
                                             <td>
                                                 {Number(
                                                     item.standard_price
@@ -1259,7 +1341,7 @@ function Field({
     required,
     autoFocus,
     error,
-    maxLength = { maxLength },
+    maxLength,
     touched,
 }) {
     const id = useMemo(() => `f_${Math.random().toString(36).slice(2)}`, []);
