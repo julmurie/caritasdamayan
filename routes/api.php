@@ -24,6 +24,7 @@ Route::get('/users', [UserController::class, 'index']);
 Route::get('/patients', [PatientController::class, 'index']);
 Route::get('/patients/{id}', [PatientController::class, 'show']);
 Route::post('/patients', [PatientController::class, 'store']);
+Route::put('/patients/{id}', [PatientController::class, 'update']);
 
 // TEMP: expose show/update/destroy WITHOUT auth
 Route::get('/users/{user}', [UserController::class, 'show'])->withoutMiddleware('auth:sanctum');

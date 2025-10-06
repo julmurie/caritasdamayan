@@ -94,4 +94,68 @@ class PatientController extends Controller
 
         return response()->json($patient, 201);
     }
+
+    /**
+     * PUT /api/patients/{id}
+     */
+
+    public function update(Request $request, $id)
+    {
+        $patient = Patient::findOrFail($id);
+
+        $validated = $request->validate([
+            'patient_fname' => 'nullable|string|max:255',
+            'patient_lname' => 'nullable|string|max:255',
+            'patient_mname' => 'nullable|string|max:255',
+            'gender' => 'nullable|string|max:50',
+            'birthday' => 'nullable|date',
+            'contact_no' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:255',
+            'clinic' => 'nullable|string|max:255',
+            'parish' => 'nullable|string|max:255',
+            'classification_cm' => 'nullable|string|max:10',
+            'category' => 'nullable|string|max:255',
+            'booklet_no' => 'nullable|string|max:50',
+            'is_head_family' => 'nullable|boolean',
+            'valid_id_no' => 'nullable|string|max:100',
+            'endorsed_as_fp' => 'nullable|boolean',
+            'first_time_visit' => 'nullable|boolean',
+            'has_philhealth' => 'nullable|boolean',
+            'philhealth_no' => 'nullable|string|max:100',
+        ]);
+
+        // ✅ If "Has PhilHealth" = No, clear number
+        if ($request->boolean('has_philhealth') === false) {
+            $validated['philhealth_no'] = null;
+        }
+
+        // ✅ Handle logic for FP / NFP switching
+        if ($request->input('classification_cm') === 'FP') {
+            // Family Partner only fields
+            $validated['is_head_family'] = $request->boolean('is_head_family');
+
+            // Reset NFP-only fields safely
+            $validated['endorsed_as_fp'] = false;
+            $validated['first_time_visit'] = false;
+            $validated['valid_id_no'] = null;
+        }
+
+        if ($request->input('classification_cm') === 'NFP') {
+            // NFP only fields
+            $validated['endorsed_as_fp'] = $request->boolean('endorsed_as_fp');
+            $validated['first_time_visit'] = $request->boolean('first_time_visit');
+
+            // Reset FP-only fields safely
+            $validated['is_head_family'] = false;
+            $validated['booklet_no'] = null;
+        }
+
+        $patient->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'patient' => $patient,
+        ]);
+    }
+
 }
