@@ -71,7 +71,15 @@ function Users() {
 
     const handleChange = (e) => {
         const { id, value } = e.target;
-        setFormData((prev) => ({ ...prev, [id]: value }));
+
+        // Handle boolean fields properly
+        let newValue = value;
+        if (id === "is_active") {
+            newValue = value === "1" || value === true || value === 1;
+        }
+
+        setFormData((prev) => ({ ...prev, [id]: newValue }));
+
         if (errors[id]) {
             setErrors((prev) => ({ ...prev, [id]: "" }));
         }
@@ -114,6 +122,7 @@ function Users() {
         const requestData = {
             role: selectedRole,
             email: formData.email.trim(),
+            is_active: formData.is_active ?? true,
             ...(selectedRole === "merchant"
                 ? {
                       branchName: formData.branchName.trim(),
@@ -144,8 +153,17 @@ function Users() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new notify("danger", err.message || "Request failed");
+                const errorData = await response.json().catch(() => ({}));
+                const message =
+                    errorData.message ||
+                    (errorData.errors
+                        ? Object.values(errorData.errors).flat().join(", ")
+                        : "") ||
+                    "Request failed";
+
+                notify("danger", message);
+                setIsSubmitting(false);
+                return; // stop execution here
             }
 
             if (dataTable) dataTable.ajax.reload(null, false);
@@ -172,7 +190,7 @@ function Users() {
             // inside the DataTable init in Users.jsx
             const dt = $(tableRef.current).DataTable({
                 processing: true,
-                serverSide: true,
+                serverSide: false,
                 ajax: {
                     url: "http://127.0.0.1:8000/api/users/datatable",
                     type: "GET",
@@ -380,18 +398,22 @@ function Users() {
                 }
             );
 
-            if (!response.ok)
-                throw new notify("danger", "Failed to load user data");
+            if (!response.ok) throw new Error("Failed to load user data");
 
-            const userData = await response.json();
+            const userData = await response.json(); // ✅ Correct variable name
 
             setFormData({
                 firstName: userData.firstname || "",
                 lastName: userData.lastname || "",
                 branchName: userData.branch_name || "",
-                branchItem: userData.merchant_type || "", // Note the field name change
+                branchItem: userData.merchant_type || "",
                 email: userData.email || "",
                 jobDescription: userData.job_description || "",
+                // ✅ FIX: use userData not data
+                is_active:
+                    userData.is_active === 1 ||
+                    userData.is_active === true ||
+                    userData.is_active === "1",
             });
 
             setSelectedRole(userData.role);
@@ -404,35 +426,8 @@ function Users() {
     };
 
     const handleDeleteUser = async (userId) => {
-        if (setConfirmState({ open: true, userId })) {
-            try {
-                const response = await fetch(
-                    `http://127.0.0.1:8000/api/users/${userId}`,
-                    {
-                        method: "DELETE",
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                if (response.ok) {
-                    if (dataTable) {
-                        dataTable.ajax.reload(null, false);
-                    }
-                    notify("success", "User deleted successfully");
-                } else {
-                    const errorData = await response.json();
-                    notify("danger", errorData.message || "Delete failed");
-                }
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                notify("danger", "Error deleting user");
-            }
-        }
+        // Open confirmation modal
+        setConfirmState({ open: true, userId });
     };
 
     return (
@@ -517,6 +512,7 @@ function Users() {
                         onChange={handleChange}
                         errors={errors}
                         isSubmitting={isSubmitting}
+                        editingUserId={editingUserId} // ✅ add this
                     />
                 </main>
             </div>
@@ -524,7 +520,7 @@ function Users() {
                 open={confirmState.open}
                 variant="danger"
                 title="Archive this user?"
-                message="This will mark the user as deleted. You can restore later if you implemented restore. Continue?"
+                message="This will mark the user as archived. You can restore later in Archives. Continue?"
                 confirmText="Archive"
                 cancelText="Cancel"
                 onCancel={() => setConfirmState({ open: false, userId: null })}
@@ -532,35 +528,37 @@ function Users() {
                     const id = confirmState.userId;
                     setConfirmState({ open: false, userId: null });
 
-                    // do the actual DELETE
                     try {
+                        // ✅ Call the soft-delete (archive) route
                         const response = await fetch(
-                            `http://127.0.0.1:8000/api/users/${id}`,
+                            `http://127.0.0.1:8000/api/users/${id}/archive`,
                             {
-                                method: "DELETE",
+                                method: "PATCH",
                                 headers: {
+                                    "Content-Type": "application/json",
+                                    Accept: "application/json",
                                     Authorization: `Bearer ${localStorage.getItem(
                                         "token"
                                     )}`,
-                                    "Content-Type": "application/json",
                                 },
                             }
                         );
 
                         if (response.ok) {
                             dataTable?.ajax.reload(null, false);
-                            notify("success", "User deleted successfully");
+                            notify("success", "User archived successfully");
                         } else {
                             const errorData = await response
                                 .json()
                                 .catch(() => ({}));
                             notify(
                                 "danger",
-                                errorData.message || "Delete failed"
+                                errorData.message || "Archive failed"
                             );
                         }
                     } catch (error) {
-                        notify("danger", "Error deleting user");
+                        console.error("Error archiving user:", error);
+                        notify("danger", "Error archiving user");
                     }
                 }}
             />

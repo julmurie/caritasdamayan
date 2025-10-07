@@ -161,6 +161,7 @@
 
 .textInput {
     height: 100%;
+    background-color: #0000; /* transparent */
     flex: 1 1 auto;
     width: 100%; /* guarantee full-width inside the group */
     font-size: clamp(14px, 4vw, 18px);
@@ -169,6 +170,7 @@
     border-left: 2px solid var(--brand);
     border: none;
     outline: none;
+    border-radius: 5px;
 }
 .textInput:disabled {
     background: #f3f4f6;

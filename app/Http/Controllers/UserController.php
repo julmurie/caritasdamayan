@@ -6,153 +6,184 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
- 
-// For User Table
-public function datatable(Request $request)
-{
-    $query = User::query();
+    /* -----------------------------------------------------------------
+     | DataTable for Users
+     -----------------------------------------------------------------*/
+    public function datatable(Request $request)
+    {
+        $query = User::query();
 
-     // Search (now includes merchant_type and date strings)
-    if ($request->has('search') && !empty($request->search['value'])) {
-        $search = $request->search['value'];
-        $query->where(function ($q) use ($search) {
-            $q->where('email', 'like', "%$search%")
-              ->orWhere('firstname', 'like', "%$search%")
-              ->orWhere('lastname', 'like', "%$search%")
-              ->orWhere('role', 'like', "%$search%")
-              ->orWhere('branch_name', 'like', "%$search%")
-              ->orWhere('job_description', 'like', "%$search%")
-              ->orWhere('merchant_type', 'like', "%$search%")
-              ->orWhereRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') like ?", ["%$search%"])
-              ->orWhereRaw("DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') like ?", ["%$search%"]);
-        });
-    }
-
-    // Get total count before pagination
-    $total = $query->count();
-
-    $columns = [
-        'role',
-        'firstname',
-        'merchant_type',
-        'branch_name',
-        'job_description',
-        'email',
-        'is_active',
-        'created_at',
-        'updated_at',
-    ];
-
-    // Sorting
-    if ($request->has('order') && isset($request->order[0]['column'])) {
-            $idx = (int) $request->order[0]['column'];
-            $orderColumn = $columns[$idx] ?? 'created_at';
-            $orderDirection = $request->order[0]['dir'] ?? 'desc';
-            $query->orderBy($orderColumn, $orderDirection);
-        } else {
-            // Default: newest first
-            $query->orderBy('created_at', 'desc');
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $search = $request->search['value'];
+            $query->where(function ($q) use ($search) {
+                $q->where('email', 'like', "%$search%")
+                    ->orWhere('firstname', 'like', "%$search%")
+                    ->orWhere('lastname', 'like', "%$search%")
+                    ->orWhere('role', 'like', "%$search%")
+                    ->orWhere('branch_name', 'like', "%$search%")
+                    ->orWhere('job_description', 'like', "%$search%")
+                    ->orWhere('merchant_type', 'like', "%$search%");
+            });
         }
 
-    // Pagination
+        $total = $query->count();
         $length = (int) $request->input('length', 10);
-        $start  = (int) $request->input('start', 0);
-        $users  = $query->skip($start)->take($length)->get();
+        $start = (int) $request->input('start', 0);
 
-    // Response
-    return response()->json([
-        'draw'            => (int) $request->input('draw'),
-        'recordsTotal'    => User::count(),
-        'recordsFiltered' => $total,
-        'data' => $users->map(function ($user) {
-            return [
-                'id'              => $user->id,
-                'role'            => $user->role ?? '-',
-                'firstname'       => $user->firstname ?? '',
-                'lastname'        => $user->lastname ?? '',
-                'merchant_type'   => $user->merchant_type ?? null,  // "product" | "lab" | null
-                'branch_name'     => $user->branch_name ?? '-',
-                'job_description' => $user->job_description ?? '-',
-                'email'           => $user->email ?? '-',
-                'is_active'       => (bool) ($user->is_active ?? true),
-                'created_at'      => optional($user->created_at)->toIso8601String(),
-                'updated_at'      => optional($user->updated_at)->toIso8601String(),
-            ];
-        }),
-    ]);
-}
+        $users = $query->skip($start)->take($length)->get();
 
+        return response()->json([
+            'draw' => (int) $request->input('draw'),
+            'recordsTotal' => User::count(),
+            'recordsFiltered' => $total,
+            'data' => $users,
+        ]);
+    }
 
- public function store(Request $request)
+    /* -----------------------------------------------------------------
+     | Store a new user
+     -----------------------------------------------------------------*/
+public function store(Request $request)
 {
     try {
         $validated = $request->validate([
             'role' => ['required', Rule::in(['admin', 'volunteer', 'merchant', 'accounting', 'treasury'])],
             'email' => ['required', 'email', 'unique:users,email'],
-            'firstName' => ['required_unless:role,merchant', 'string'],
-            'lastName' => ['required_unless:role,merchant', 'string'],
-            'jobDescription' => ['required_unless:role,merchant', 'string'],
-            'branchName' => ['required_if:role,merchant', 'string'],
-            'branchItem' => ['required_if:role,merchant', Rule::in(['product', 'lab'])],
+            'firstName' => ['nullable', 'string'],
+            'lastName' => ['nullable', 'string'],
+            'jobDescription' => ['nullable', 'string'],
+            'branchName' => ['nullable', 'string'],
+            'branchItem' => ['nullable', 'string'],
         ]);
 
-        
         $user = User::create([
+            'role' => $validated['role'],
             'email' => $validated['email'],
             'password' => Hash::make('DefaultPassword123!'),
-            'role' => $validated['role'],
-            'firstname' => $validated['firstName'] ?? null,  
+            'firstname' => $validated['firstName'] ?? null,
             'lastname' => $validated['lastName'] ?? null,
             'job_description' => $validated['jobDescription'] ?? null,
-            'branch_name' => $validated['branchName'] ?? null, 
-            'merchant_type' => $validated['branchItem'] ?? null, 
+            'branch_name' => $validated['branchName'] ?? null,
+            'merchant_type' => $validated['branchItem'] ?? null,
         ]);
 
-         return response()->json(['message' => 'User registered successfully.', 'user' => $user], 201);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Something went wrong.'], 500);
+        return response()->json(['message' => 'User created', 'user' => $user], 201);
+
+    } catch (ValidationException $e) {
+        // ✅ Return Laravel-style 422 response with validation details
+        return response()->json([
+            'message' => $e->getMessage(),
+            'errors'  => $e->errors(),
+        ], 422);
+
+    } catch (\Throwable $e) {
+        // Handle unexpected errors
+        return response()->json([
+            'message' => 'Error creating user',
+            'error'   => $e->getMessage(),
+        ], 500);
     }
 }
+    /* -----------------------------------------------------------------
+     | Show single user
+     -----------------------------------------------------------------*/
+    public function show(User $user)
+    {
+        return response()->json($user);
+    }
 
-// Get single user
-public function show(User $user)
-{
-    return response()->json($user);
-}
-
-// Update user
+    /* -----------------------------------------------------------------
+     | Update user
+     -----------------------------------------------------------------*/
 public function update(Request $request, User $user)
 {
-    $validated = $request->validate([
-        'role' => 'sometimes|in:admin,volunteer,merchant,accounting,treasury',
-        'email' => 'sometimes|email|unique:users,email,'.$user->id,
-        'firstName' => 'sometimes|required_if:role,admin,volunteer,accounting,treasury',
-        'lastName' => 'sometimes|required_if:role,admin,volunteer,accounting,treasury',
-        'jobDescription' => 'sometimes|required_if:role,admin,volunteer,accounting,treasury',
-        'branchName' => 'sometimes|required_if:role,merchant',
-        'branchItem' => 'sometimes|required_if:role,merchant|in:product,lab'
-    ]);
+    try {
+        $validated = $request->validate([
+            'role' => 'sometimes|in:admin,volunteer,merchant,accounting,treasury',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'firstName' => 'nullable|string',
+            'lastName' => 'nullable|string',
+            'jobDescription' => 'nullable|string',
+            'branchName' => 'nullable|string',
+            'branchItem' => 'nullable|string',
+            'is_active' => 'boolean', // ✅ include validation
+        ]);
 
-    $user->update([
-        'email' => $validated['email'] ?? $user->email,
-        'role' => $validated['role'] ?? $user->role,
-        'firstname' => $validated['firstName'] ?? $user->firstname,
-        'lastname' => $validated['lastName'] ?? $user->lastname,
-        'job_description' => $validated['jobDescription'] ?? $user->job_description,
-        'branch_name' => $validated['branchName'] ?? $user->branch_name,
-        'merchant_type' => $validated['branchItem'] ?? $user->merchant_type
-    ]);
+        $user->update([
+            'role' => $validated['role'] ?? $user->role,
+            'email' => $validated['email'] ?? $user->email,
+            'firstname' => $validated['firstName'] ?? $user->firstname,
+            'lastname' => $validated['lastName'] ?? $user->lastname,
+            'job_description' => $validated['jobDescription'] ?? $user->job_description,
+            'branch_name' => $validated['branchName'] ?? $user->branch_name,
+            'merchant_type' => $validated['branchItem'] ?? $user->merchant_type,
+            'is_active' => array_key_exists('is_active', $validated)
+                ? $validated['is_active']
+                : $user->is_active, // ✅ properly update status
+        ]);
 
-    return response()->json($user);
+        return response()->json(['message' => 'User updated', 'user' => $user]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'message' => 'Error updating user',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 }
+    /* -----------------------------------------------------------------
+     | Archive (soft delete)
+     -----------------------------------------------------------------*/
+    public function archive(User $user)
+    {
+        try {
+            $user->is_active = false; // ✅ deactivate
+            $user->save();
+            $user->delete(); // soft delete
+            return response()->json(['message' => 'User archived and deactivated']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Error archiving user', 'error' => $e->getMessage()], 500);
+        }
+    }
 
-// Delete user
-public function destroy(User $user)
-{
-    $user->delete();
-    return response()->json(['message' => 'User deleted successfully']);
-}
+    /* -----------------------------------------------------------------
+     | Restore archived user
+     -----------------------------------------------------------------*/
+    public function restore($id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+            $user->restore();
+            $user->update(['is_active' => true]); // ✅ re-enable account
+            return response()->json(['message' => 'User restored and reactivated']);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Error restoring user', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /* -----------------------------------------------------------------
+     | List archived users
+     -----------------------------------------------------------------*/
+    public function archived()
+    {
+        $archivedUsers = User::onlyTrashed()->get();
+        return response()->json($archivedUsers);
+    }
+
+    /* -----------------------------------------------------------------
+     | Hard delete (optional, not used by frontend)
+     -----------------------------------------------------------------*/
+    public function destroy(User $user)
+  {
+      if ($user->trashed()) {
+          return response()->json(['message' => 'User already archived.'], 400);
+      }
+
+      $user->delete(); // this sets deleted_at
+      return response()->json(['message' => 'User archived successfully.']);
+  }
+
 }
