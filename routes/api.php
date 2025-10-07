@@ -33,3 +33,4 @@ Route::patch('/users/{user}/archive', [UserController::class, 'archive'])->witho
 Route::get('/patients', [PatientController::class, 'index']);
 Route::get('/patients/{id}', [PatientController::class, 'show']);
 Route::post('/patients', [PatientController::class, 'store']);
+Route::put('/patients/{id}', [PatientController::class, 'update']);
