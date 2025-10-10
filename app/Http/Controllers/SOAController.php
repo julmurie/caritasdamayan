@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Soa; // <-- use the proper model class name
+use App\Models\Soa; 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -170,9 +170,25 @@ class SOAController extends Controller
         return back(303)->with('success', 'SOA deleted.');
     }
 
+    public function archive(Soa $soa)
+    {
+        $soa->delete();                    // soft delete
+        return back(303)->with('success', 'SOA archived successfully.');
+    }
+
+    public function archived()
+    {
+        $records = Soa::onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->get(['id','number','soa_date','cover_period','charge_slip','total_amount','deleted_at']);
+
+        return response()->json($records);
+    }
+
     public function restore($id)
     {
-        Soa::withTrashed()->findOrFail($id)->restore();
-        return back(303)->with('success', 'SOA restored.');
+        $soa = Soa::onlyTrashed()->findOrFail($id);
+        $soa->restore();
+        return back(303)->with('success', 'SOA restored successfully.');
     }
 }

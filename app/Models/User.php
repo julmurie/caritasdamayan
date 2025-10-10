@@ -5,19 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-// ⬇️ Add this:
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
     // ⬇️ Add HasApiTokens
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable,SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<string>
      */
+
+    protected $dates = ['deleted_at'];
+
     protected $fillable = [
         'role',
         'firstname',
@@ -27,6 +30,7 @@ class User extends Authenticatable
         'job_description',
         'branch_name',
         'merchant_type',
+        'is_active',
         // if you add archive later:
         // 'archived_at',
     ];

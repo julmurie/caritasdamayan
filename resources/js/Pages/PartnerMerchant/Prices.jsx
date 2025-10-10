@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "../../components/Navbar";
 import styles from "../../../css/merchant.module.css";
 import { router } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
+import Alert from "@/Components/Alert";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 const ICON_COLOR = "#111827"; // Tailwind gray-800-ish
 
@@ -111,7 +114,24 @@ export default function Prices({
     permissions = {},
     endpoints = {},
 }) {
+    const [toast, setToast] = useState(null);
+    const notify = (variant, msg) => setToast({ variant, msg });
+
+    useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(() => setToast(null), 4000);
+        return () => clearTimeout(t);
+    }, [toast]);
     const canManage = !!permissions?.canManage;
+
+    // 🧩 Confirm state + safe reference (keep near other useStates)
+    const [confirmState, setConfirmState] = useState({
+        open: false,
+        id: null,
+        type: null, // 'product' or 'service'
+    });
+    const confirmStateRef = useRef();
+    confirmStateRef.current = (newState) => setConfirmState(newState);
 
     // use endpoints passed from server (with safe fallbacks)
     const productsURL =
@@ -128,9 +148,9 @@ export default function Prices({
         (typeof window !== "undefined" && location.hash?.slice(1)) || "products"
     );
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            history.replaceState(null, "", `#${activeTab}`);
-        }
+        if (typeof window === "undefined") return;
+        if (window.location.pathname !== "/merchant/prices") return;
+        history.replaceState(null, "", `#${activeTab}`);
     }, [activeTab]);
 
     // Modals & forms
@@ -339,21 +359,18 @@ export default function Prices({
                 });
             });
 
-            $table.on("click", "button.btn-archive", function () {
-                const id = window.$(this).data("id");
-                router.delete(`/merchant/products/${id}/archive`, {
-                    onSuccess: () => {
-                        dt.ajax.reload(null, false);
-                        setArchivedCount((n) => n + 1); // <-- bump
-                        if (showArchived) {
-                            // if modal open, refresh list too
-                            fetch(archivedURL)
-                                .then((r) => r.json())
-                                .then(setArchived);
-                        }
-                    },
+            $table
+                .off("click", ".btn-archive")
+                .on("click", ".btn-archive", function () {
+                    const id = window.$(this).data("id");
+                    console.log("ARCHIVE CLICK DETECTED", id);
+                    if (!id) return;
+                    confirmStateRef.current({
+                        open: true,
+                        id,
+                        type: "product",
+                    });
                 });
-            });
         }
 
         return () => {
@@ -461,20 +478,18 @@ export default function Prices({
                 });
             });
 
-            $table.on("click", "button.btn-archive-service", function () {
-                const id = window.$(this).data("id");
-                router.delete(`/merchant/services/${id}/archive`, {
-                    onSuccess: () => {
-                        dt.ajax.reload(null, false);
-                        setArchivedServicesCount((n) => n + 1); // <-- bump
-                        if (showArchivedService) {
-                            fetch(servicesArchivedURL)
-                                .then((r) => r.json())
-                                .then(setArchivedServices);
-                        }
-                    },
+            $table
+                .off("click", ".btn-archive-service")
+                .on("click", ".btn-archive-service", function () {
+                    const id = window.$(this).data("id");
+                    console.log("SERVICE ARCHIVE CLICK DETECTED", id);
+                    if (!id) return;
+                    confirmStateRef.current({
+                        open: true,
+                        id,
+                        type: "service",
+                    });
                 });
-            });
         }
 
         return () => {
@@ -530,7 +545,9 @@ export default function Prices({
                     setShowAddService(false);
                     setServiceForm(resetServiceForm());
                     reloadServiceTable();
+                    notify("success", "Service added successfully!");
                 },
+                onError: () => notify("danger", "Failed to add service."),
             }
         );
     };
@@ -556,7 +573,9 @@ export default function Prices({
                     setServiceEditing(null);
                     setServiceForm(resetServiceForm());
                     reloadServiceTable();
+                    notify("success", "Service updated successfully!");
                 },
+                onError: () => notify("danger", "Failed to update service."),
             }
         );
     };
@@ -676,6 +695,13 @@ export default function Prices({
                     setShowAdd(false);
                     setForm(resetForm());
                     reloadTable();
+                    notify("success", "Product added successfully!");
+                },
+                onError: () => {
+                    notify(
+                        "danger",
+                        "Failed to add product. Please try again."
+                    );
                 },
             }
         );
@@ -716,6 +742,13 @@ export default function Prices({
                     setEditing(null);
                     setForm(resetForm());
                     reloadTable();
+                    notify("success", "Product updated successfully!");
+                },
+                onError: () => {
+                    notify(
+                        "danger",
+                        "Failed to update product. Please try again."
+                    );
                 },
             }
         );
@@ -738,6 +771,18 @@ export default function Prices({
     return (
         <>
             <Navbar />
+
+            {toast && (
+                <Alert
+                    variant={toast.variant}
+                    floating
+                    position="top-right"
+                    autoDismissMs={4000}
+                    onClose={() => setToast(null)}
+                >
+                    {toast.msg}
+                </Alert>
+            )}
             <div className={styles.pricesContainer}>
                 <aside className={styles.pricesSidebar}>
                     <div
@@ -787,7 +832,6 @@ export default function Prices({
                                 <h1>Products</h1>
                                 <p>Partner Merchant | {merchant}</p>
                             </div>
-
                             {canManage && (
                                 <div className="space-x-2">
                                     <button
@@ -796,13 +840,28 @@ export default function Prices({
                                     >
                                         + Add Product
                                     </button>
-                                    <button
+                                    <a
+                                        href="/archives?view=merchant-products&source=prices"
                                         className={styles.btnDark}
-                                        onClick={() => setShowArchived(true)}
-                                        title="View archived products"
                                     >
-                                        Archived Products ({archivedCount})
-                                    </button>
+                                        <span className={styles.iconLeft}>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth="1.5"
+                                                stroke="currentColor"
+                                                className="size-6"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                                                />
+                                            </svg>
+                                        </span>
+                                        Archived Products
+                                    </a>
                                 </div>
                             )}
                         </div>
@@ -840,7 +899,6 @@ export default function Prices({
                                 <h1>Service</h1>
                                 <p>Partner Merchant | {merchant}</p>
                             </div>
-
                             {canManage && (
                                 <div className="space-x-2">
                                     <button
@@ -849,18 +907,30 @@ export default function Prices({
                                     >
                                         + Add Service
                                     </button>
-                                    <button
+                                    <a
+                                        href="/archives?view=merchant-services&source=prices"
                                         className={styles.btnDark}
-                                        onClick={() =>
-                                            setShowArchivedService(true)
-                                        }
-                                        title="View archived services"
                                     >
-                                        Archived Services (
-                                        {archivedServicesCount})
-                                    </button>
+                                        <span className={styles.iconLeft}>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth="1.5"
+                                                stroke="currentColor"
+                                                className="size-6"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                                                />
+                                            </svg>
+                                        </span>
+                                        Archived Services
+                                    </a>
                                 </div>
-                            )}
+                            )}{" "}
                         </div>
                         <hr className="my-4 border-gray-300" />
 
@@ -1218,8 +1288,67 @@ export default function Prices({
                     </form>
                 </Modal>
             )}
+            {confirmState.open && (
+                <ConfirmDialog
+                    open={confirmState.open} // <── REQUIRED
+                    title={
+                        confirmState.type === "service"
+                            ? "Archive Service"
+                            : "Archive Product"
+                    }
+                    message={`Are you sure you want to archive this ${confirmState.type}? It can be restored later from the Archives.`}
+                    confirmText="Archive"
+                    cancelText="Cancel"
+                    variant="danger"
+                    onCancel={() =>
+                        setConfirmState({ open: false, id: null, type: null })
+                    }
+                    onConfirm={() => {
+                        const { id, type } = confirmState;
+                        const url =
+                            type === "service"
+                                ? `/merchant/services/${id}/archive`
+                                : `/merchant/products/${id}/archive`;
 
-            {canManage && showArchivedService && (
+                        router.delete(url, {
+                            onSuccess: () => {
+                                if (type === "service") {
+                                    dtServicesRef.current?.ajax.reload(
+                                        null,
+                                        false
+                                    );
+                                    setArchivedServicesCount((n) => n + 1);
+                                } else {
+                                    dtProductsRef.current?.ajax.reload(
+                                        null,
+                                        false
+                                    );
+                                    setArchivedCount((n) => n + 1);
+                                }
+                                setConfirmState({
+                                    open: false,
+                                    id: null,
+                                    type: null,
+                                });
+                                notify(
+                                    "success",
+                                    `${type} archived successfully!`
+                                );
+                            },
+                            onError: () => {
+                                setConfirmState({
+                                    open: false,
+                                    id: null,
+                                    type: null,
+                                });
+                                notify("danger", `Failed to archive ${type}.`);
+                            },
+                        });
+                    }}
+                />
+            )}
+
+            {/* {canManage && showArchivedService && (
                 <Modal
                     onClose={() => setShowArchivedService(false)}
                     title="Archived Services"
@@ -1295,7 +1424,7 @@ export default function Prices({
                         </button>
                     </div>
                 </Modal>
-            )}
+            )} */}
         </>
     );
 }

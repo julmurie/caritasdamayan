@@ -1,25 +1,24 @@
-// resources/js/components/Sidebar.jsx (or your path)
-
+// resources/js/components/Sidebar.jsx
 import React, { useEffect, useState } from "react";
 import { fetchPatients, createPatient } from "@/api/patients";
 import styles from "../../css/volunteer.module.css";
 import AddPatientModal from "./modals/AddPatientModal";
+import { Link, router } from "@inertiajs/react";
 
 export default function Sidebar({ onToggle, onSelect, selectedId }) {
     const [open, setOpen] = useState(true);
     const [patients, setPatients] = useState([]);
     const [showAdd, setShowAdd] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
+    const [busyId, setBusyId] = useState(null); // track row action in-flight
 
     const idOf = (row) => row?.patient_id ?? row?.id;
 
     async function load({ selectFirstIfNone = true } = {}) {
         try {
-            // If your fetchPatients accepts query params, this works:
             const data = await fetchPatients(
                 showArchived ? { archived: 1 } : { archived: 0 }
             );
-            // If not, switch this to separate endpoints or your own jsonFetch.
             setPatients(Array.isArray(data) ? data : []);
 
             if (selectFirstIfNone && !selectedId && data?.length) {
@@ -31,16 +30,16 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
         }
     }
 
-    // Notify parent about width changes
+    // notify parent when width changes
     useEffect(() => onToggle?.(open), [open, onToggle]);
 
-    // Initial load
+    // initial load
     useEffect(() => {
         load({ selectFirstIfNone: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Reload when archived filter toggles
+    // reload when archived filter toggles
     useEffect(() => {
         load({ selectFirstIfNone: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,6 +59,40 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
             alert(e.message || "Failed to save patient");
         }
     }
+
+    // centralized archive/restore using Inertia router
+    const handleArchiveClick = (e, { id, isArchived, active }) => {
+        e.stopPropagation();
+        if (busyId) return; // prevent double actions
+        setBusyId(id);
+
+        if (isArchived) {
+            // RESTORE
+            router.post(
+                `/volunteer/patients/${id}/restore`,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: () => setBusyId(null),
+                    onSuccess: async () => {
+                        await load({ selectFirstIfNone: true });
+                    },
+                    onError: () => alert("Restore failed"),
+                }
+            );
+        } else {
+            // ARCHIVE
+            router.delete(`/volunteer/patients/${id}/archive`, {
+                preserveScroll: true,
+                onFinish: () => setBusyId(null),
+                onSuccess: async () => {
+                    if (active) onSelect?.(null); // if we archived the selected patient, clear selection
+                    await load({ selectFirstIfNone: true });
+                },
+                onError: () => alert("Archive failed"),
+            });
+        }
+    };
 
     return (
         <aside
@@ -86,8 +119,9 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                         />
+                        
                     </svg>
                 ) : (
                     <svg
@@ -101,7 +135,7 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                         />
                     </svg>
                 )}
@@ -121,21 +155,20 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                     <span className={styles.btnText}>Add Patient</span>
                 </button>
 
-                <button
-                    className={`${styles.btn} ${styles.btnDark} ${
-                        showArchived ? styles.btnActive : ""
-                    }`}
+                <Link
+                    href="/archives?view=patients"
+                    as="button"
                     type="button"
-                    onClick={() => setShowArchived((v) => !v)}
-                    title={showArchived ? "Showing archived" : "Showing active"}
+                    className={`${styles.btn} ${styles.btnDark}`}
+                    title="View archived patients"
                 >
                     <span className={styles.iconLeft}>
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9Z" />
                         </svg>
                     </span>
-                    <span className={styles.btnText}>Archived Patient</span>
-                </button>
+                    <span className={styles.btnText}>Archive Patients</span>
+                </Link>
 
                 <div className={styles.searchRow}>
                     <input className={styles.search} placeholder="Search" />
@@ -160,6 +193,13 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                     const id =
                         idOf(p) ?? `${p.patient_lname}-${p.patient_fname}`;
                     const active = id === selectedId;
+                    const archived = !!(
+                        p.archived ||
+                        p.archived_at ||
+                        p.is_archived
+                    );
+                    const isBusy = busyId === id;
+
                     return (
                         <button
                             key={id}
@@ -167,14 +207,73 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                             className={styles.row}
                             onClick={() => onSelect?.(id)}
                             title={`${p.patient_lname}, ${p.patient_fname}`}
-                            style={{ fontWeight: active ? 700 : 400 }}
+                            style={{
+                                fontWeight: active ? 700 : 400,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                            }}
                         >
                             <span className={styles.rowText}>
                                 {p.patient_lname}, {p.patient_fname}
                             </span>
+
+                            {/* hover-only action */}
+                            <span className={styles.rowAction}>
+                                <button
+                                    type="button"
+                                    className={styles.iconOnly}
+                                    title={archived ? "Restore" : "Archive"}
+                                    onClick={(e) =>
+                                        handleArchiveClick(e, {
+                                            id,
+                                            isArchived: archived,
+                                            active,
+                                        })
+                                    }
+                                    disabled={isBusy}
+                                >
+                                    {archived ? (
+                                        // Restore icon (arrow up from box)
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            width="18"
+                                            height="18"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M3 20.25h18M12 3.75v10.5m0 0 3-3m-3 3-3-3M6.75 20.25h10.5a2.25 2.25 0 0 0 2.25-2.25V12"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        // Your ARCHIVE icon
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            width="18"
+                                            height="18"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                                            />
+                                        </svg>
+                                    )}
+                                </button>
+                            </span>
                         </button>
                     );
                 })}
+
                 <div className={styles.flexFill} />
             </div>
 

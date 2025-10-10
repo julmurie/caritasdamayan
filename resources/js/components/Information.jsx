@@ -71,8 +71,8 @@ export default function Information({ patient, onEdit }) {
                     <div className={styles.cellValue}>
                         {patient?.classification_cm
                             ? patient.classification_cm === "FP"
-                                ? "Beneficiary (FP)"
-                                : "Beneficiary (NFP)"
+                                ? "FP (Family Partner)"
+                                : "NFP (Non-Family Partner)"
                             : "–"}
                     </div>
                 </div>

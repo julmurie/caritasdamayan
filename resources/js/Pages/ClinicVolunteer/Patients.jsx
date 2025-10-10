@@ -66,7 +66,7 @@ const Patients = () => {
                     <Information
                         patient={withAge}
                         loading={loading}
-                        onEdit={() => setShowEdit(true)}
+                        onEdit={() => setShowEdit(true)} // 🔥 pass the callback
                     />
                 );
             case "documents":
@@ -90,7 +90,9 @@ const Patients = () => {
             >
                 {/* Sidebar now controls layout */}
                 <Sidebar
-                    onSelect={setSelectedId}
+                    onSelect={(id) => {
+                        if (!showEdit) setSelectedId(id);
+                    }}
                     selectedId={selectedId}
                     onToggle={setSidebarOpen}
                 />
@@ -226,23 +228,15 @@ const Patients = () => {
                     {showEdit && patient && (
                         <EditPatientModal
                             open={showEdit}
-                            patient={patient}
                             onClose={() => setShowEdit(false)}
-                            onUpdate={async (updated) => {
-                                try {
-                                    const data = await updatePatient(
-                                        patient.patient_id,
-                                        updated
-                                    );
-                                    setPatient(data); // refresh with updated patient
-                                    setShowEdit(false);
-                                } catch (err) {
-                                    console.error(err);
-                                    alert(
-                                        err.message ||
-                                            "Failed to update patient"
-                                    );
-                                }
+                            patient={patient}
+                            onSave={async (form) => {
+                                await updatePatient(patient.patient_id, form);
+                                setShowEdit(false);
+                                const refreshed = await fetchPatientById(
+                                    patient.patient_id
+                                );
+                                setPatient(refreshed);
                             }}
                         />
                     )}
