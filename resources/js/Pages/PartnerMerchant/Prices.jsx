@@ -54,11 +54,11 @@ function validateProductForm(form) {
     const errors = {};
     if (!form.generic_name || form.generic_name.trim().length < 2) {
         errors.generic_name = "Generic name must be at least 2 characters.";
-    } else if (form.generic_name.trim().length > 100) {
-        errors.generic_name = "Generic name cannot exceed 100 characters.";
+    } else if (form.generic_name.trim().length > 25) {
+        errors.generic_name = "Generic name cannot exceed 25 characters.";
     }
-    if (form.brand_name && form.brand_name.trim().length > 100) {
-        errors.brand_name = "Brand name cannot exceed 100 characters.";
+    if (form.brand_name && form.brand_name.trim().length > 25) {
+        errors.brand_name = "Brand name cannot exceed 25 characters.";
     }
 
     if (!form.standard_price || Number(form.standard_price) <= 0) {
@@ -86,8 +86,8 @@ function validateServiceForm(form) {
     const errors = {};
     if (!form.name || form.name.trim().length < 2) {
         errors.name = "Service name must be at least 2 characters.";
-    } else if (form.name.trim().length > 100) {
-        errors.name = "Service name cannot exceed 100 characters.";
+    } else if (form.name.trim().length > 25) {
+        errors.name = "Service name cannot exceed 25 characters.";
     }
     if (!form.standard_rate || Number(form.standard_rate) <= 0) {
         errors.standard_rate = "Standard rate must be greater than 0.";
@@ -897,7 +897,7 @@ export default function Prices({
                             }
                             required
                             autoFocus
-                            maxLength={100}
+                            maxLength={25}
                             error={errors.generic_name}
                         />
                         <Field
@@ -963,7 +963,7 @@ export default function Prices({
                             }
                             required
                             autoFocus
-                            maxLength={100}
+                            maxLength={25}
                             error={errors.generic_name}
                         />
                         <Field

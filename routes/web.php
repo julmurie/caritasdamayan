@@ -85,7 +85,7 @@ Route::middleware('auth', 'nocache')->group(function () {
         Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('admin.soa.restore');
     });
 
-    /* ---------------- Clinic Volunteer ---------------- */
+/* ---------------- Clinic Volunteer ---------------- */
 Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
     Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
     Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
