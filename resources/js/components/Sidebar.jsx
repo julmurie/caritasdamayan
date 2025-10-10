@@ -119,8 +119,9 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                         />
+                        
                     </svg>
                 ) : (
                     <svg
@@ -134,7 +135,7 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                         />
                     </svg>
                 )}
@@ -166,7 +167,7 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                             <path d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9Z" />
                         </svg>
                     </span>
-                    Archived Patients
+                    <span className={styles.btnText}>Archive Patients</span>
                 </Link>
 
                 <div className={styles.searchRow}>
