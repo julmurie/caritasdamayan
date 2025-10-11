@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import styles from "../../../css/volunteer.module.css";
 
 export default function AddPatientModal({ open, onClose, onSave }) {
-    const [classification, setClassification] = useState(""); // FP / NFP
-    const [hasPhilhealth, setHasPhilhealth] = useState(null); // true / false
+    const [classification, setClassification] = useState("");
+    const [hasPhilhealth, setHasPhilhealth] = useState(null);
+    const [errors, setErrors] = useState({});
+    const errorText = "mt-1 text-xs text-red-600";
 
-    // close on Esc
     useEffect(() => {
         function onKey(e) {
             if (e.key === "Escape") onClose?.();
@@ -16,49 +17,137 @@ export default function AddPatientModal({ open, onClose, onSave }) {
 
     if (!open) return null;
 
+    const validate = (data) => {
+        const newErrors = {};
+
+        // NAME FIELDS
+        if (!data.patient_fname)
+            newErrors.patient_fname = "First name is required.";
+        else if (data.patient_fname.length < 2)
+            newErrors.patient_fname =
+                "First name must be at least 2 characters.";
+        else if (data.patient_fname.length > 50)
+            newErrors.patient_fname = "First name cannot exceed 50 characters.";
+
+        if (!data.patient_lname)
+            newErrors.patient_lname = "Last name is required.";
+        else if (data.patient_lname.length < 2)
+            newErrors.patient_lname =
+                "Last name must be at least 2 characters.";
+        else if (data.patient_lname.length > 50)
+            newErrors.patient_lname = "Last name cannot exceed 50 characters.";
+
+        if (data.patient_mname.length < 2)
+            newErrors.patient_mname =
+                "Middle name must be at least 2 characters.";
+        else if (data.patient_mname.length > 50)
+            newErrors.patient_mname =
+                "Middle name cannot exceed 50 characters.";
+
+        // GENDER
+        if (!data.gender) newErrors.gender = "Gender is required.";
+
+        // BIRTHDAY
+        if (!data.birthday) newErrors.birthday = "Birthday is required.";
+        else {
+            const birthDate = new Date(data.birthday);
+            const today = new Date();
+            if (birthDate > today)
+                newErrors.birthday = "Birthday cannot be in the future.";
+        }
+
+        // CONTACT NUMBER
+        if (!data.contact_no)
+            newErrors.contact_no = "Contact number is required.";
+        else if (isNaN(data.contact_no))
+            newErrors.contact_no =
+                "Contact number should only contain numbers.";
+        else if (data.contact_no.length !== 11)
+            newErrors.contact_no = "Contact number must be exactly 11 digits.";
+
+        // ADDRESS
+        if (!data.address) newErrors.address = "Address is required.";
+        else if (data.address.length < 5)
+            newErrors.address = "Please enter a complete address.";
+        else if (data.address.length > 255)
+            newErrors.address = "Address cannot exceed 255 characters.";
+
+        // CLINIC AND PARISH
+        if (data.clinic && data.clinic.length < 3)
+            newErrors.clinic = "Clinic name must be at least 3 characters.";
+        else if (data.clinic && data.clinic.length > 100)
+            newErrors.clinic = "Clinic name cannot exceed 100 characters.";
+
+        if (data.parish && data.parish.length < 3)
+            newErrors.parish = "Parish name must be at least 3 characters.";
+        else if (data.parish && data.parish.length > 100)
+            newErrors.parish = "Parish name cannot exceed 100 characters.";
+
+        // CLASSIFICATION AND CATEGORY
+        if (!data.classification_cm)
+            newErrors.classification_cm = "Classification is required.";
+
+        if (!data.category) newErrors.category = "Category is required.";
+
+        // OPTIONAL IDs
+        if (data.booklet_no && data.booklet_no.length > 30)
+            newErrors.booklet_no =
+                "Booklet number cannot exceed 30 characters.";
+
+        if (data.valid_id_no && data.valid_id_no.length > 30)
+            newErrors.valid_id_no =
+                "Valid ID number cannot exceed 30 characters.";
+
+        // PHILHEALTH
+        if (data.has_philhealth === null || data.has_philhealth === undefined)
+            newErrors.has_philhealth =
+                "Please select if the patient has PhilHealth.";
+
+        if (data.has_philhealth && !data.philhealth_no)
+            newErrors.philhealth_no = "PhilHealth number is required.";
+        else if (data.philhealth_no && data.philhealth_no.length > 30)
+            newErrors.philhealth_no =
+                "PhilHealth number cannot exceed 30 characters.";
+
+        return newErrors;
+    };
+
     async function handleSubmit(e) {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
 
-        // helper to coerce to real boolean
-        const toBool = (val) => {
-            if (val === "1" || val === 1 || val === true) return true;
-            if (val === "0" || val === 0 || val === false) return false;
-            return false; // default to false if empty
-        };
+        const fd = new FormData(e.currentTarget);
+        const toBool = (v) => v === "1" || v === 1 || v === true;
 
         const payload = {
-            patient_fname: fd.get("patient_fname")?.trim() || "",
-            patient_lname: fd.get("patient_lname")?.trim() || "",
-            patient_mname: fd.get("patient_mname")?.trim() || null,
-            gender: fd.get("gender") || null,
-            birthday: fd.get("birthday") || null,
-            contact_no: fd.get("contact_no")?.trim() || null,
-            address: fd.get("address")?.trim() || null,
-            clinic: fd.get("clinic")?.trim() || null,
-            parish: fd.get("parish")?.trim() || null,
-
-            classification_cm: fd.get("classification_cm") || null,
-            category: fd.get("category") || null,
-
-            // FP
-            booklet_no: fd.get("booklet_no")?.trim() || null,
+            patient_fname: fd.get("patient_fname")?.trim(),
+            patient_lname: fd.get("patient_lname")?.trim(),
+            patient_mname: fd.get("patient_mname")?.trim() || "",
+            gender: fd.get("gender") || "",
+            birthday: fd.get("birthday") || "",
+            contact_no: fd.get("contact_no")?.trim() || "",
+            address: fd.get("address")?.trim() || "",
+            clinic: fd.get("clinic")?.trim() || "",
+            parish: fd.get("parish")?.trim() || "",
+            classification_cm: fd.get("classification_cm") || "",
+            category: fd.get("category") || "",
+            booklet_no: fd.get("booklet_no")?.trim() || "",
             is_head_family: toBool(fd.get("is_head_family")),
-
-            // NFP
-            valid_id_no: fd.get("valid_id_no")?.trim() || null,
+            valid_id_no: fd.get("valid_id_no")?.trim() || "",
             endorsed_as_fp: toBool(fd.get("endorsed_as_fp")),
             first_time_visit: toBool(fd.get("first_time_visit")),
-
-            // Philhealth
             has_philhealth: toBool(fd.get("has_philhealth")),
-            philhealth_no: fd.get("philhealth_no")?.trim() || null,
+            philhealth_no: fd.get("philhealth_no")?.trim() || "",
         };
+
+        // ✅ Validate using payload only
+        const validationErrors = validate(payload);
+        setErrors(validationErrors);
+        if (Object.keys(validationErrors).length > 0) return;
 
         try {
             await onSave(payload);
+            onClose();
         } catch (err) {
-            console.error(err);
             alert(err.message || "Failed to save patient");
         }
     }
@@ -90,14 +179,22 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                         >
                             First Name <span className={styles.req}>*</span>
                         </label>
-                        <input
-                            id="patient_fname"
-                            name="patient_fname"
-                            required
-                            className={styles.formControl}
-                            type="text"
-                            placeholder="e.g. Juan"
-                        />
+                        <div>
+                            {" "}
+                            <input
+                                id="patient_fname"
+                                name="patient_fname"
+                                required
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="e.g. Juan"
+                            />
+                            {errors.patient_fname && (
+                                <p className={errorText}>
+                                    {errors.patient_fname}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className={styles.formRow}>
@@ -107,14 +204,21 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                         >
                             Last Name <span className={styles.req}>*</span>
                         </label>
-                        <input
-                            id="patient_lname"
-                            name="patient_lname"
-                            required
-                            className={styles.formControl}
-                            type="text"
-                            placeholder="e.g. Dela Cruz"
-                        />
+                        <div>
+                            <input
+                                id="patient_lname"
+                                name="patient_lname"
+                                required
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="e.g. Dela Cruz"
+                            />
+                            {errors.patient_lname && (
+                                <p className={errorText}>
+                                    {errors.patient_lname}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className={styles.formRow}>
@@ -124,36 +228,54 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                         >
                             Middle Name
                         </label>
-                        <input
-                            id="patient_mname"
-                            name="patient_mname"
-                            className={styles.formControl}
-                            type="text"
-                            placeholder="(optional)"
-                        />
+                        <div>
+                            {" "}
+                            <input
+                                id="patient_mname"
+                                name="patient_mname"
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="(optional)"
+                            />
+                            {errors.patient_mname && (
+                                <p className={errorText}>
+                                    {errors.patient_mname}
+                                </p>
+                            )}
+                        </div>
                     </div>
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>Gender</label>
-                        <select
-                            name="gender"
-                            className={styles.formInput}
-                            defaultValue=""
-                        >
-                            <option value="" disabled hidden>
-                                Select
-                            </option>
-                            <option value="Female">Female</option>
-                            <option value="Male">Male</option>
-                            <option value="Others">Others</option>
-                        </select>
+                        <div>
+                            <select
+                                name="gender"
+                                className={styles.formInput}
+                                defaultValue=""
+                            >
+                                <option value="" disabled hidden>
+                                    Select
+                                </option>
+                                <option value="Female">Female</option>
+                                <option value="Male">Male</option>
+                                <option value="Others">Others</option>
+                            </select>
+                            {errors.gender && (
+                                <p className={errorText}>{errors.gender}</p>
+                            )}
+                        </div>
                     </div>
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>Birthday</label>
-                        <input
-                            type="date"
-                            name="birthday"
-                            className={styles.formInput}
-                        />
+                        <div>
+                            <input
+                                type="date"
+                                name="birthday"
+                                className={styles.formInput}
+                            />
+                            {errors.birthday && (
+                                <p className={errorText}>{errors.birthday}</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Contact */}
@@ -164,35 +286,60 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                         >
                             Contact No
                         </label>
-                        <input
-                            id="contact_no"
-                            name="contact_no"
-                            className={styles.formControl}
-                            type="text"
-                            placeholder="e.g. 09xxxxxxxxx"
-                        />
+                        <div>
+                            <input
+                                id="contact_no"
+                                name="contact_no"
+                                className={styles.formControl}
+                                type="text"
+                                inputMode="numeric"
+                                minLength={11}
+                                maxLength={11}
+                                placeholder="e.g. 09xxxxxxxxx"
+                            />
+                            {errors.contact_no && (
+                                <p className={errorText}>{errors.contact_no}</p>
+                            )}
+                        </div>
                     </div>
 
                     <div className={styles.formRow}>
                         <label htmlFor="address" className={styles.formLabel}>
                             Address
                         </label>
-                        <input
-                            id="address"
-                            name="address"
-                            className={styles.formControl}
-                            type="text"
-                            placeholder="Street / Barangay / City"
-                        />
+                        <div>
+                            <input
+                                id="address"
+                                name="address"
+                                className={styles.formControl}
+                                type="text"
+                                placeholder="Street / Barangay / City"
+                            />
+                            {errors.address && (
+                                <p className={errorText}>{errors.address}</p>
+                            )}
+                        </div>
                     </div>
 
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>Clinic</label>
-                        <input name="clinic" className={styles.formInput} />
+                        <div>
+                            {" "}
+                            <input name="clinic" className={styles.formInput} />
+                            {errors.clinic && (
+                                <p className={errorText}>{errors.clinic}</p>
+                            )}
+                        </div>
                     </div>
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>Parish</label>
-                        <input name="parish" className={styles.formInput} />
+                        <div>
+                            {" "}
+                            <input name="parish" className={styles.formInput} />
+                            {errors.parish && (
+                                <p className={errorText}>{errors.parish}</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Classification */}
@@ -201,26 +348,35 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                             Classification to CM Beneficiary
                         </label>
                         <div className={styles.inlineGroup}>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="classification_cm"
-                                    value="FP"
-                                    checked={classification === "FP"}
-                                    onChange={() => setClassification("FP")}
-                                />{" "}
-                                FP (Family Partner)
-                            </label>
-                            <label style={{ marginLeft: "12px" }}>
-                                <input
-                                    type="radio"
-                                    name="classification_cm"
-                                    value="NFP"
-                                    checked={classification === "NFP"}
-                                    onChange={() => setClassification("NFP")}
-                                />{" "}
-                                NFP (Non-Family Partner)
-                            </label>
+                            <div>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="classification_cm"
+                                        value="FP"
+                                        checked={classification === "FP"}
+                                        onChange={() => setClassification("FP")}
+                                    />{" "}
+                                    FP (Family Partner)
+                                </label>
+                                <label style={{ marginLeft: "12px" }}>
+                                    <input
+                                        type="radio"
+                                        name="classification_cm"
+                                        value="NFP"
+                                        checked={classification === "NFP"}
+                                        onChange={() =>
+                                            setClassification("NFP")
+                                        }
+                                    />{" "}
+                                    NFP (Non-Family Partner)
+                                </label>
+                                {errors.classification_cm && (
+                                    <p className={errorText}>
+                                        {errors.classification_cm}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -231,33 +387,42 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                                 <label className={styles.formLabel}>
                                     Booklet #
                                 </label>
-                                <input
-                                    name="booklet_no"
-                                    className={styles.formInput}
-                                />
+                                <div>
+                                    <input
+                                        name="booklet_no"
+                                        className={styles.formInput}
+                                    />
+                                    {errors.booklet_no && (
+                                        <p className={errorText}>
+                                            {errors.booklet_no}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className={styles.formRow}>
                                 <label className={styles.formLabel}>
                                     Head of Family?
                                 </label>
                                 <div className={styles.inlineGroup}>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            name="is_head_family"
-                                            value="1"
-                                        />{" "}
-                                        Yes
-                                    </label>
-                                    <label style={{ marginLeft: "12px" }}>
-                                        <input
-                                            type="radio"
-                                            name="is_head_family"
-                                            value="0"
-                                            defaultChecked
-                                        />{" "}
-                                        No
-                                    </label>
+                                    <div>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="is_head_family"
+                                                value="1"
+                                            />{" "}
+                                            Yes
+                                        </label>
+                                        <label style={{ marginLeft: "12px" }}>
+                                            <input
+                                                type="radio"
+                                                name="is_head_family"
+                                                value="0"
+                                                defaultChecked
+                                            />{" "}
+                                            No
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </>
@@ -270,33 +435,42 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                                 <label className={styles.formLabel}>
                                     Valid ID #
                                 </label>
-                                <input
-                                    name="valid_id_no"
-                                    className={styles.formInput}
-                                />
+                                <div>
+                                    <input
+                                        name="valid_id_no"
+                                        className={styles.formInput}
+                                    />
+                                    {errors.valid_id_no && (
+                                        <p className={errorText}>
+                                            {errors.valid_id_no}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className={styles.formRow}>
                                 <label className={styles.formLabel}>
                                     Endorsed for CM Family Partner?
                                 </label>
                                 <div className={styles.inlineGroup}>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            name="endorsed_as_fp"
-                                            value="1"
-                                        />{" "}
-                                        Yes
-                                    </label>
-                                    <label style={{ marginLeft: "12px" }}>
-                                        <input
-                                            type="radio"
-                                            name="endorsed_as_fp"
-                                            value="0"
-                                            defaultChecked
-                                        />{" "}
-                                        No
-                                    </label>
+                                    <div>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="endorsed_as_fp"
+                                                value="1"
+                                            />{" "}
+                                            Yes
+                                        </label>
+                                        <label style={{ marginLeft: "12px" }}>
+                                            <input
+                                                type="radio"
+                                                name="endorsed_as_fp"
+                                                value="0"
+                                                defaultChecked
+                                            />{" "}
+                                            No
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div className={styles.formRow}>
@@ -304,23 +478,25 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                                     First time visit?
                                 </label>
                                 <div className={styles.inlineGroup}>
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            name="first_time_visit"
-                                            value="1"
-                                        />{" "}
-                                        Yes
-                                    </label>
-                                    <label style={{ marginLeft: "12px" }}>
-                                        <input
-                                            type="radio"
-                                            name="first_time_visit"
-                                            value="0"
-                                            defaultChecked
-                                        />{" "}
-                                        No
-                                    </label>
+                                    <div>
+                                        <label>
+                                            <input
+                                                type="radio"
+                                                name="first_time_visit"
+                                                value="1"
+                                            />{" "}
+                                            Yes
+                                        </label>
+                                        <label style={{ marginLeft: "12px" }}>
+                                            <input
+                                                type="radio"
+                                                name="first_time_visit"
+                                                value="0"
+                                                defaultChecked
+                                            />{" "}
+                                            No
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </>
@@ -328,66 +504,80 @@ export default function AddPatientModal({ open, onClose, onSave }) {
 
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>Category</label>
-                        <select
-                            name="category"
-                            className={styles.formInput}
-                            required
-                            defaultValue=""
-                        >
-                            <option value="" disabled>
-                                Select category
-                            </option>
-                            <option value="Caritas Manila Program Volunteers">
-                                Caritas Manila Program Volunteers
-                            </option>
-                            <option value="Caritas in Action Referrals">
-                                Caritas in Action Referrals
-                            </option>
-                            <option value="Referrals from Other Caritas Manila Clinics">
-                                Referrals from Other Caritas Manila Clinics
-                            </option>
-                            <option value="Caritas Manila Employees">
-                                Caritas Manila Employees
-                            </option>
-                            <option value="Parish Employees">
-                                Parish Employees
-                            </option>
-                            <option value="Parish Volunteers or Lay Leaders">
-                                Parish Volunteers or Lay Leaders
-                            </option>
-                            <option value="YSLEP Scholars">
-                                YSLEP Scholars
-                            </option>
-                            <option value="Other Program Beneficiaries">
-                                Other Program Beneficiaries
-                            </option>
-                        </select>
+                        <div>
+                            <select
+                                name="category"
+                                className={styles.formInput}
+                                required
+                                defaultValue=""
+                            >
+                                <option value="" disabled>
+                                    Select category
+                                </option>
+                                <option value="Caritas Manila Program Volunteers">
+                                    Caritas Manila Program Volunteers
+                                </option>
+                                <option value="Caritas in Action Referrals">
+                                    Caritas in Action Referrals
+                                </option>
+                                <option value="Referrals from Other Caritas Manila Clinics">
+                                    Referrals from Other Caritas Manila Clinics
+                                </option>
+                                <option value="Caritas Manila Employees">
+                                    Caritas Manila Employees
+                                </option>
+                                <option value="Parish Employees">
+                                    Parish Employees
+                                </option>
+                                <option value="Parish Volunteers or Lay Leaders">
+                                    Parish Volunteers or Lay Leaders
+                                </option>
+                                <option value="YSLEP Scholars">
+                                    YSLEP Scholars
+                                </option>
+                                <option value="Other Program Beneficiaries">
+                                    Other Program Beneficiaries
+                                </option>
+                            </select>
+                            {errors.category && (
+                                <p className={errorText}>{errors.category}</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* PhilHealth */}
                     <div className={styles.formRow}>
                         <label className={styles.formLabel}>PhilHealth</label>
                         <div className={styles.inlineGroup}>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="has_philhealth"
-                                    value="1"
-                                    checked={hasPhilhealth === true}
-                                    onChange={() => setHasPhilhealth(true)}
-                                />{" "}
-                                Yes
-                            </label>
-                            <label style={{ marginLeft: "12px" }}>
-                                <input
-                                    type="radio"
-                                    name="has_philhealth"
-                                    value="0"
-                                    checked={hasPhilhealth === false}
-                                    onChange={() => setHasPhilhealth(false)}
-                                />{" "}
-                                No
-                            </label>
+                            <div>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="has_philhealth"
+                                        value="1"
+                                        checked={hasPhilhealth === true}
+                                        onChange={() => setHasPhilhealth(true)}
+                                        required
+                                    />{" "}
+                                    Yes
+                                </label>
+                                <label style={{ marginLeft: "12px" }}>
+                                    <input
+                                        type="radio"
+                                        name="has_philhealth"
+                                        value="0"
+                                        checked={hasPhilhealth === false}
+                                        onChange={() => setHasPhilhealth(false)}
+                                        required
+                                    />{" "}
+                                    No
+                                </label>
+                                {errors.has_philhealth && (
+                                    <p className={errorText}>
+                                        {errors.has_philhealth}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                     {hasPhilhealth && (
@@ -395,10 +585,17 @@ export default function AddPatientModal({ open, onClose, onSave }) {
                             <label className={styles.formLabel}>
                                 PhilHealth No.
                             </label>
-                            <input
-                                name="philhealth_no"
-                                className={styles.formInput}
-                            />
+                            <div>
+                                <input
+                                    name="philhealth_no"
+                                    className={styles.formInput}
+                                />
+                                {errors.philhealth_no && (
+                                    <p className={errorText}>
+                                        {errors.philhealth_no}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     )}
 
