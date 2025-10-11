@@ -3,43 +3,11 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 
-function Field({
-    id,
-    label,
-    children,
-    required,
-    className = "",
-    align = "center", // "center" | "start" for textarea
-}) {
-    return (
-        <div
-            className={`flex ${
-                align === "start" ? "items-start" : "items-center"
-            } gap-4 ${className}`}
-        >
-            <label
-                htmlFor={id}
-                className="w-44 shrink-0 text-sm font-medium text-gray-700"
-            >
-                {label}
-                {required ? (
-                    <span className="text-red-500 ml-0.5" aria-hidden>
-                        *
-                    </span>
-                ) : null}
-            </label>
-            <div className="flex-1">{children}</div>
-        </div>
-    );
-}
-
-const inputBase =
-    "block w-full rounded-md border border-gray-300 bg-white px-3 py-[9px] text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-[#c61d22] focus:ring-2 focus:ring-[#c61d22]/50 sm:text-sm";
-
 function InitialAssessment() {
     const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [selectedPatientId, setSelectedPatientId] = useState(null);
+    const [errors, setErrors] = useState({});
     const [form, setForm] = useState({
         date: "",
         name: "",
@@ -63,264 +31,355 @@ function InitialAssessment() {
 
     const onSubmit = (e) => {
         e.preventDefault();
-        // Light inline validation
-        if (!form.name || !form.date) {
-            alert("Please fill out at least Date and Name.");
-            return;
-        }
+        const newErrors = {};
+        if (!form.name) newErrors.name = "Please input Name.";
+        if (!form.date) newErrors.date = "Please input Date.";
+        if (!form.age) newErrors.age = "Please input Age.";
+        if (!form.sex) newErrors.sex = "Please input Sex.";
+        if (!form.temperature) newErrors.temperature = "Please input Temperature.";
+        if (!form.bloodPressure) newErrors.bloodPressure = "Please input Blood Pressure.";
+        if (!form.height) newErrors.height = "Please input Height.";
+        if (!form.weight) newErrors.weight = "Please input Weight.";
+        if (!form.pulseRate) newErrors.pulseRate = "Please input Pulse Rate.";
+        if (!form.respiratoryRate) newErrors.respiratoryRate = "Please input Respiratory Rate.";
+        if (!form.spo2) newErrors.spo2 = "Please input SPO2 (Oxygen).";
+        if (!form.physician) newErrors.physician = "Please input Physician Name.";
+        if (!form.licNo) newErrors.licNo = "Please input LIC No.";
+        if (!form.ptrNo) newErrors.ptrNo = "Please input PTR No.";
+        if (!form.s2No) newErrors.s2No = "Please input S2 No.";
+
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) return;
+
         setLoading(true);
-        // TODO: Hook this up to an API/Inertia post
-        // For now, just log the data
         console.log("Initial Assessment:", form);
         setTimeout(() => setLoading(false), 600);
     };
 
+    const inputStyle =
+        "w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50";
+
     return (
-        <div className="min-h-screen bg-gray-50 print:bg-white">
+        <div className="min-h-screen bg-gray-50 flex flex-col print:bg-white">
             <Navbar />
-            {/* Content with Sidebar (full-width like Referral) */}
-            <div className="w-full flex">
+            <div className="flex flex-1">
                 <Sidebar
                     onToggle={(open) => setSidebarOpen(open)}
                     onSelect={(id) => setSelectedPatientId(id)}
                     selectedId={selectedPatientId}
                 />
 
-                {/* Main content area with padding */}
-                <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
-                    <main>
-                        <div className="mb-6 flex items-end justify-between gap-4 print:mb-3">
-                            <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">
-                                Initial Patient Assessment
-                            </h1>
-                            <div className="text-right">
-                                <label
-                                    htmlFor="date"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Date
-                                </label>
+                {/* MAIN CONTAINER */}
+                <div className="flex-1 min-w-0 bg-white p-4 md:p-8 shadow-inner">
+                    <main className="mx-auto max-w-5xl border border-dashed border-gray-400 rounded-md p-4 md:p-8 bg-white">
+                        <h2 className="mb-4 text-center text-xl font-bold text-black">
+                            INITIAL PATIENT ASSESSMENT
+                        </h2>
+
+                        {/* SECTION I */}
+                        <h3 className="mb-2 text-lg font-semibold">
+                            <span className="underline">I. VITAL SIGN RECORD:</span>
+                            <span className="text-red-500">*</span>
+                        </h3>
+
+                        {/* Date aligned right on desktop, left on mobile, no label shift */}
+                        <div className="flex justify-start md:justify-end mb-4">
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 whitespace-nowrap w-full md:w-auto">
+                            
+                            {/* Label stays fixed */}
+                            <div>
+                            <label htmlFor="date" className="font-medium md:self-center ">
+                                Date:
+                            </label>
+                            </div>
+
+                            {/* Input + Error grouped together */}
+                            <div className="flex flex-col w-full md:w-auto">
+                            <input
+                                id="date"
+                                type="date"
+                                value={form.date}
+                                onChange={update("date")}
+                                required
+                                className="border border-gray-400 rounded-md px-2 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50 w-full md:w-auto"
+                            />
+                            {errors.date && (
+                                <p className="text-xs text-red-600 mt-1">{errors.date}</p>
+                            )}
+                            </div>
+                        </div>
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex flex-col md:flex-row items-start gap-2 mb-3">
+                            <div className="md:w-20">
+                                <label className="font-medium whitespace-nowrap pt-[2px]">Name:</label>
+                            </div>
+                            <div className="flex flex-col w-full">
                                 <input
-                                    id="date"
-                                    type="date"
-                                    value={form.date}
-                                    onChange={update("date")}
-                                    className={`${inputBase} sm:w-56`}
+                                    id="name"
+                                    type="text"
+                                    value={form.name}
+                                    onChange={update("name")}
                                     required
+                                    className="border border-gray-400 rounded-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50"
                                 />
+                                {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
                             </div>
                         </div>
 
-                        <form
-                            onSubmit={onSubmit}
-                            className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 print:shadow-none print:ring-0 sm:p-6"
-                        >
-                    <div className="grid grid-cols-1 gap-4 sm:gap-5">
-                        <Field id="name" label="Name" required>
-                            <input
-                                id="name"
-                                type="text"
-                                value={form.name}
-                                onChange={update("name")}
-                                placeholder="Last, First M.I."
-                                className={inputBase}
-                                required
-                            />
-                        </Field>
+                        {/* Age, Sex, Temp */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Age */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-32">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Age:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <input id="age" type="number" min="1"
+                                        value={form.age} onChange={update("age")} required
+                                        className="border border-gray-400 rounded-md px-2 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                    {errors.age && <p className="text-xs text-red-600 mt-1">{errors.age}</p>}
+                                </div>
+                            </div>
 
-                        {/* Single-row fields */}
-                        <Field id="age" label="Age">
-                            <input
-                                id="age"
-                                type="number"
-                                min="0"
-                                value={form.age}
-                                onChange={update("age")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="sex" label="Sex">
-                            <select
-                                id="sex"
-                                value={form.sex}
-                                onChange={update("sex")}
-                                className={inputBase}
-                            >
-                                <option value="">Select…</option>
-                                <option>Male</option>
-                                <option>Female</option>
-                                <option>Intersex</option>
-                                <option>Prefer not to say</option>
-                            </select>
-                        </Field>
-                        <Field id="temperature" label="Temperature (°C)">
-                            <input
-                                id="temperature"
-                                type="text"
-                                inputMode="decimal"
-                                placeholder="e.g. 36.8"
-                                value={form.temperature}
-                                onChange={update("temperature")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="bp" label="Blood Pressure (mmHg)">
-                            <input
-                                id="bp"
-                                type="text"
-                                placeholder="e.g. 120/80"
-                                value={form.bloodPressure}
-                                onChange={update("bloodPressure")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="height" label="Height (cm)">
-                            <input
-                                id="height"
-                                type="number"
-                                min="0"
-                                step="0.1"
-                                value={form.height}
-                                onChange={update("height")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="weight" label="Weight (kg)">
-                            <input
-                                id="weight"
-                                type="number"
-                                min="0"
-                                step="0.1"
-                                value={form.weight}
-                                onChange={update("weight")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="pulseRate" label="Pulse Rate (bpm)">
-                            <input
-                                id="pulseRate"
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={form.pulseRate}
-                                onChange={update("pulseRate")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field
-                            id="respiratoryRate"
-                            label="Respiratory Rate (breaths/min)"
-                        >
-                            <input
-                                id="respiratoryRate"
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={form.respiratoryRate}
-                                onChange={update("respiratoryRate")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="spo2" label="SPO2 (Oxygen %)">
-                            <input
-                                id="spo2"
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="1"
-                                value={form.spo2}
-                                onChange={update("spo2")}
-                                className={inputBase}
-                            />
-                        </Field>
+                            {/* Sex */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-16">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Sex:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <select
+                                        id="sex"
+                                        value={form.sex}
+                                        onChange={update("sex")}
+                                        required
+                                        className="w-full border border-gray-400 rounded-md px-3 py-1 text-sm bg-white focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50"
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                    {errors.sex && <p className="text-xs text-red-600 mt-1">{errors.sex}</p>}
+                                </div>
+                            </div>
 
-                        {/* Chief Complaint */}
-                        <Field
-                            id="chiefComplaint"
-                            label="Chief Complaint"
-                            align="start"
-                        >
+                            {/* Temperature */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-28">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Temperature:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="temperature" type="number" min="0"
+                                            value={form.temperature} onChange={update("temperature")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            °C
+                                        </span>
+                                    </div>
+                                    {errors.temperature && <p className="text-xs text-red-600 mt-1">{errors.temperature}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* BP & Height */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                            {/* Blood Pressure */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-36">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Blood Pressure:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="bp" type="text"
+                                            value={form.bloodPressure} onChange={update("bloodPressure")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            mmHg
+                                        </span>
+                                    </div>
+                                    {errors.bloodPressure && <p className="text-xs text-red-600 mt-1">{errors.bloodPressure}</p>}
+                                </div>
+                            </div>
+
+                            {/* Height */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-20">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Height:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="height" type="number" min="0"
+                                            value={form.height} onChange={update("height")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            cm
+                                        </span>
+                                    </div>
+                                    {errors.height && <p className="text-xs text-red-600 mt-1">{errors.height}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Weight & Pulse Rate */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                            {/* Weight */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-24">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Weight:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="weight" type="number" min="0"
+                                            value={form.weight} onChange={update("weight")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            kg
+                                        </span>
+                                    </div>
+                                    {errors.weight && <p className="text-xs text-red-600 mt-1">{errors.weight}</p>}
+                                </div>
+                            </div>
+
+                            {/* Pulse Rate */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-28">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Pulse Rate:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="pulseRate" type="number" min="0"
+                                            value={form.pulseRate} onChange={update("pulseRate")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            bpm
+                                        </span>
+                                    </div>
+                                    {errors.pulseRate && <p className="text-xs text-red-600 mt-1">{errors.pulseRate}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Respiratory & SPO2 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                            {/* Respiratory Rate */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-40">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">Respiratory Rate:</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="respiratoryRate" type="number" min="0"
+                                            value={form.respiratoryRate} onChange={update("respiratoryRate")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            bpm
+                                        </span>
+                                    </div>
+                                    {errors.respiratoryRate && <p className="text-xs text-red-600 mt-1">{errors.respiratoryRate}</p>}
+                                </div>
+                            </div>
+
+                            {/* SPO2 */}
+                            <div className="flex flex-col md:flex-row items-start gap-2">
+                                <div className="md:w-32">
+                                    <label className="font-medium whitespace-nowrap pt-[2px]">SPO2 (Oxygen):</label>
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    <div className="relative flex w-full">
+                                        <input id="spo2" type="number" min="0"
+                                            value={form.spo2} onChange={update("spo2")} required
+                                            className="w-full border border-gray-400 rounded-l-md px-3 py-1 text-sm focus:border-[#c61d22] focus:ring-1 focus:ring-[#c61d22]/50" />
+                                        <span className="flex items-center justify-center w-16 bg-gray-200 border border-l-0 border-gray-400 rounded-r-md text-gray-700 text-xs font-semibold">
+                                            %
+                                        </span>
+                                    </div>
+                                    {errors.spo2 && <p className="text-xs text-red-600 mt-1">{errors.spo2}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION II */}
+                        <h3 className="mt-8 mb-2 text-lg font-semibold underline">
+                            II. CHIEF COMPLAINT:
+                        </h3>
+                        <div className="flex flex-col">
                             <textarea
                                 id="chiefComplaint"
+                                rows={3}
                                 value={form.chiefComplaint}
                                 onChange={update("chiefComplaint")}
-                                rows={4}
-                                placeholder="Describe the patient's main concern…"
-                                className={`${inputBase} resize-y`}
-                            />
-                        </Field>
+                                placeholder="Enter patient's main concern..."
+                                className={`${inputStyle} resize-y border border-gray-300 bg-white`}
+                            ></textarea>
+                        </div>
 
-                        <hr className="my-2 border-gray-200" />
-
-                        {/* Physician + credentials */}
-                        <Field id="physician" label="Attending Physician">
-                            <div className="flex items-center gap-2">
+                        {/* SECTION III */}
+                        <h3 className="mt-8 mb-2 text-lg font-semibold">
+                            <span className="underline">III. ATTENDING PHYSICIAN:</span>
+                            <span className="text-red-500">*</span>
+                        </h3>
+                        <div className="space-y-3 text-base">
+                            <div className="flex flex-col">
+                                <label className="font-medium whitespace-nowrap">Name:</label>
                                 <input
                                     id="physician"
                                     type="text"
                                     value={form.physician}
                                     onChange={update("physician")}
-                                    placeholder="Full name"
-                                    className={`${inputBase} sm:max-w-md`}
+                                    required
+                                    placeholder="Full Name, M.D."
+                                    className={inputStyle}
                                 />
-                                <span className="text-sm text-gray-700">, M.D.</span>
+                                {errors.physician && <p className="text-xs text-red-600 mt-1">{errors.physician}</p>}
                             </div>
-                        </Field>
 
-                        <Field id="licNo" label="LIC No.">
-                            <input
-                                id="licNo"
-                                type="text"
-                                value={form.licNo}
-                                onChange={update("licNo")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="ptrNo" label="PTR No.">
-                            <input
-                                id="ptrNo"
-                                type="text"
-                                value={form.ptrNo}
-                                onChange={update("ptrNo")}
-                                className={inputBase}
-                            />
-                        </Field>
-                        <Field id="s2No" label="S2 No.">
-                            <input
-                                id="s2No"
-                                type="text"
-                                value={form.s2No}
-                                onChange={update("s2No")}
-                                className={inputBase}
-                            />
-                        </Field>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="flex flex-col">
+                                    <label className="font-medium whitespace-nowrap">LIC No.:</label>
+                                    <input id="licNo" type="number" min="0"
+                                        value={form.licNo} onChange={update("licNo")} required className={inputStyle} />
+                                    {errors.licNo && <p className="text-xs text-red-600 mt-1">{errors.licNo}</p>}
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="font-medium whitespace-nowrap">PTR No.:</label>
+                                    <input id="ptrNo" type="number" min="0"
+                                        value={form.ptrNo} onChange={update("ptrNo")} required className={inputStyle} />
+                                    {errors.ptrNo && <p className="text-xs text-red-600 mt-1">{errors.ptrNo}</p>}
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="font-medium whitespace-nowrap">S2 No.:</label>
+                                    <input id="s2No" type="number" min="0"
+                                        value={form.s2No} onChange={update("s2No")} required className={inputStyle} />
+                                    {errors.s2No && <p className="text-xs text-red-600 mt-1">{errors.s2No}</p>}
+                                </div>
+                            </div>
+                        </div>
 
-                        {/* Actions */}
-                        <div className="mt-6 flex justify-end gap-3">
+                        {/* BUTTONS */}
+                        <div className="mt-10 flex flex-col sm:flex-row justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={() => window.history.back()}
-                                className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 w-full sm:w-auto"
                             >
                                 Back
                             </button>
                             <button
                                 type="submit"
+                                onClick={onSubmit}
                                 disabled={loading}
-                                className="inline-flex items-center justify-center rounded-md bg-[#c61d22] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#a8181c] focus:outline-none focus:ring-2 focus:ring-[#c61d22]/50 disabled:opacity-60"
+                                className="rounded-md bg-[#2e7d32] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#276b2b] disabled:opacity-60 w-full sm:w-auto"
                             >
                                 {loading ? "Saving…" : "Save Assessment"}
                             </button>
                         </div>
-                        {/* close fields grid */}
-                        </div>
-                        </form>
                     </main>
                 </div>
             </div>
-            <Footer />
         </div>
-        
     );
 }
 
