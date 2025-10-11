@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\MedicineRequest;
 use App\Models\MedicineRequestItem;
+use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
+
 
 class MedicineRequestController extends Controller
 {
@@ -24,6 +27,7 @@ class MedicineRequestController extends Controller
             'parish_address' => 'nullable|string|max:255',
             'partner_type' => 'required|string|in:Family Partner,Non-Family Partner',
 
+            'patient_id' => 'required|exists:patients,id', // ✅ correct usage
             'patient_surname' => 'required|string|max:255',
             'patient_firstname' => 'required|string|max:255',
             'patient_mi' => 'nullable|string|max:10',
@@ -49,6 +53,7 @@ class MedicineRequestController extends Controller
         ]);
 
         $medicineRequest = MedicineRequest::create([
+            'patient_id' => $validated['patient_id'], // ✅ add this
             'date' => $validated['date'],
             'all_is_well' => $validated['all_is_well'] ?? null,
             'partner_institution_branch' => $validated['partner_institution_branch'] ?? null,
@@ -75,6 +80,7 @@ class MedicineRequestController extends Controller
             'user_id' => Auth::id(), 
         ]);
 
+        
         foreach ($validated['items'] as $item) {
             MedicineRequestItem::create([
                 'medicine_request_id' => $medicineRequest->id,
@@ -87,6 +93,14 @@ class MedicineRequestController extends Controller
                 'remarks' => $item['remarks'] ?? null,
             ]);
         }
+
+            // 3️⃣ 🔥 NEW: Automatically create document record
+    \App\Models\Document::create([
+        'patient_id' => $medicineRequest->patient_id,
+        'doc_type' => 'Medicine Request',
+        'file_path' => null,
+        'status' => 'Pending',
+    ]);
 
         // 4. Redirect or respond
         return redirect()

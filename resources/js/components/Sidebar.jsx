@@ -121,7 +121,6 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                             strokeLinejoin="round"
                             d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
                         />
-                        
                     </svg>
                 ) : (
                     <svg
@@ -220,8 +219,9 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
 
                             {/* hover-only action */}
                             <span className={styles.rowAction}>
-                                <button
-                                    type="button"
+                                <span
+                                    role="button"
+                                    tabIndex={0}
                                     className={styles.iconOnly}
                                     title={archived ? "Restore" : "Archive"}
                                     onClick={(e) =>
@@ -231,7 +231,24 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                                             active,
                                         })
                                     }
-                                    disabled={isBusy}
+                                    onKeyDown={(e) => {
+                                        if (
+                                            e.key === "Enter" ||
+                                            e.key === " "
+                                        ) {
+                                            handleArchiveClick(e, {
+                                                id,
+                                                isArchived: archived,
+                                                active,
+                                            });
+                                        }
+                                    }}
+                                    style={{
+                                        cursor: isBusy
+                                            ? "not-allowed"
+                                            : "pointer",
+                                        opacity: isBusy ? 0.6 : 1,
+                                    }}
                                 >
                                     {archived ? (
                                         // Restore icon (arrow up from box)
@@ -251,7 +268,7 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                                             />
                                         </svg>
                                     ) : (
-                                        // Your ARCHIVE icon
+                                        // Archive icon
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
                                             viewBox="0 0 24 24"
@@ -268,7 +285,7 @@ export default function Sidebar({ onToggle, onSelect, selectedId }) {
                                             />
                                         </svg>
                                     )}
-                                </button>
+                                </span>
                             </span>
                         </button>
                     );

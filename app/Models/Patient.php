@@ -38,6 +38,17 @@ class Patient extends Model
         'first_time_visit' => 'boolean',
         'has_philhealth' => 'boolean',
     ];
+
+    public function documents()
+{
+    return $this->hasMany(Document::class, 'patient_id', 'patient_id');
+}
+
+public function medicineRequests()
+{
+    return $this->hasMany(MedicineRequest::class, 'patient_id', 'patient_id');
+}
+
 }
 
 

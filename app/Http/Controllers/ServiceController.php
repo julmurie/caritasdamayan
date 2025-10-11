@@ -94,7 +94,7 @@ class ServiceController extends Controller
 
         $recordsFiltered = (clone $base)->count();
 
-        $columns = ['name','standard_rate','discounted_rate'];
+        $columns = ['id','name','standard_rate','discounted_rate'];
         if (!empty($order)) {
             foreach ($order as $o) {
                 $idx = (int) ($o['column'] ?? 0);
@@ -103,9 +103,10 @@ class ServiceController extends Controller
                     $base->orderBy($columns[$idx], $dir);
                 }
             }
-        } else {
-            $base->orderBy('name');
         }
+        if (empty($order)) {
+                $base->orderByDesc('id'); // ✅ moved outside
+            }
 
         $data = $base->skip($start)->take($length)
             ->get(['id','name','standard_rate','discounted_rate'])

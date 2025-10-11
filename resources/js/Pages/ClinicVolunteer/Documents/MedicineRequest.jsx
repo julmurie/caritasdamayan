@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useRef } from "react";
+import { useState, useEffect, useCallback, memo, useRef } from "react";
 import { Link, router } from "@inertiajs/react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
@@ -366,6 +366,13 @@ function MedicineRequest() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [partnerType, setPartnerType] = useState("Family Partner");
     const [clearSelection, setClearSelection] = useState(false);
+    const [patientId, setPatientId] = useState(null);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("patient_id");
+        setPatientId(id);
+    }, []);
     /* state */
     const [patient, setPatient] = useState({
         surname: "",
@@ -681,6 +688,7 @@ function MedicineRequest() {
         router.post(
             "/volunteer/medicine-requests",
             {
+                patient_id: patientId, // ✅ add this line to send patient ID
                 ...meta,
                 partner_type: partnerType,
                 ...patient,

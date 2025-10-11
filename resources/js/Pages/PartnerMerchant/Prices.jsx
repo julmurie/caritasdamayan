@@ -274,11 +274,13 @@ export default function Prices({
 
         // columns base (no Action when !canManage)
         const productColumns = [
+            { data: "id", visible: false }, // ✅ add this
             { data: "generic_name", title: "Generic Name" },
             { data: "brand_name", title: "Brand Name" },
             { data: "standard_price", title: "Standard Price" },
             { data: "discounted_price", title: "Discounted Price" },
         ];
+
         if (canManage) {
             productColumns.push({
                 data: null,
@@ -291,7 +293,7 @@ export default function Prices({
 
         const dt = $table.DataTable({
             processing: true,
-            serverSide: true,
+            serverSide: false,
             responsive: true,
 
             ajax: { url: productsURL, type: "GET", dataType: "json" },
@@ -323,7 +325,12 @@ export default function Prices({
             ],
 
             columns: productColumns,
-            order: [[0, "asc"]],
+            // order: [[0, "asc"]],
+            order: [[0, "desc"]],
+            search: { smart: true, caseInsensitive: true },
+        });
+        dt.columns().every(function () {
+            this.searchable = true; // ✅ ensure all columns (except action) are searchable
         });
         dtProductsRef.current = dt;
 
@@ -398,6 +405,7 @@ export default function Prices({
         }
 
         const serviceColumns = [
+            { data: "id", visible: false }, // ✅ add this
             { data: "name", title: "Service Name" },
             { data: "standard_rate", title: "Standard Rate" },
             { data: "discounted_rate", title: "Discounted Rate" },
@@ -414,7 +422,7 @@ export default function Prices({
 
         const dt = $table.DataTable({
             processing: true,
-            serverSide: true,
+            serverSide: false,
             responsive: true,
             ajax: { url: servicesURL, type: "GET", dataType: "json" },
             lengthMenu: [
@@ -445,9 +453,14 @@ export default function Prices({
             ],
 
             columns: serviceColumns,
-            order: [[0, "asc"]],
+            // order: [[0, "asc"]],
+            order: [[0, "desc"]],
+            search: { smart: true, caseInsensitive: true },
         });
         dtServicesRef.current = dt;
+        dt.columns().every(function () {
+            this.searchable = true; // ✅ ensure all columns (except action) are searchable
+        });
 
         if (canManage) {
             $table.on("click", "button.btn-edit-service", function () {
@@ -520,9 +533,51 @@ export default function Prices({
         return () => clearTimeout(t);
     }, [activeTab]);
 
-    const reloadTable = () => dtProductsRef.current?.ajax.reload(null, false);
-    const reloadServiceTable = () =>
-        dtServicesRef.current?.ajax.reload(null, false);
+    // const reloadTable = () => dtProductsRef.current?.ajax.reload(null, false);
+    // const reloadServiceTable = () =>
+    //     dtServicesRef.current?.ajax.reload(null, false);
+
+    const reloadTable = () => {
+        const dt = dtProductsRef.current;
+        if (dt) {
+            // 🩸 force sort by newest, reload, and go back to page 1
+            // dt.order([0, "desc"]).ajax.reload(() => {
+            //     dt.page("first").draw(false); // ⬅️ always show page 1
+            // }, false);
+            dt.order([0, "desc"]).ajax.reload(
+                () => dt.page("first").draw(false),
+                false
+            );
+
+            // optional scroll-to-top animation
+            setTimeout(() => {
+                const tableEl = tableRef.current;
+                if (tableEl)
+                    tableEl.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                    });
+            }, 300);
+        }
+    };
+
+    const reloadServiceTable = () => {
+        const dt = dtServicesRef.current;
+        if (dt) {
+            dt.order([0, "desc"]).ajax.reload(() => {
+                dt.page("first").draw(false); // ⬅️ always show page 1
+            }, false);
+
+            setTimeout(() => {
+                const tableEl = serviceTableRef.current;
+                if (tableEl)
+                    tableEl.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                    });
+            }, 300);
+        }
+    };
 
     // ===== Merchant-only actions =====
     const addService = (e) => {
@@ -601,63 +656,6 @@ export default function Prices({
             }
         );
     };
-
-    // const addRow = (e) => {
-    //     e.preventDefault();
-
-    //     // run validation
-    //     const errs = validateProductForm(form);
-    //     if (Object.keys(errs).length > 0) {
-    //         setErrors(errs); // show errors in UI
-    //         return;
-    //     }
-    //     setErrors({}); // clear errors if valid
-
-    //     router.post(
-    //         "/merchant/products",
-    //         {
-    //             name: form.name,
-    //             standard_price: form.standard_price || 0,
-    //             discounted_price: form.discounted_price || 0,
-    //         },
-    //         {
-    //             onSuccess: () => {
-    //                 setShowAdd(false);
-    //                 setForm(resetForm());
-    //                 reloadTable();
-    //             },
-    //         }
-    //     );
-    // };
-
-    // const saveEdit = (e) => {
-    //     e.preventDefault();
-
-    //     // run validation
-    //     const errs = validateProductForm(form);
-    //     if (Object.keys(errs).length > 0) {
-    //         setErrors(errs); // show errors
-    //         return;
-    //     }
-    //     setErrors({}); // clear errors
-
-    //     if (!editing) return;
-    //     router.patch(
-    //         `/merchant/products/${editing.id}`,
-    //         {
-    //             name: form.name,
-    //             standard_price: form.standard_price || 0,
-    //             discounted_price: form.discounted_price || 0,
-    //         },
-    //         {
-    //             onSuccess: () => {
-    //                 setEditing(null);
-    //                 setForm(resetForm());
-    //                 reloadTable();
-    //             },
-    //         }
-    //     );
-    // };
 
     const addRow = (e) => {
         e.preventDefault();
@@ -875,6 +873,8 @@ export default function Prices({
                             >
                                 <thead>
                                     <tr>
+                                        <th style={{ display: "none" }}>ID</th>{" "}
+                                        {/* Hidden column for sorting */}
                                         <th>Generic Name</th>
                                         <th>Brand Name</th>
                                         <th>Standard Price</th>
@@ -942,6 +942,7 @@ export default function Prices({
                             >
                                 <thead>
                                     <tr>
+                                        <th style={{ display: "none" }}>ID</th>
                                         <th>Service Name</th>
                                         <th>Standard Rate</th>
                                         <th>Discounted Rate</th>

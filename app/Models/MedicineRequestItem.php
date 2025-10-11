@@ -24,4 +24,10 @@ class MedicineRequestItem extends Model
     {
         return $this->belongsTo(MedicineRequest::class);
     }
+
+public function medicineRequest()
+{
+    return $this->belongsTo(MedicineRequest::class);
+}
+
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Patient;
+use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

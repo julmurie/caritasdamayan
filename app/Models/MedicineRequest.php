@@ -44,4 +44,11 @@ class MedicineRequest extends Model
     {
         return $this->hasMany(MedicineRequestItem::class);
     }
+
+    public function patient()
+{
+    return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+}
+
+
 }
