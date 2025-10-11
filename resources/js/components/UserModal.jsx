@@ -11,10 +11,11 @@ export default function UserModal({
     onChange,
     errors,
     isSubmitting,
+    editingUserId, // ✅ new prop for detecting edit mode
+    setFormData, // ✅ required for active status update
 }) {
     if (!isOpen) return null;
 
-    // Small helper to render label with red *
     const RequiredLabel = ({ htmlFor, children }) => (
         <label
             htmlFor={htmlFor}
@@ -27,8 +28,11 @@ export default function UserModal({
     return (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6">
+                {/* ✅ Header */}
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Register New User</h2>
+                    <h2 className="text-xl font-semibold">
+                        {editingUserId ? "Edit User" : "Register New User"}
+                    </h2>
                     <button
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700"
@@ -40,6 +44,7 @@ export default function UserModal({
                 <hr className="mb-4 border-gray-300" />
 
                 <form onSubmit={onSubmit}>
+                    {/* ROLE */}
                     <div className="mb-6">
                         <RequiredLabel htmlFor="role">User Role</RequiredLabel>
                         <select
@@ -68,6 +73,7 @@ export default function UserModal({
                         )}
                     </div>
 
+                    {/* CONDITIONAL FIELDS */}
                     {selectedRole === "merchant" ? (
                         <>
                             <div className="mb-6">
@@ -199,6 +205,7 @@ export default function UserModal({
                         </>
                     )}
 
+                    {/* EMAIL */}
                     <div className="mb-6">
                         <RequiredLabel htmlFor="email">
                             Email Address
@@ -223,17 +230,40 @@ export default function UserModal({
                         )}
                     </div>
 
-                    {errors.submit && (
-                        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
-                            {errors.submit}
+                    {/* ✅ Active Status — only visible in Edit mode */}
+                    {editingUserId && (
+                        <div className="mb-6">
+                            <label
+                                htmlFor="is_active"
+                                className="block mb-2 text-sm font-medium text-gray-900"
+                            >
+                                Active Status
+                            </label>
+                            <select
+                                id="is_active"
+                                value={formData.is_active ? "1" : "0"}
+                                onChange={(e) =>
+                                    onChange({
+                                        target: {
+                                            id: "is_active",
+                                            value: e.target.value === "1",
+                                        },
+                                    })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                            >
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
                         </div>
                     )}
 
-                    <div className="flex justify-end space-x-3">
+                    {/* ✅ Buttons */}
+                    <div className="flex justify-end space-x-3 mt-6">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                            className="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
                         >
                             Cancel
                         </button>
@@ -242,7 +272,11 @@ export default function UserModal({
                             disabled={isSubmitting}
                             className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isSubmitting ? "Saving..." : "Save"}
+                            {isSubmitting
+                                ? "Saving..."
+                                : editingUserId
+                                ? "Update User"
+                                : "Save"}
                         </button>
                     </div>
                 </form>

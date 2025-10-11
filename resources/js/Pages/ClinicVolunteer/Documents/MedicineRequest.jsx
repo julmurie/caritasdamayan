@@ -7,6 +7,7 @@ import styles from "../../../../css/volunteer.module.css";
 import "../../../../css/print.css";
 
 /* ================== Limits & Helpers ================== */
+
 const buildPrintableHTML = ({
     meta,
     patient,
@@ -167,7 +168,7 @@ const buildPrintableHTML = ({
 
 const printHTML = (html, filenameHint = document.title) => {
     const prev = document.title;
-    document.title = filenameHint; // helps some browsers name the PDF
+    document.title = filenameHint;
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
     iframe.style.right = "0";
@@ -334,13 +335,37 @@ const Field = ({ label, className = "", children }) => (
     </div>
 );
 
+/* ======= Initial states for clearing ======= */
+const makeInitialMeta = () => ({
+    date: "",
+    all_is_well: "",
+    partner_institution_branch: "",
+    clinic_name: "",
+    partner_institution_name: "",
+    parish_name: "",
+    parish_address: "",
+});
+
+const makeInitialPatient = () => ({
+    surname: "",
+    firstname: "",
+    mi: "",
+    age: "",
+    address: "",
+    contact_number: "",
+    government_id: "",
+    diagnosis: "",
+});
+
+const makeInitialMedicines = () => [];
+
 /* ================== Component ================== */
 
 function MedicineRequest() {
     /* layout */
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [partnerType, setPartnerType] = useState("Family Partner");
-
+    const [clearSelection, setClearSelection] = useState(false);
     /* state */
     const [patient, setPatient] = useState({
         surname: "",
@@ -396,6 +421,11 @@ function MedicineRequest() {
 
     /* stopPropagation shield */
     const shield = (e) => e.stopPropagation();
+
+    const hasSelections =
+        Object.values(meta).some(Boolean) ||
+        Object.values(patient).some(Boolean) ||
+        medicines.length > 0;
 
     /* ============= Validators ============= */
     const validateField = useCallback((path, value) => {
@@ -590,37 +620,6 @@ function MedicineRequest() {
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     };
 
-    // const handleSave = useCallback(() => {
-    //     const errs = validateAll();
-    //     if (Object.keys(errs).length > 0) {
-    //         scrollToFirstError(errs);
-    //         return;
-    //     }
-
-    //     router.post(
-    //         "/volunteer/medicine-requests",
-    //         {
-    //             ...meta,
-    //             partner_type: partnerType,
-    //             ...patient,
-    //             age: parseInt(patient.age || "0", 10) || 0,
-    //             ...summary,
-    //             items: medicines,
-    //         },
-    //         {
-    //             onSuccess: () => alert("Medicine request saved successfully!"),
-    //             onError: (serverErrors) => {
-    //                 const mapped = {};
-    //                 Object.entries(serverErrors || {}).forEach(([k, v]) => {
-    //                     mapped[k] = Array.isArray(v) ? v[0] : v;
-    //                 });
-    //                 setErrors((e) => ({ ...e, ...mapped }));
-    //                 scrollToFirstError(mapped);
-    //             },
-    //         }
-    //     );
-    // }, [validateAll, meta, partnerType, patient, summary, medicines]);
-    // put this alongside your other top-level callbacks
     const handlePrint = useCallback(() => {
         const scope =
             `${patient.surname || "patient"}_${
@@ -637,6 +636,34 @@ function MedicineRequest() {
         });
         printHTML(html, filename);
     }, [meta, patient, partnerType, medicines, summary]);
+
+    const clearAllSelections = useCallback(() => {
+        // Reset all states to default
+        setMeta(makeInitialMeta());
+        setPatient(makeInitialPatient());
+        setMedicines(makeInitialMedicines());
+        setEntry({
+            unitCost: "",
+            qty: "",
+            packaging: "",
+            name: "",
+            dosage: "",
+            amount: "",
+            remarks: "",
+        });
+
+        setSummary({
+            subtotal_a: "0.00",
+            subtotal_b: "0.00",
+            grand_total: "0.00",
+            total_amount_words: "",
+        });
+
+        // Clear validation states
+        setErrors({});
+        setTouched({});
+        setClearSelection((v) => !v);
+    }, []);
 
     const handleSave = useCallback(() => {
         const errs = validateAll();
@@ -1405,6 +1432,19 @@ function MedicineRequest() {
 
                     {/* Bottom actions */}
                     <div className="fixed bottom-4 right-6 flex gap-3 ">
+                        <button
+                            type="button"
+                            onClick={clearAllSelections}
+                            className={`px-4 h-9 rounded text-sm ${
+                                hasSelections
+                                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            }`}
+                            disabled={!hasSelections}
+                        >
+                            Clear Selection
+                        </button>
+
                         <button
                             onClick={handleSave}
                             className="px-4 h-9 bg-[#2e7d32] text-white rounded hover:bg-[#276b2b]"

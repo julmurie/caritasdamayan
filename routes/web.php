@@ -15,6 +15,7 @@ use App\Http\Controllers\MedicineRequestController;
 use App\Http\Controllers\LaboratoryRequestController;
 use App\Http\Controllers\ReferralController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public (Login)
@@ -55,6 +56,8 @@ Route::middleware('guest')->group(function () {
 */
 Route::middleware('auth', 'nocache')->group(function () {
 
+  
+
     /* ---------------- Admin ---------------- */
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::inertia('/dashboard', 'Admin/Dashboard')->name('admin.dashboard');
@@ -85,7 +88,7 @@ Route::middleware('auth', 'nocache')->group(function () {
         Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('admin.soa.restore');
     });
 
-    /* ---------------- Clinic Volunteer ---------------- */
+/* ---------------- Clinic Volunteer ---------------- */
 Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
     Route::inertia('/dashboard', 'ClinicVolunteer/Dashboard')->name('volunteer.dashboard');
     Route::inertia('/patients', 'ClinicVolunteer/Patients')->name('volunteer.patients');
@@ -118,6 +121,12 @@ Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
 
     Route::post('/medicine-requests', [MedicineRequestController::class, 'store'])->name('volunteer.medicine_requests.store');
     Route::post('/laboratory-requests', [LaboratoryRequestController::class, 'store'])->name('volunteer.laboratory_requests.store');
+    
+    Route::delete('/patients/{patient}/archive', [PatientController::class, 'archive'])
+    ->name('volunteer.patients.archive');
+    Route::post('/patients/{id}/restore', [PatientController::class, 'restore'])
+      ->name('volunteer.patients.restore');
+
 
     // Appointments
     Route::inertia('/appointments/donated-item', 'ClinicVolunteer/Appointments/DonatedItem')->name('volunteer.appointments.donated');
@@ -165,9 +174,14 @@ Route::prefix('volunteer')->middleware('role:volunteer')->group(function () {
         Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('merchant.soa.datatable');
         Route::post  ('/soa',              [SOAController::class, 'store'])->name('merchant.soa.store');
         Route::patch ('/soa/{soa}',        [SOAController::class, 'update'])->name('merchant.soa.update');
-        Route::delete('/soa/{soa}',        [SOAController::class, 'destroy'])->name('merchant.soa.destroy');
-        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('merchant.soa.restore');
-    });
+
+        // ✅ Soft-delete (“archive”) instead of force delete
+        Route::delete('/soa/{soa}/archive', [SOAController::class, 'archive'])->name('merchant.soa.archive');
+
+        // ✅ List and restore archived SOAs
+        Route::get   ('/soa/archived',  [SOAController::class, 'archived'])->name('merchant.soa.archived.index');
+        Route::post  ('/soa/{id}/restore', [SOAController::class, 'restore'])->name('merchant.soa.restore');    
+      });
 
     /* ---------------- Accounting ---------------- */
     Route::prefix('accounting')->middleware('role:accounting')->group(function () {

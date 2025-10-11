@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { router, usePage } from "@inertiajs/react"; // ⬅️ added usePage
+import { router, usePage } from "@inertiajs/react";
 import Navbar from "./Navbar";
 import styles from "../../css/merchant.module.css";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import Alert from "@/Components/Alert";
 
 /* ===== SVG icons for action buttons ===== */
 const icons = {
@@ -155,6 +157,17 @@ export default function SoaLayout({
     datatablesDom = "Bfrtip",
     showAddButton = true,
 }) {
+    // ===== Confirm + Toast states =====
+    const [confirmState, setConfirmState] = useState({ open: false, id: null });
+    const [toast, setToast] = useState(null);
+    const notify = (variant, msg) => setToast({ variant, msg });
+
+    useEffect(() => {
+        if (!toast) return;
+        const t = setTimeout(() => setToast(null), 4000);
+        return () => clearTimeout(t);
+    }, [toast]);
+
     // Get role from Inertia shared props
     const { auth } = usePage().props;
     const role = auth?.user?.role || "";
@@ -257,13 +270,7 @@ export default function SoaLayout({
         const onArchive = function () {
             const id = window.$(this).data("id");
             if (!id) return;
-            if (!confirm("Archive this SOA?")) return;
-
-            router.delete(`${resolvedDeleteBase}/${id}`, {
-                onSuccess: () => dt.ajax.reload(null, false),
-                onError: () =>
-                    alert("Archive failed. Check the Network tab for details."),
-            });
+            setConfirmState({ open: true, id });
         };
 
         $table.on("click", "button.btn-edit", onEdit);
@@ -325,6 +332,10 @@ export default function SoaLayout({
                 setFile(null);
                 setErrors({});
                 reloadTable();
+                notify("success", "SOA record added successfully!");
+            },
+            onError: () => {
+                notify("danger", "Failed to add SOA record.");
             },
         });
     };
@@ -376,9 +387,10 @@ export default function SoaLayout({
                 setForm(resetForm());
                 setErrors({});
                 reloadTable();
+                notify("success", "SOA record updated successfully!");
             },
             onError: () => {
-                alert("Update failed. Please check validation messages.");
+                notify("danger", "Failed to update SOA record.");
             },
         });
     };
@@ -398,15 +410,38 @@ export default function SoaLayout({
                     </div>
 
                     {showAddButton && (
-                        <button
-                            className={`${
-                                styles.soaBtnGreen || styles.btnGreen
-                            }`}
-                            onClick={() => setShowAdd(true)}
-                            title="Add a new SOA record"
-                        >
-                            Add Record
-                        </button>
+                        <div className="space-x-2">
+                            <button
+                                className={styles.btnGreen}
+                                onClick={() => setShowAdd(true)}
+                                title="Add a new SOA record"
+                            >
+                                + Add Record
+                            </button>
+
+                            <a
+                                href="/archives?view=soa&source=soa"
+                                className={styles.btnDark}
+                            >
+                                <span className={styles.iconLeft}>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        className="size-6"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
+                                        />
+                                    </svg>
+                                </span>
+                                Archived SOA
+                            </a>
+                        </div>
                     )}
                 </div>
 
@@ -666,6 +701,45 @@ export default function SoaLayout({
                     </form>
                 </Modal>
             )}
+            {/* ===== Toast (alert) ===== */}
+            {toast && (
+                <Alert
+                    variant={toast.variant}
+                    floating
+                    position="top-right"
+                    autoDismissMs={4000}
+                    onClose={() => setToast(null)}
+                >
+                    {toast.msg}
+                </Alert>
+            )}
+
+            {/* ===== Confirm Archive Modal ===== */}
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Archive SOA"
+                message="Are you sure you want to archive this SOA record? You can restore it later from the Archives page."
+                confirmText="Archive"
+                cancelText="Cancel"
+                variant="danger"
+                onCancel={() => setConfirmState({ open: false, id: null })}
+                onConfirm={() => {
+                    const { id } = confirmState;
+                    if (!id) return;
+
+                    router.delete(`${resolvedDeleteBase}/${id}/archive`, {
+                        onSuccess: () => {
+                            dtRef.current?.ajax.reload(null, false);
+                            setConfirmState({ open: false, id: null });
+                            notify("success", "SOA archived successfully!");
+                        },
+                        onError: () => {
+                            setConfirmState({ open: false, id: null });
+                            notify("danger", "Failed to archive SOA.");
+                        },
+                    });
+                }}
+            />
         </>
     );
 }
