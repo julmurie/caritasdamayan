@@ -79,6 +79,10 @@ Route::middleware('auth', 'nocache')->group(function () {
         Route::inertia('/soa', 'Admin/SOA')->name('admin.soa');   // PAGE ONLY
         Route::inertia('/users', 'Admin/Users')->name('admin.users');
         Route::inertia('/logs', 'Admin/Logs')->name('admin.logs');
+        
+        // Logs API
+        Route::get('/logs/account', [\App\Http\Controllers\Admin\LogController::class, 'accountLogs'])->name('admin.logs.account');
+        Route::get('/logs/activity', [\App\Http\Controllers\Admin\LogController::class, 'activityLogs'])->name('admin.logs.activity');  
 
         // SOA API
         Route::get   ('/soa/datatable',    [SOAController::class, 'datatable'])->name('admin.soa.datatable');

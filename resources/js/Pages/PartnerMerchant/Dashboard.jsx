@@ -1,97 +1,55 @@
-import React from "react";
-import Navbar from "../../components/Navbar";
-import styles from "../../../css/merchant.module.css";
+import Navbar from "@/components/Navbar";
 import FlashAlerts from "@/Components/FlashAlerts";
 import PageHeader from "@/Components/PageHeader";
+import Footer from "@/components/Footer";
 
-export default function Dashboard() {
+function Dashboard() {
     return (
-        <>
+        <div className="flex flex-col min-h-screen">
             <FlashAlerts autoDismissMs={6000} /> {/* shows the session flash */}
             <Navbar />
-            <div className={styles.dashboardContainer}>
-                <div>
-                    <PageHeader title="Dashboard" />
+            {/* Main Content */}
+            <main className="flex-grow m-8">
+                <PageHeader title="Dashboard" />
+                {/* Top Stat Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    {[...Array(3)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center justify-center"
+                        >
+                            <div className="w-20 h-20 bg-gray-100 rounded-full mb-3"></div>
+                            <div className="w-16 h-4 bg-gray-200 rounded mb-2"></div>
+                            <div className="w-10 h-3 bg-gray-100 rounded"></div>
+                        </div>
+                    ))}
                 </div>
 
-                <div className={styles.statGrid}>
-                    <div className={styles.statCard}>
-                        <h2>Unredeemed Charge Slips</h2>
-                        <p className={styles.statNumber}>8</p>
-                        <a href="#">view all →</a>
-                    </div>
-
-                    <div className={styles.statCard}>
-                        <h2>Charge Slips Redeemed for this Month</h2>
-                        <p className={styles.statNumber}>120</p>
-                        <a href="#">view all →</a>
-                    </div>
-
-                    <div className={styles.statCard}>
-                        <h2>Pending SOAs</h2>
-                        <p className={styles.statNumber}>4</p>
-                        <a href="#">view all →</a>
-                    </div>
+                {/* Bottom Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {[...Array(2)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                        >
+                            <ul className="space-y-4">
+                                {[...Array(5)].map((_, j) => (
+                                    <li
+                                        key={j}
+                                        className="flex items-center justify-between"
+                                    >
+                                        <span className="inline-block w-2/3 h-3 bg-gray-200 rounded"></span>
+                                        <span className="inline-block w-10 h-3 bg-gray-100 rounded"></span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
                 </div>
-
-                <div className={styles.bottomGrid}>
-                    <div className={styles.card}>
-                        <h3>Recent Activity</h3>
-                        <ul>
-                            <li>
-                                <span>• SOA #102 approved by Accounting</span>
-                                <span className={styles.time}>48 mins ago</span>
-                            </li>
-                            <li>
-                                <span>• SOA #103 flagged for compliance</span>
-                                <span className={styles.time}>1 hour ago</span>
-                            </li>
-                            <li>
-                                <span>
-                                    • Charge Slip for Juan Dela Cruz redeemed
-                                </span>
-                                <span className={styles.time}>
-                                    12 hours ago
-                                </span>
-                            </li>
-                            <li>
-                                <span>• New SOA #104 submitted</span>
-                                <span className={styles.time}>1 day ago</span>
-                            </li>
-                            <li>
-                                <span>• Price of Medicine updated</span>
-                                <span className={styles.time}>2 weeks ago</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div className={styles.card}>
-                        <h3>SOA Status</h3>
-                        <ul>
-                            <li>
-                                <span>• For Checking with Admin</span>
-                                <span className={styles.count}>3</span>
-                            </li>
-                            <li>
-                                <span>• For Accounting</span>
-                                <span className={styles.count}>2</span>
-                            </li>
-                            <li>
-                                <span>• With Compliance</span>
-                                <span className={styles.count}>1</span>
-                            </li>
-                            <li>
-                                <span>• For Treasury</span>
-                                <span className={styles.count}>5</span>
-                            </li>
-                            <li>
-                                <span>• Check Released</span>
-                                <span className={styles.count}>10</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </>
+            </main>
+            <Footer />
+        </div>
     );
 }
+
+export default Dashboard;

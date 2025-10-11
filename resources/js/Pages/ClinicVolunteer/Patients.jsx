@@ -169,9 +169,7 @@ const Patients = () => {
                             </aside>
 
                             <aside className={styles.docPanel}>
-                                <h4 className={styles.panelTitle}>
-                                    Add Appointment
-                                </h4>
+                                <div className="mb-9"></div>
                                 <div className={styles.docGrid}>
                                     <Link
                                         href="/volunteer/appointments/donated-item"
@@ -191,12 +189,12 @@ const Patients = () => {
                                     >
                                         Initial Assessment
                                     </Link>
-                                    <Link
+                                    {/* <Link
                                         href="/volunteer/appointments/consultation"
                                         className={styles.docBtn}
                                     >
                                         Consultation
-                                    </Link>
+                                    </Link> */}
                                 </div>
                             </aside>
                         </div>

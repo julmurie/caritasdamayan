@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;            
 use Inertia\Inertia;                  
 use App\Models\User;
+use App\Models\AccountLog; 
 
 class AuthController extends Controller
 {
@@ -25,23 +26,26 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
         if (!$user) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        return \DB::transaction(function () use ($user, $request) {
-            // lock the row
-            $user = \App\Models\User::whereKey($user->id)->lockForUpdate()->first();
+        if ($user->is_active === 0) {
+            return response()->json([
+                'message' => 'Your account is inactive. Please contact the system administrator to reactivate it.'
+            ], 401);
+        }
 
-            // If a lock exists but is expired, auto-reset
+        return DB::transaction(function () use ($user, $request) {
+            $user = User::whereKey($user->id)->lockForUpdate()->first();
+
             if ($user->locked_until && now()->greaterThanOrEqualTo($user->locked_until)) {
                 $user->locked_until = null;
                 $user->attempts_left = 5;
                 $user->save();
             }
 
-            // Still locked?
             if ($user->locked_until && now()->lessThan($user->locked_until)) {
                 $seconds = now()->diffInSeconds($user->locked_until, false);
                 return response()->json([
@@ -52,11 +56,8 @@ class AuthController extends Controller
                 ], 423);
             }
 
-            // Check password
-            if (!\Hash::check($request->password, $user->password)) {
+            if (!Hash::check($request->password, $user->password)) {
                 $user->attempts_left = max(0, (int)$user->attempts_left - 1);
-
-                // Hit zero? start 15-minute lock
                 if ($user->attempts_left <= 0) {
                     $user->locked_until = now()->addMinutes(15);
                 }
@@ -70,10 +71,18 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            // Success: reset and issue token
+            // ✅ success
             $user->attempts_left = 5;
             $user->locked_until  = null;
             $user->save();
+
+            // 🪵 Account Log: record login
+            AccountLog::create([
+                'user_id'    => $user->id,
+                'action'     => 'login',
+                'ip'         => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
 
             $token = $user->createToken('web', ['*'])->plainTextToken;
 
@@ -84,6 +93,7 @@ class AuthController extends Controller
             ]);
         });
     }
+
 
     /**
      * Session (cookie) login — HTML form POST /session-login
@@ -103,6 +113,18 @@ class AuthController extends Controller
 
     $user = \App\Models\User::where('email', $creds['email'])->first();
     if ($user) {
+
+        // 🚫 Block inactive accounts BEFORE Auth::attempt()
+        if ((int) $user->is_active === 0) {
+            $inactiveMsg = 'Your account is inactive. Please contact the system administrator to reactivate it.';
+
+            return back()
+                ->withErrors(['email' => $inactiveMsg])
+                ->with('error', $inactiveMsg)
+                ->onlyInput('email');
+        }
+
+
         // auto-unlock if expired
         if ($user->locked_until && now()->greaterThanOrEqualTo($user->locked_until)) {
             $user->locked_until = null;
@@ -122,7 +144,7 @@ class AuthController extends Controller
     }
 
     // Attempt with remember flag
-    if (!Auth::attempt($creds, $remember)) {
+    if (!Auth::attempt(array_merge($creds, ['is_active' => 1]), $remember)) {
         if ($user) {
             $user->attempts_left = max(0, (int) $user->attempts_left - 1);
             if ($user->attempts_left <= 0) {
@@ -134,18 +156,17 @@ class AuthController extends Controller
                 ? 'Too many failed attempts. Try again in 15 minutes.'
                 : ('Invalid credentials. Attempts left: ' . $user->attempts_left);
 
-            return back()
+            $response = back()
                 ->withErrors(['email' => $msg])
                 ->with('error', $msg)
-                ->when($user->locked_until, fn ($r) => $r->with('retry_at', $user->locked_until->toIso8601String()))
                 ->onlyInput('email');
-        }
-        if ($remember) {
-      \Log::info('Remember cookie should be set', [
-          'recaller' => Auth::guard()->getRecallerName(),
-          ]);
-      }
 
+            if ($user->locked_until) {
+                $response->with('retry_at', $user->locked_until->toIso8601String());
+            }
+
+            return $response;
+        }
 
         return back()
             ->withErrors(['email' => 'Invalid credentials'])

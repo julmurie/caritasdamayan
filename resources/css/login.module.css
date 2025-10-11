@@ -256,6 +256,12 @@
     background-size: cover;
 }
 
+.warningBanner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
 @media (min-width: 640px) {
     .bgMobile {
         display: none;
